@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
-import { Sparkles, Printer, Calculator, BookOpen, Download, Upload, RotateCcw, CheckCircle } from 'lucide-react';
+import { Sparkles, Printer, Calculator, BookOpen, Download, Upload, RotateCcw, CheckCircle, Layers, FileDown } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
+import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface HeaderNavProps {
   plans: LessonPlan[];
@@ -9,9 +10,12 @@ interface HeaderNavProps {
   onOpenAiGenerator: () => void;
   onOpenAbacusModal: () => void;
   onOpenPrintView: () => void;
+  onOpenResourcesModal: () => void;
+  resourcesCount: number;
   onResetToDefault: () => void;
   onImportPlan: (plan: LessonPlan) => void;
   currentPlan: LessonPlan;
+  onOpenExportModal: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -21,9 +25,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenAiGenerator,
   onOpenAbacusModal,
   onOpenPrintView,
+  onOpenResourcesModal,
+  resourcesCount,
   onResetToDefault,
   onImportPlan,
   currentPlan,
+  onOpenExportModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,6 +117,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <span className="hidden sm:inline">المعداد التفاعلي</span>
             </button>
 
+            {/* Resources Manager CTA */}
+            <button
+              onClick={onOpenResourcesModal}
+              title="إدارة ورفع المصادر والمراجع التعليمية"
+              className="px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              <Layers className="w-4 h-4 text-emerald-700" />
+              <span className="hidden md:inline">المصادر والمراجع</span>
+              <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold">
+                {toArabicDigits(resourcesCount)}
+              </span>
+            </button>
+
             {/* AI Plan Generator CTA */}
             <button
               onClick={onOpenAiGenerator}
@@ -117,6 +137,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             >
               <Sparkles className="w-4 h-4 text-emerald-300" />
               <span>توليد خطة جديدة بالذكاء الاصطناعي</span>
+            </button>
+
+            {/* Export Hub Button (Word, PDF, HTML) */}
+            <button
+              onClick={onOpenExportModal}
+              title="تصدير الخطة بصيغ Word و PDF و HTML"
+              className="px-2.5 sm:px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              <FileDown className="w-4 h-4 text-blue-700" />
+              <span className="hidden sm:inline">تصدير</span>
+              <span className="text-[10px] bg-blue-700 text-white px-1.5 py-0.2 rounded-md font-bold">
+                Word • PDF • HTML
+              </span>
             </button>
 
             {/* Official Print View */}

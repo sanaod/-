@@ -1,6 +1,23 @@
 import React, { useState } from 'react';
-import { LessonPhase } from '../types/lessonPlan';
-import { Clock, PlayCircle, Layers, CheckCircle2, Flag, Edit3, Check, Plus, Trash2, Sparkles } from 'lucide-react';
+import { LessonPhase, LessonPlan } from '../types/lessonPlan';
+import {
+  Clock,
+  PlayCircle,
+  Layers,
+  CheckCircle2,
+  Flag,
+  Edit3,
+  Check,
+  Plus,
+  Trash2,
+  Sparkles,
+  Calculator,
+  Compass,
+  BookOpen,
+  Cpu,
+  Target,
+  Wand2,
+} from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface Section2TimelineCardProps {
@@ -9,6 +26,7 @@ interface Section2TimelineCardProps {
   onOpenAbacusModal: () => void;
   onOpenExitTicketModal: () => void;
   onChange: (timeline: LessonPhase[]) => void;
+  plan?: LessonPlan;
 }
 
 export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
@@ -17,9 +35,75 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
   onOpenAbacusModal,
   onOpenExitTicketModal,
   onChange,
+  plan,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const currentTotal = timeline.reduce((acc, p) => acc + (p.durationMinutes || 0), 0);
+
+  // Determine contextual interactive simulator tool based on subject & lesson from attached resource/plan
+  const subject = plan?.header?.subject || '';
+  const lessonTitle = plan?.header?.lessonTitle || '';
+
+  const getInteractiveToolConfig = () => {
+    if (/رياضيات/i.test(subject) && /قيمة منزلية|أعداد|منازل/i.test(lessonTitle)) {
+      return {
+        label: 'المعداد الرقمي التفاعلي',
+        shortDesc: 'محاكي تمثيل الأعداد ولوحة المنازل',
+        icon: Calculator,
+        btnColor: 'bg-emerald-600/80 hover:bg-emerald-600 border-emerald-400/40',
+      };
+    } else if (/رياضيات/i.test(subject) && /كسور|هندسة|مساحة/i.test(lessonTitle)) {
+      return {
+        label: 'محاكي الكسور والمجسمات التفاعلي',
+        shortDesc: 'أشرطة الكسور والمقارنة البصرية',
+        icon: Calculator,
+        btnColor: 'bg-teal-600/80 hover:bg-teal-600 border-teal-400/40',
+      };
+    } else if (/علوم|مادة|طاقة|بيئة|خلية|ماء/i.test(subject) || /مادة|ماء|خلية|كائنات|تنفس|ضوء/i.test(lessonTitle)) {
+      return {
+        label: 'مختبر المحاكاة العلمي التفاعلي',
+        shortDesc: 'محاكاة التجارب والظواهر الحسية',
+        icon: Sparkles,
+        btnColor: 'bg-cyan-600/80 hover:bg-cyan-600 border-cyan-400/40',
+      };
+    } else if (/عربية|لغة|قراءة|إملاء|نصوص/i.test(subject) || /قراءة|نص|قصيدة|تعبير/i.test(lessonTitle)) {
+      return {
+        label: 'مختبر القراءة والمعجم الرقمي التفاعلي',
+        shortDesc: 'تحليل النصوص والمفردات والتراكيب',
+        icon: BookOpen,
+        btnColor: 'bg-blue-600/80 hover:bg-blue-600 border-blue-400/40',
+      };
+    } else if (/اجتماعية|جغرافيا|تاريخ/i.test(subject) || /فلسطين|خريطة|تضاريس|مدن/i.test(lessonTitle)) {
+      return {
+        label: 'الخريطة التفاعلية وأطلس فلسطين',
+        shortDesc: 'استكشاف معالم وجغرافية الوطن',
+        icon: Compass,
+        btnColor: 'bg-amber-600/80 hover:bg-amber-600 border-amber-400/40',
+      };
+    } else if (/تكنولوجيا|حاسوب|برمجة/i.test(subject)) {
+      return {
+        label: 'محاكي البرمجة والخوارزميات التفاعلي',
+        shortDesc: 'تطبيق الأوامر البرمجية والأمان الرقمي',
+        icon: Cpu,
+        btnColor: 'bg-indigo-600/80 hover:bg-indigo-600 border-indigo-400/40',
+      };
+    }
+    return {
+      label: 'الوسيلة الرقمية والمحاكي التفاعلي',
+      shortDesc: 'محاكاة تفاعلية للمفاهيم',
+      icon: Sparkles,
+      btnColor: 'bg-emerald-600/80 hover:bg-emerald-600 border-emerald-400/40',
+    };
+  };
+
+  const toolConfig = getInteractiveToolConfig();
+  const ToolIcon = toolConfig.icon;
+
+  // Extract exit ticket prompt from phase 4 if present
+  const phase4 = timeline.find((p) => p.phaseName.includes('الخاتمة') || p.phaseName.includes('التقويم'));
+  const exitTicketAction = phase4?.teacherAndStudentActions.find(
+    (a) => a.includes('بطاقة الخروج') || a.includes('Exit Ticket')
+  );
 
   const getPhaseColor = (index: number) => {
     switch (index) {
@@ -47,27 +131,32 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
               ثانياً: مخطط سير الحصة والأنشطة المتمركزة حول المتعلم
             </h3>
             <p className="text-xs text-slate-300">
-              جدول الحصة التفصيلي الرباعي (التمهيد، العرض، التطبيق، الخاتمة)
+              جدول الحصة التفصيلي الرباعي المتوافق مع المصادر والمراجع المرفقة
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Quick interactive shortcuts */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Dynamic interactive simulator shortcut */}
           <button
             onClick={onOpenAbacusModal}
-            className="px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-emerald-400/40"
+            className={`px-3 py-1.5 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-2xs ${toolConfig.btnColor}`}
+            title={toolConfig.shortDesc}
           >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
-            المعداد الرقمي التفاعلي
+            <ToolIcon className="w-3.5 h-3.5 text-white/90" />
+            <span>{toolConfig.label}</span>
           </button>
+
+          {/* Contextual Exit ticket shortcut */}
           <button
             onClick={onOpenExitTicketModal}
-            className="px-3 py-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-rose-400/40"
+            className="px-3 py-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-rose-400/40 shadow-2xs"
+            title="معاينة وطباعة بطاقات الخروج المخصصة للدرس"
           >
             <Flag className="w-3.5 h-3.5 text-rose-200" />
-            بطاقة الخروج (Exit Ticket)
+            <span>بطاقة الخروج (Exit Ticket)</span>
           </button>
+
           <button
             onClick={() => setIsEditing(!isEditing)}
             className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors"
@@ -87,44 +176,51 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
         </div>
       </div>
 
-      {/* Progress & Time summary bar */}
-      <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-700">توزيع زمن الحصة المبرمج:</span>
-          <span
-            className={`px-2.5 py-0.5 rounded-full font-bold ${
-              currentTotal === totalMinutes
-                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                : 'bg-amber-100 text-amber-800 border border-amber-300'
-            }`}
-          >
-            {toArabicDigits(currentTotal)} دقيقة من إجمالي {toArabicDigits(totalMinutes)} دقيقة
+      {/* Resource & Simulator Dynamic Match Banner */}
+      <div className="px-4 py-2.5 bg-emerald-50/70 border-b border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 text-emerald-950 font-bold">
+          <Wand2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>الأداة التفاعلية وبطاقة الخروج مكيفتان تلقائياً وفق المبحث:</span>
+          <span className="bg-emerald-700 text-white px-2 py-0.5 rounded-md text-[11px]">
+            {subject || 'مبحث معتمد'}
           </span>
+          {lessonTitle && (
+            <span className="text-slate-600 hidden sm:inline">• الدرس: {toArabicDigits(lessonTitle)}</span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span>المعايير المعتمدة: التمهيد ٥د • العرض ١٥د • التطبيق ١٢د • الخاتمة ٨د</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-500">
+            مجموع زمن الحصة: {toArabicDigits(currentTotal)} من {toArabicDigits(totalMinutes)} دقيقة
+          </span>
         </div>
       </div>
 
-      {/* Table / Timeline view */}
-      <div className="p-5 space-y-4">
+      {/* Phases Timeline Container */}
+      <div className="p-4 md:p-6 space-y-5">
         {timeline.map((phase, idx) => {
           const colors = getPhaseColor(idx);
+          const isPhase2 = idx === 1; // العرض والاستكشاف
+          const isPhase4 = idx === 3 || phase.phaseName.includes('الخاتمة'); // الخاتمة
+
           return (
             <div
-              key={phase.id}
-              className={`rounded-2xl border ${colors.border} ${colors.bg} p-4.5 transition-all hover:shadow-xs`}
+              key={phase.id || idx}
+              className={`rounded-2xl border-2 ${colors.border} ${colors.bg} p-4 md:p-5 transition-all space-y-3.5`}
             >
-              {/* Phase header */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 pb-3 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-1 rounded-lg text-white font-bold text-xs ${colors.badge}`}>
-                    المرحلة {toArabicDigits(idx + 1)}
+              {/* Phase Header */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`w-7 h-7 rounded-xl ${colors.badge} text-white flex items-center justify-center font-bold text-xs shadow-2xs`}
+                  >
+                    {toArabicDigits(idx + 1)}
                   </span>
-                  <h4 className="text-sm font-bold text-slate-900 font-['Tajawal']">
-                    {toArabicDigits(phase.phaseName)}
-                  </h4>
+                  <div>
+                    <h4 className={`text-sm md:text-base font-bold ${colors.text}`}>
+                      {toArabicDigits(phase.phaseName)}
+                    </h4>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -147,6 +243,57 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Special Contextual Tool Banner in Phase 2 */}
+              {isPhase2 && (
+                <div className="p-3 bg-linear-to-r from-emerald-100/90 to-teal-50 border border-emerald-300 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-emerald-700 text-white rounded-lg">
+                      <ToolIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <strong className="text-emerald-950">الأداة الرقمية التفاعلية المعتمدة للمصدر:</strong>
+                      <span className="text-emerald-800 mr-1.5 font-bold">{toolConfig.label}</span>
+                      <span className="text-[11px] text-slate-600 block sm:inline sm:mr-1">({toolConfig.shortDesc})</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenAbacusModal}
+                    className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>تشغيل الأداة التفاعلية</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Special Contextual Exit Ticket Banner in Phase 4 */}
+              {isPhase4 && (
+                <div className="p-3 bg-linear-to-r from-rose-100/90 to-amber-50 border border-rose-300 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-rose-700 text-white rounded-lg">
+                      <Flag className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <strong className="text-rose-950">بطاقة الخروج السريعة المتوافقة مع الدرس (Exit Ticket):</strong>
+                      <div className="text-[11px] text-slate-800 font-semibold mt-0.5">
+                        {exitTicketAction
+                          ? toArabicDigits(exitTicketAction)
+                          : `تطبيق التحدي الختامي الفردي لدرس (${lessonTitle || 'المبحث'}) وتأكيد تحقق النتاجات.`}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenExitTicketModal}
+                    className="px-3 py-1 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    <span>معاينة وطباعة البطاقة</span>
+                  </button>
+                </div>
+              )}
 
               {/* 3 Columns details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
@@ -252,7 +399,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                     <ul className="space-y-1.5 text-slate-700 leading-relaxed">
                       {phase.strategiesAndResources.map((strat, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-emerald-500 font-bold">-</span>
+                          <span className="text-emerald-500 font-bold">•</span>
                           <span>{toArabicDigits(strat)}</span>
                         </li>
                       ))}
@@ -268,11 +415,11 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                   </div>
                   {isEditing ? (
                     <div className="space-y-1.5">
-                      {phase.assessmentAndFeedback.map((fb, i) => (
+                      {phase.assessmentAndFeedback.map((evalItem, i) => (
                         <div key={i} className="flex gap-1">
                           <input
                             type="text"
-                            value={fb}
+                            value={evalItem}
                             onChange={(e) => {
                               const updated = [...timeline];
                               updated[idx].assessmentAndFeedback[i] = e.target.value;
@@ -295,7 +442,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                       <button
                         onClick={() => {
                           const updated = [...timeline];
-                          updated[idx].assessmentAndFeedback.push('أداة تقويم أو تغذية راجعة...');
+                          updated[idx].assessmentAndFeedback.push('أداة تقويم جديدة...');
                           onChange(updated);
                         }}
                         className="text-[11px] text-purple-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
@@ -305,10 +452,10 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                     </div>
                   ) : (
                     <ul className="space-y-1.5 text-slate-700 leading-relaxed">
-                      {phase.assessmentAndFeedback.map((fb, i) => (
+                      {phase.assessmentAndFeedback.map((evalItem, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-purple-500 font-bold">*</span>
-                          <span>{toArabicDigits(fb)}</span>
+                          <span className="text-purple-500 font-bold">•</span>
+                          <span>{toArabicDigits(evalItem)}</span>
                         </li>
                       ))}
                     </ul>

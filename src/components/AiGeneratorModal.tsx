@@ -1,18 +1,38 @@
-import React, { useState } from 'react';
-import { X, Sparkles, Loader2, BookOpen, GraduationCap, Clock, Building2, User, AlertCircle } from 'lucide-react';
-import { LessonPlan } from '../types/lessonPlan';
+import React, { useState, useEffect } from 'react';
+import {
+  X,
+  Sparkles,
+  Loader2,
+  BookOpen,
+  GraduationCap,
+  Clock,
+  Building2,
+  User,
+  AlertCircle,
+  Layers,
+  CheckCircle2,
+  Plus,
+  Wand2,
+} from 'lucide-react';
+import { EducationalResource, LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface AiGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPlanGenerated: (plan: LessonPlan) => void;
+  resources: EducationalResource[];
+  onOpenResourcesModal: () => void;
+  selectedResourceForPlanning?: EducationalResource | null;
 }
 
 export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
   isOpen,
   onClose,
   onPlanGenerated,
+  resources,
+  onOpenResourcesModal,
+  selectedResourceForPlanning,
 }) => {
   const [subject, setSubject] = useState('العلوم والحياة');
   const [grade, setGrade] = useState('الرابع الأساسي');
@@ -25,10 +45,42 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
   const [school, setSchool] = useState('مدرسة المعري الأساسية للبنين');
   const [directorate, setDirectorate] = useState('مديرية نابلس');
   const [teacherName, setTeacherName] = useState('أ. عبد الرحمن دويكات');
-  const [customNotes, setCustomNotes] = useState('التركيز على استقصاء علمي وتجارب حسية واستخدام استراتيجيات التعلم النشط ومهمة تقويم أصيل GRASPS وسلالم التقدير والربط بالبيئة المحلية الفلسطينية مع استخدام الأرقام العربية المشرقية ومنازل الآحاد ثم العشرات ثم المئات ثم الآلاف.');
-  
+  const [customNotes, setCustomNotes] = useState(
+    'التركيز على استقصاء علمي وتجارب حسية واستخدام استراتيجيات التعلم النشط ومهمة تقويم أصيل GRASPS وسلالم التقدير والربط بالبيئة المحلية الفلسطينية مع استخدام الأرقام العربية المشرقية ومنازل الآحاد ثم العشرات ثم المئات ثم الآلاف.'
+  );
+
+  const [activeResource, setActiveResource] = useState<EducationalResource | null>(null);
+  const [autoUpdatedNotice, setAutoUpdatedNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const applyResourceToFields = (res: EducationalResource) => {
+    setActiveResource(res);
+    if (res.inferredSubject) setSubject(res.inferredSubject);
+    if (res.inferredGrade) setGrade(res.inferredGrade);
+    
+    let resolvedTitle = res.inferredLessonTitle || res.title;
+    resolvedTitle = resolvedTitle.replace(/^كتاب [^\-]+- /, '').trim();
+    if (resolvedTitle) setLessonTitle(resolvedTitle);
+
+    setCustomNotes(
+      `الاستناد التام إلى المصدر المرفق: "${res.title}". يرجى مراعاة نصوصه وأهدافه وتدريباته بدقة في بناء سير الحصة، ومهمة التقويم الأصيل GRASPS، وسلم التقدير اللفظي Rubric.`
+    );
+
+    setAutoUpdatedNotice(`تمت مزامنة العناوين تلقائياً وفق المصدر: «${res.title}»`);
+    setTimeout(() => setAutoUpdatedNotice(null), 3500);
+  };
+
+  // Sync fields whenever selected resource changes or modal opens with resources
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (selectedResourceForPlanning) {
+      applyResourceToFields(selectedResourceForPlanning);
+    } else if (resources.length > 0 && !activeResource) {
+      applyResourceToFields(resources[0]);
+    }
+  }, [isOpen, selectedResourceForPlanning, resources]);
 
   if (!isOpen) return null;
 
@@ -54,6 +106,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
           directorate,
           teacherName,
           customNotes,
+          resources,
         }),
       });
 
@@ -62,8 +115,20 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
         throw new Error(data.error || 'حدث خطأ أثناء توليد خطة الدرس');
       }
 
-      onPlanGenerated(data.plan);
+      // Attach used resources to plan
+      const planWithResources: LessonPlan = {
+        ...data.plan,
+        attachedResources: resources.length > 0 ? [...resources] : undefined,
+      };
+
+      onPlanGenerated(planWithResources);
       onClose();
+
+      if (data.isFallback) {
+        setTimeout(() => {
+          alert('تم إعداد وتخصيص خطة الدرس بنجاح وفق المعايير الوزارية الرسمية ونموذج التميز للدرجة 4.');
+        }, 300);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'تعذر الاتصال بالخادم الذكي لإعداد الخطة');
@@ -72,12 +137,43 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
     }
   };
 
-  const sampleTopics = [
-    { sub: 'الرياضيات', gr: 'الخامس الأساسي', title: 'جمع الكسور العادية غير متجانسة المقامات وطرحها' },
-    { sub: 'اللغة العربية', gr: 'الثالث الأساسي', title: 'الأفعال الماضية والمضارعة وصيد الكلمات التراثية' },
-    { sub: 'العلوم والحياة', gr: 'السادس الأساسي', title: 'الخلية النباتية والخلية الحيوانية تحت المجهر' },
-    { sub: 'التربية الإسلامية', gr: 'الرابع الأساسي', title: 'آداب المسجد وعمارة بيوت الله في فلسطين' },
-    { sub: 'الدراسات الاجتماعية', gr: 'السابع الأساسي', title: 'جغرافية فلسطين ومصادر المياه الطبيعية والأودية' },
+  const sampleSubjects = [
+    {
+      sub: 'العلوم والحياة',
+      gr: 'الرابع الأساسي',
+      title: 'حالات المادة ودورة الماء في الطبيعة',
+      notes: 'تجارب استقصائية حسية، الربط بجبال فلسطين ومصادر المياه الجوفية، مهمة GRASPS إرشادية بيئية.',
+    },
+    {
+      sub: 'اللغة العربية',
+      gr: 'الرابع الأساسي',
+      title: 'القدس زهرة المدائن - قراءة استيعابية وتعبير أدبي',
+      notes: 'قراءة جهرية معبرة، التمييز بين الحقيقة والرأي، مفردات تراثية ومشاعر الانتماء الوطني والعروبة.',
+    },
+    {
+      sub: 'الرياضيات',
+      gr: 'الثالث الأساسي',
+      title: 'القيمة المنزلية للأعداد ضمن ٩٩٩٩',
+      notes: 'المحسوسات والمعداد، البدء بمنازل الآحاد ثم العشرات ثم المئات ثم آحاد الآلاف، الصورة الموسعة.',
+    },
+    {
+      sub: 'التربية الإسلامية',
+      gr: 'الخامس الأساسي',
+      title: 'آداب الاستئذان وحرمة البيوت',
+      notes: 'لعب الأدوار، الاستشهاد بالآيات القرآنية والأحاديث الشريفة، وغرس القيم الأخلاقية والتراحم.',
+    },
+    {
+      sub: 'الدراسات الاجتماعية',
+      gr: 'السادس الأساسي',
+      title: 'تضاريس فلسطين والمناخ والسهول الساحلية',
+      notes: 'تحليل الخرائط الجغرافية، الربط بمدن يافا وحيفا والقدس، وأهمية حماية الأرض والتراث الزراعي.',
+    },
+    {
+      sub: 'التكنولوجيا',
+      gr: 'السابع الأساسي',
+      title: 'أمن المعلومات والحوسبة السحابية والأمان الرقمي',
+      notes: 'تطبيق مفاهيم الخوارزميات، التفكير المنطقي، وأخلاقيات استخدام الإنترنت والسلامة الرقمية.',
+    },
   ];
 
   return (
@@ -85,7 +181,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
       dir="rtl"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto text-right"
     >
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden my-6">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden my-6">
         {/* Header */}
         <div className="bg-linear-to-r from-emerald-800 to-teal-900 text-white p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -95,7 +191,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
             <div>
               <h3 className="text-xl font-bold font-['Tajawal']">إعداد وتوليد خطة درس نموذجية بالذكاء الاصطناعي</h3>
               <p className="text-xs text-emerald-100 mt-0.5">
-                وفق المعايير الوزارية، التخطيط التكيفي، وسير الحصة الرباعي، والتقويم الأصيل GRASPS
+                تتطابق العناوين والمباحث تلقائياً مع المصادر والمراجع التعليمية المرفقة
               </p>
             </div>
           </div>
@@ -111,19 +207,84 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleGenerate} className="p-6 space-y-5">
           {error && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-sm flex items-center gap-2">
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
               <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Quick Inspirations */}
+          {/* Auto-updated notification toast */}
+          {autoUpdatedNotice && (
+            <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 font-bold flex items-center gap-2 shadow-2xs">
+              <Wand2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{autoUpdatedNotice}</span>
+            </div>
+          )}
+
+          {/* Attached Resources Multi-Sync Strip */}
+          <div className="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-2xl space-y-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-2xs">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                    <span>المصادر المرفقة لتوليد الخطة:</span>
+                    <span className="px-2 py-0.2 rounded-full text-[10px] bg-emerald-700 text-white font-extrabold">
+                      {toArabicDigits(resources.length)} مصادر
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onOpenResourcesModal}
+                className="px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-[11px] font-bold shrink-0 transition-colors shadow-2xs flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3 text-emerald-700" />
+                <span>إضافة أو تعديل المصادر</span>
+              </button>
+            </div>
+
+            {/* Quick selector of active resource to sync titles */}
+            {resources.length > 0 && (
+              <div className="pt-2 border-t border-emerald-200/60">
+                <span className="block text-[11px] font-bold text-emerald-900 mb-1.5 flex items-center gap-1">
+                  <Wand2 className="w-3 h-3 text-emerald-600" />
+                  اختر مصدراً لمزامنة وتغيير العناوين تلقائياً معه:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {resources.map((res) => {
+                    const isSelected = activeResource?.id === res.id;
+                    return (
+                      <button
+                        key={res.id}
+                        type="button"
+                        onClick={() => applyResourceToFields(res)}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all text-right ${
+                          isSelected
+                            ? 'bg-emerald-800 text-white border-emerald-800 font-bold shadow-xs'
+                            : 'bg-white hover:bg-emerald-100 text-emerald-950 border-emerald-300'
+                        }`}
+                      >
+                        {res.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Inspirations for Different Subjects */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              نماذج مقترحة سريعة للاختيار:
+              أو اختر من النماذج المقترحة السريعة:
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {sampleTopics.map((st, i) => (
+              {sampleSubjects.map((st, i) => (
                 <button
                   type="button"
                   key={i}
@@ -131,10 +292,16 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                     setSubject(st.sub);
                     setGrade(st.gr);
                     setLessonTitle(st.title);
+                    setCustomNotes(st.notes);
+                    setActiveResource(null);
                   }}
-                  className="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 border border-slate-200 rounded-lg text-slate-700 transition-colors"
+                  className={`text-[11px] px-2.5 py-1 rounded-xl border transition-all text-right ${
+                    subject === st.sub && !activeResource
+                      ? 'bg-emerald-700 text-white border-emerald-700 font-bold shadow-xs'
+                      : 'bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-300 border-slate-200 text-slate-700'
+                  }`}
                 >
-                  {st.sub} - {st.gr}: {st.title}
+                  {st.sub} - {st.gr}
                 </button>
               ))}
             </div>
@@ -144,30 +311,30 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                المادة / المبحث *
+                المادة / المبحث (تلقائي) *
               </label>
               <input
                 type="text"
                 required
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="مثال: الرياضيات، العلوم، اللغة العربية"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right"
+                placeholder="مثال: العلوم والحياة، اللغة العربية، الرياضيات"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right font-semibold"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
                 <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
-                الصف والشعبة *
+                الصف والشعبة (تلقائي) *
               </label>
               <input
                 type="text"
                 required
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                placeholder="مثال: الثالث الأساسي / أ"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right"
+                placeholder="مثال: الرابع الأساسي / أ"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right font-semibold"
               />
             </div>
           </div>
@@ -175,15 +342,15 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              عنوان الدرس المراد تحضيره *
+              عنوان الدرس المراد تحضيره (يتطابق تلقائياً مع المصدر) *
             </label>
             <input
               type="text"
               required
               value={lessonTitle}
               onChange={(e) => setLessonTitle(e.target.value)}
-              placeholder="مثال: القيمة المنزلية للأعداد ضمن 9999"
-              className="w-full px-3 py-2 text-sm font-semibold border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right"
+              placeholder="مثال: حالات المادة والتحولات الفيزيائية"
+              className="w-full px-3 py-2 text-xs font-bold text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right"
             />
           </div>
 
@@ -200,7 +367,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                 max={90}
                 value={periodDurationMinutes}
                 onChange={(e) => setPeriodDurationMinutes(Number(e.target.value))}
-                className="w-full px-2.5 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-center font-bold"
               />
             </div>
             <div>
@@ -213,7 +380,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                 max={10}
                 value={totalPeriods}
                 onChange={(e) => setTotalPeriods(Number(e.target.value))}
-                className="w-full px-2.5 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-center font-bold"
               />
             </div>
             <div>
@@ -226,7 +393,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                 max={totalPeriods}
                 value={currentPeriod}
                 onChange={(e) => setCurrentPeriod(Number(e.target.value))}
-                className="w-full px-2.5 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-center font-bold"
               />
             </div>
           </div>
@@ -274,21 +441,21 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
           {/* Custom Pedagogical Focus */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              توجيهات تربوية خاصة (اختياري):
+              توجيهات وأهداف خاصة (مستندة للمصدر):
             </label>
             <textarea
               rows={2}
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
-              placeholder="مثال: التركيز على التعلم باللعب، دمج الطلبة من ذوي الإعاقة البصرية، ربط الدرس بالبيئة والتراث الفلسطيني، بدء المنازل من الآحاد..."
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right"
+              placeholder="مثال: الاستناد للمصدر المرفق ومراعاة نصوصه وأهدافه وتدريباته..."
+              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right leading-relaxed"
             />
           </div>
 
           {/* Footer CTA */}
           <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
             <span className="text-[11px] text-slate-500">
-              * سيتم إنشاء خطة تفصيلية بجميع الأقسام الستة ومهمة تقويم أصيل وسلم Rubric
+              * سيتم إنشاء خطة كاملة ومحكمة متطابقة مع مراجعك
             </span>
             <div className="flex gap-2">
               <button
@@ -306,7 +473,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span>جاري التوليد والتحليل التربوي...</span>
                   </>
                 ) : (

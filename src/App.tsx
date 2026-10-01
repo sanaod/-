@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LessonPlan } from './types/lessonPlan';
+import { LessonPlan, EducationalResource } from './types/lessonPlan';
 import { defaultExemplarPlans, palestineMathGrade3Plan } from './data/exemplarPlans';
 import { HeaderNav } from './components/HeaderNav';
 import { LessonHeaderCard } from './components/LessonHeaderCard';
@@ -19,6 +19,9 @@ import { AbacusSimulationModal } from './components/AbacusSimulationModal';
 import { AiGeneratorModal } from './components/AiGeneratorModal';
 import { ExitTicketModal } from './components/ExitTicketModal';
 import { ParentCardModal } from './components/ParentCardModal';
+import { ResourcesManagerModal } from './components/ResourcesManagerModal';
+import { ExportModal } from './components/ExportModal';
+import { toArabicDigits } from './utils/arabicNumerals';
 import {
   Compass,
   Clock,
@@ -32,6 +35,8 @@ import {
   ChevronDown,
   Info,
   CheckCircle2,
+  Layers,
+  FileDown,
 } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
@@ -67,16 +72,42 @@ export default function App() {
   const [isAbacusModalOpen, setIsAbacusModalOpen] = useState(false);
   const [isExitTicketModalOpen, setIsExitTicketModalOpen] = useState(false);
   const [isParentCardModalOpen, setIsParentCardModalOpen] = useState(false);
+  const [isResourcesModalOpen, setIsResourcesModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
+
+  // User Added Resources
+  const [resources, setResources] = useState<EducationalResource[]>(() => {
+    try {
+      const saved = localStorage.getItem('educational_expert_resources_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [
+      {
+        id: 'res-default-1',
+        type: 'textbook',
+        title: 'كتاب الرياضيات للصف الثالث - الفصل الأول (ص ١٠-١٢)',
+        content: 'الدرس الثاني: القيمة المنزلية للأعداد ضمن ٩٩٩٩، كتابة الأعداد بالصورة الموسعة، تمثيل الأعداد على المعداد ولوحة المنازل، وربط الأعداد بمعالم فلسطين (جبل الجرمق ١٢٠٨ م ومخيم الفارعة ٧٨٣٠ نسمة).',
+        sourceInfo: 'الطبعة الرابعة ٢٠٢٢',
+        createdAt: '٢٠٢٦/١٠/١٥م',
+        tags: ['رياضيات', 'الصف الثالث', 'قيمة منزلية'],
+      },
+    ];
+  });
 
   // Sync to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(plans));
       localStorage.setItem(ACTIVE_PLAN_KEY, activePlanId);
+      localStorage.setItem('educational_expert_resources_v1', JSON.stringify(resources));
     } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
-  }, [plans, activePlanId]);
+  }, [plans, activePlanId, resources]);
 
   const currentPlan = plans.find((p) => p.id === activePlanId) || plans[0] || palestineMathGrade3Plan;
 
@@ -131,9 +162,12 @@ export default function App() {
         onOpenAiGenerator={() => setIsAiModalOpen(true)}
         onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
         onOpenPrintView={() => setViewMode('official-print')}
+        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+        resourcesCount={resources.length}
         onResetToDefault={handleResetToDefault}
         onImportPlan={handleImportPlan}
         currentPlan={currentPlan}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
       />
 
       {/* Hero Pedagogical Context Banner */}
@@ -154,18 +188,32 @@ export default function App() {
 
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setIsAbacusModalOpen(true)}
-              className="px-3.5 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors border border-emerald-500/40 shadow-xs"
+              onClick={() => setIsResourcesModalOpen(true)}
+              className="px-3.5 py-2 bg-emerald-800/90 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors border border-emerald-500/50 shadow-xs"
             >
-              <Calculator className="w-4 h-4 text-emerald-200" />
-              فتح المعداد التفاعلي الرقمي
+              <Layers className="w-4 h-4 text-emerald-300" />
+              <span>المصادر المرفقة ({toArabicDigits(resources.length)})</span>
+            </button>
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md"
+            >
+              <FileDown className="w-4 h-4 text-blue-200" />
+              <span>تصدير الخطة (Word • PDF • HTML)</span>
+            </button>
+            <button
+              onClick={() => setIsAbacusModalOpen(true)}
+              className="px-3.5 py-2 bg-teal-800/80 hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors border border-teal-500/40 shadow-xs"
+            >
+              <Calculator className="w-4 h-4 text-teal-200" />
+              المحاكي التفاعلي
             </button>
             <button
               onClick={() => setViewMode('official-print')}
               className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md"
             >
               <Printer className="w-4 h-4 text-emerald-800" />
-              معاينة النموذج الوزاري الرسمي (A4)
+              معاينة وتصدير PDF (A4)
             </button>
           </div>
         </div>
@@ -226,6 +274,7 @@ export default function App() {
             onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
             onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
             onChange={(section2Timeline) => updateCurrentPlan({ ...currentPlan, section2Timeline })}
+            plan={currentPlan}
           />
         )}
 
@@ -278,13 +327,40 @@ export default function App() {
       {/* Modals */}
       <AiGeneratorModal
         isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
+        onClose={() => {
+          setIsAiModalOpen(false);
+          setSelectedResourceForPlanning(null);
+        }}
         onPlanGenerated={handlePlanGenerated}
+        resources={resources}
+        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+        selectedResourceForPlanning={selectedResourceForPlanning}
+      />
+
+      <ResourcesManagerModal
+        isOpen={isResourcesModalOpen}
+        onClose={() => setIsResourcesModalOpen(false)}
+        resources={resources}
+        onAddResource={(newRes) => {
+          setResources((prev) => [newRes, ...prev]);
+          setSelectedResourceForPlanning(newRes);
+        }}
+        onDeleteResource={(id) => setResources((prev) => prev.filter((r) => r.id !== id))}
+        onGenerateWithResources={(selectedRes) => {
+          if (selectedRes) {
+            setSelectedResourceForPlanning(selectedRes);
+          } else if (resources.length > 0) {
+            setSelectedResourceForPlanning(resources[0]);
+          }
+          setIsResourcesModalOpen(false);
+          setIsAiModalOpen(true);
+        }}
       />
 
       <AbacusSimulationModal
         isOpen={isAbacusModalOpen}
         onClose={() => setIsAbacusModalOpen(false)}
+        plan={currentPlan}
       />
 
       <ExitTicketModal
@@ -297,6 +373,13 @@ export default function App() {
         isOpen={isParentCardModalOpen}
         onClose={() => setIsParentCardModalOpen(false)}
         plan={currentPlan}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        plan={currentPlan}
+        onOpenPdfPrint={() => setViewMode('official-print')}
       />
     </div>
   );

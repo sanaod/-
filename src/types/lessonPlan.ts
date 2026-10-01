@@ -112,6 +112,22 @@ export interface Section6Signatures {
   };
 }
 
+export type ResourceType = 'textbook' | 'document' | 'link' | 'standard' | 'image' | 'note';
+
+export interface EducationalResource {
+  id: string;
+  type: ResourceType;
+  title: string;
+  content: string;
+  sourceInfo?: string;
+  createdAt: string;
+  tags?: string[];
+  fileSize?: string;
+  inferredSubject?: string;
+  inferredGrade?: string;
+  inferredLessonTitle?: string;
+}
+
 export interface LessonPlan {
   id: string;
   title: string;
@@ -122,4 +138,5 @@ export interface LessonPlan {
   section4Environment: Section4LearningEnvironment;
   section5Reflection: Section5SelfReflection;
   section6Signatures: Section6Signatures;
+  attachedResources?: EducationalResource[];
 }
