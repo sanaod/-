@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @media print {
+    body {
+      background-color: white !important;
+      color: black !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+    .official-document {
+      border: 2px solid black !important;
+      box-shadow: none !important;
+      padding: 0.5in !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+  }
+}
