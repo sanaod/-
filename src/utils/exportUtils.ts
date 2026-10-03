@@ -373,6 +373,15 @@ export function exportToWord(plan: LessonPlan) {
     </tbody>
   </table>
 
+  <div style="margin-top: 25pt; padding-top: 10pt; border-top: 1pt solid #cbd5e1; text-align: center; font-size: 9.5pt; color: #475569;">
+    <p style="margin: 2pt 0; font-weight: bold; color: #064e3b;">
+      إعداد وتصميم: الأستاذ عبد الرحمن دويكات | منظومة عبقور للتخطيط التربوي وتحضير الدروس
+    </p>
+    <p style="margin: 2pt 0;">
+      جميع الحقوق محفوظة لصالح الأستاذ عبد الرحمن دويكات © مرخص بموجب رخصة المشاع الإبداعي (CC BY-NC-SA 4.0) نَسب المُصنَّف - غير تجاري - الترخيص بالمثل.
+    </p>
+  </div>
+
 </body>
 </html>
   `.trim();
@@ -605,6 +614,14 @@ export function exportToHtml(plan: LessonPlan) {
         </td>
       </tr>
     </table>
+    <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 11px; color: #64748b;">
+      <p style="margin: 4px 0; font-weight: bold; color: #064e3b;">
+        إعداد وتصميم: الأستاذ عبد الرحمن دويكات | منظومة عبقور للتخطيط التربوي وتحضير الدروس
+      </p>
+      <p style="margin: 4px 0;">
+        جميع الحقوق محفوظة لصالح الأستاذ عبد الرحمن دويكات © ومحمية بموجب رخصة المشاع الإبداعي (CC BY-NC-SA 4.0) نَسْب المُصنَّف - غير تجاري - الترخيص بالمثل.
+      </p>
+    </div>
   </div>
 </body>
 </html>

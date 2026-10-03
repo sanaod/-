@@ -73,11 +73,20 @@ export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = (
               <textarea
                 rows={3}
                 value={data.classroomRoutines}
+                placeholder="قواعد المشاركة، الانتقال بين الأنشطة، وتوزيع المهام..."
                 onChange={(e) => onChange({ ...data, classroomRoutines: e.target.value })}
                 className="w-full p-2 border border-slate-300 rounded-lg bg-white text-right"
               />
             ) : (
-              <p className="text-slate-700 leading-relaxed">{toArabicDigits(data.classroomRoutines)}</p>
+              <p className="text-slate-700 leading-relaxed">
+                {data.classroomRoutines ? (
+                  toArabicDigits(data.classroomRoutines)
+                ) : (
+                  <span className="text-slate-400 font-normal italic text-[11px] block">
+                    [الروتينات الصفية، إشارات الانتباه، وتنظيم العمل الجماعي...]
+                  </span>
+                )}
+              </p>
             )}
           </div>
 
@@ -90,11 +99,20 @@ export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = (
               <textarea
                 rows={3}
                 value={data.safeAndMotivatingClimate}
+                placeholder="مناخ دافئ يشجع التعبير والتقبل والدعم الإيجابي..."
                 onChange={(e) => onChange({ ...data, safeAndMotivatingClimate: e.target.value })}
                 className="w-full p-2 border border-slate-300 rounded-lg bg-white text-right"
               />
             ) : (
-              <p className="text-slate-700 leading-relaxed">{toArabicDigits(data.safeAndMotivatingClimate)}</p>
+              <p className="text-slate-700 leading-relaxed">
+                {data.safeAndMotivatingClimate ? (
+                  toArabicDigits(data.safeAndMotivatingClimate)
+                ) : (
+                  <span className="text-slate-400 font-normal italic text-[11px] block">
+                    [إجراءات التحفيز، التعزيز المعنوي، والأمان النفسي للطلبة...]
+                  </span>
+                )}
+              </p>
             )}
           </div>
         </div>
@@ -104,7 +122,10 @@ export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = (
           <div className="flex items-center justify-between border-b border-slate-200 pb-2">
             <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
               <HeartHandshake className="w-4 h-4 text-teal-600" />
-              بطاقة الشراكة والتواصل المنزلي: {toArabicDigits(data.familyPartnership.cardTitle)}
+              <span>بطاقة الشراكة والتواصل المنزلي:</span>
+              <span className="text-teal-900 font-semibold">
+                {data.familyPartnership.cardTitle ? toArabicDigits(data.familyPartnership.cardTitle) : '[بطاقة شراكة أسرية]'}
+              </span>
             </div>
             <button
               onClick={onOpenParentCardModal}
@@ -117,11 +138,27 @@ export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-700">
             <div className="bg-white p-3 rounded-lg border border-slate-200">
               <span className="font-bold text-slate-900 block mb-1">مهمة الطالب التفاعلية:</span>
-              <p className="leading-relaxed">{toArabicDigits(data.familyPartnership.studentTask)}</p>
+              <p className="leading-relaxed">
+                {data.familyPartnership.studentTask ? (
+                  toArabicDigits(data.familyPartnership.studentTask)
+                ) : (
+                  <span className="text-slate-400 italic text-[11px] block">
+                    [مهمة بيتية تطبيقية محفزة يؤديها الطالب برفقة أسرته...]
+                  </span>
+                )}
+              </p>
             </div>
             <div className="bg-white p-3 rounded-lg border border-slate-200">
               <span className="font-bold text-slate-900 block mb-1">دور ولي الأمر والمتابعة:</span>
-              <p className="leading-relaxed">{toArabicDigits(data.familyPartnership.parentRole)}</p>
+              <p className="leading-relaxed">
+                {data.familyPartnership.parentRole ? (
+                  toArabicDigits(data.familyPartnership.parentRole)
+                ) : (
+                  <span className="text-slate-400 italic text-[11px] block">
+                    [توجيه ودعم وتشجيع وتوقيع بطاقة المتابعة الأسرية...]
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         </div>

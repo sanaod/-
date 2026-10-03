@@ -58,28 +58,35 @@ export const Section5ReflectionCard: React.FC<Section5ReflectionCardProps> = ({ 
           </div>
 
           <div className="space-y-2">
-            {data.strengthsAndImpact.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs text-emerald-950 flex items-start gap-2"
-              >
-                <span className="text-emerald-600 font-bold">•</span>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={item}
-                    onChange={(e) => {
-                      const updated = [...data.strengthsAndImpact];
-                      updated[idx] = e.target.value;
-                      onChange({ ...data, strengthsAndImpact: updated });
-                    }}
-                    className="w-full p-1 border border-slate-300 rounded-md bg-white text-xs font-normal text-right"
-                  />
-                ) : (
-                  <span className="leading-relaxed">{toArabicDigits(item)}</span>
-                )}
+            {data.strengthsAndImpact.filter((s) => s && s.trim() !== '').length > 0 ? (
+              data.strengthsAndImpact.filter((s) => s && s.trim() !== '').map((item, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs text-emerald-950 flex items-start gap-2"
+                >
+                  <span className="text-emerald-600 font-bold">•</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={item}
+                      placeholder="نقطة قوة ملحوظة بعد تنفيذ الحصة..."
+                      onChange={(e) => {
+                        const updated = [...data.strengthsAndImpact];
+                        updated[idx] = e.target.value;
+                        onChange({ ...data, strengthsAndImpact: updated });
+                      }}
+                      className="w-full p-1 border border-slate-300 rounded-md bg-white text-xs font-normal text-right"
+                    />
+                  ) : (
+                    <span className="leading-relaxed">{toArabicDigits(item)}</span>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-400 italic">
+                [يُستكمل بعد تنفيذ الحصة لتدوين مواطن القوة والأثر الملموس على تعلم الطلبة...]
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -94,11 +101,20 @@ export const Section5ReflectionCard: React.FC<Section5ReflectionCardProps> = ({ 
               <textarea
                 rows={3}
                 value={data.improvementOpportunities}
+                placeholder="الجوانب التي تحتاج تعزيزاً أو تدريباً إضافياً..."
                 onChange={(e) => onChange({ ...data, improvementOpportunities: e.target.value })}
                 className="w-full p-2 border border-slate-300 rounded-lg bg-white text-right"
               />
             ) : (
-              <p className="text-slate-700 leading-relaxed">{toArabicDigits(data.improvementOpportunities)}</p>
+              <p className="text-slate-700 leading-relaxed">
+                {data.improvementOpportunities ? (
+                  toArabicDigits(data.improvementOpportunities)
+                ) : (
+                  <span className="text-slate-400 italic text-[11px] block">
+                    [فرص التحسين والتطوير للحصص القادمة...]
+                  </span>
+                )}
+              </p>
             )}
           </div>
 
@@ -111,6 +127,7 @@ export const Section5ReflectionCard: React.FC<Section5ReflectionCardProps> = ({ 
               <textarea
                 rows={3}
                 value={data.professionalLearningCommunities}
+                placeholder="مشاركة الممارسات والخطط مع معلمي التخصص..."
                 onChange={(e) =>
                   onChange({ ...data, professionalLearningCommunities: e.target.value })
                 }
@@ -118,7 +135,13 @@ export const Section5ReflectionCard: React.FC<Section5ReflectionCardProps> = ({ 
               />
             ) : (
               <p className="text-slate-700 leading-relaxed">
-                {toArabicDigits(data.professionalLearningCommunities)}
+                {data.professionalLearningCommunities ? (
+                  toArabicDigits(data.professionalLearningCommunities)
+                ) : (
+                  <span className="text-slate-400 italic text-[11px] block">
+                    [تبادل الخبرات مع الزملاء ضمن مجتمعات التعلم المهني...]
+                  </span>
+                )}
               </p>
             )}
           </div>

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Section1AdaptivePlanning } from '../types/lessonPlan';
-import { Compass, Users, BookOpen, ShieldCheck, HelpCircle, Edit3, Check, Sparkles, Loader2 } from 'lucide-react';
+import { Compass, Users, BookOpen, ShieldCheck, HelpCircle, Edit3, Check, Sparkles, Loader2, Layers } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface Section1CardProps {
   data: Section1AdaptivePlanning;
   lessonContext: { subject: string; grade: string; lessonTitle: string };
   onChange: (data: Section1AdaptivePlanning) => void;
+  onOpenResourcesModal?: () => void;
 }
 
-export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext, onChange }) => {
+export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext, onChange, onOpenResourcesModal }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [refining, setRefining] = useState(false);
 
@@ -87,7 +88,7 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
         </div>
       </div>
 
-      <div className="p-5 space-y-6">
+      <div className="p-3.5 sm:p-5 space-y-6">
         {/* 1. الكفايات التكاملية المستهدفة */}
         <div>
           <div className="flex items-center gap-2 mb-3">
@@ -117,7 +118,13 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
                     className="w-full text-xs p-1.5 border border-slate-300 rounded-lg bg-white text-right"
                   />
                 ) : (
-                  <p className="text-xs text-slate-700 leading-relaxed">{toArabicDigits(comp.description)}</p>
+                  <p className="text-xs text-slate-700 leading-relaxed">
+                    {comp.description ? toArabicDigits(comp.description) : (
+                      <span className="text-slate-400 font-normal italic text-[11px] block">
+                        [انقر على "تعديل القسم" أو "تحسين ذكي بالـ AI" لصياغة هذه الكفاية...]
+                      </span>
+                    )}
+                  </p>
                 )}
               </div>
             ))}
@@ -131,13 +138,14 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
             <h4 className="text-sm font-bold text-slate-800">تحليل خصائص الطلبة والتخطيط التكيفي:</h4>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-blue-50/40 border border-blue-200">
               <span className="font-bold text-blue-900 block mb-1">الفروق الفردية:</span>
               {isEditing ? (
                 <textarea
                   rows={3}
                   value={data.studentCharacteristics.individualDifferences}
+                  placeholder="مراعاة الفروق الفردية وتقسيم المجموعات..."
                   onChange={(e) =>
                     onChange({
                       ...data,
@@ -151,7 +159,13 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
                 />
               ) : (
                 <p className="text-slate-700 leading-relaxed">
-                  {toArabicDigits(data.studentCharacteristics.individualDifferences)}
+                  {data.studentCharacteristics.individualDifferences ? (
+                    toArabicDigits(data.studentCharacteristics.individualDifferences)
+                  ) : (
+                    <span className="text-slate-400 font-normal italic text-[11px] block">
+                      [بيان التمايز ومراعاة الفروق الفردية...]
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -162,6 +176,7 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
                 <textarea
                   rows={3}
                   value={data.studentCharacteristics.specialNeeds}
+                  placeholder="تكييف الأنشطة لذوي الاحتياجات والصعوبات..."
                   onChange={(e) =>
                     onChange({
                       ...data,
@@ -175,17 +190,24 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
                 />
               ) : (
                 <p className="text-slate-700 leading-relaxed">
-                  {toArabicDigits(data.studentCharacteristics.specialNeeds)}
+                  {data.studentCharacteristics.specialNeeds ? (
+                    toArabicDigits(data.studentCharacteristics.specialNeeds)
+                  ) : (
+                    <span className="text-slate-400 font-normal italic text-[11px] block">
+                      [تكييفات ذوي الاحتياجات وصعوبات التعلم...]
+                    </span>
+                  )}
                 </p>
               )}
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-50/40 border border-amber-200">
+            <div className="p-3 rounded-xl bg-amber-50/40 border border-amber-200 sm:col-span-2 lg:col-span-1">
               <span className="font-bold text-amber-900 block mb-1">التكييف البيئي والمحسوسات:</span>
               {isEditing ? (
                 <textarea
                   rows={3}
                   value={data.studentCharacteristics.environmentalAdaptation}
+                  placeholder="تجهيز البيئة الصفية والمحسوسات والوسائط..."
                   onChange={(e) =>
                     onChange({
                       ...data,
@@ -199,7 +221,13 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
                 />
               ) : (
                 <p className="text-slate-700 leading-relaxed">
-                  {toArabicDigits(data.studentCharacteristics.environmentalAdaptation)}
+                  {data.studentCharacteristics.environmentalAdaptation ? (
+                    toArabicDigits(data.studentCharacteristics.environmentalAdaptation)
+                  ) : (
+                    <span className="text-slate-400 font-normal italic text-[11px] block">
+                      [المحسوسات والتكييف المكاني والبيئي...]
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -208,12 +236,25 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
 
         {/* 3. مصادر التعلم المفتوحة OER والجاهزية الرقمية */}
         <div className="border-t border-slate-100 pt-5">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4 text-emerald-600" />
-            <h4 className="text-sm font-bold text-slate-800">مصادر التعلم المفتوحة (OER) والجاهزية الرقمية:</h4>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-emerald-600" />
+              <h4 className="text-sm font-bold text-slate-800">مصادر التعلم المفتوحة (OER) والجاهزية الرقمية:</h4>
+            </div>
+            {onOpenResourcesModal && (
+              <button
+                type="button"
+                onClick={onOpenResourcesModal}
+                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
+                title="تصفح بنك المصادر ورفع مراجع إضافية"
+              >
+                <Layers className="w-3.5 h-3.5 text-emerald-700" />
+                <span>تصفح بنك المصادر والمناهج</span>
+              </button>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
               <span className="font-bold text-slate-800 block mb-1">الكتاب المدرسي المعتمد:</span>
               {isEditing ? (

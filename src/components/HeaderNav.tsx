@@ -1,7 +1,34 @@
-import React, { useRef } from 'react';
-import { Sparkles, Printer, Calculator, BookOpen, Download, Upload, RotateCcw, CheckCircle, Layers, FileDown } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import {
+  Sparkles,
+  Printer,
+  Calculator,
+  BookOpen,
+  Download,
+  Upload,
+  RotateCcw,
+  CheckCircle,
+  Layers,
+  FileDown,
+  LayoutDashboard,
+  FileText,
+  TrendingUp,
+  FileEdit,
+  Menu,
+  X,
+  ChevronDown,
+  ShieldCheck,
+  Smartphone,
+  Monitor,
+  Tablet,
+  Trash2,
+  FolderKanban,
+  FolderTree,
+  FileCheck2,
+} from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { WhatsAppHeaderButton, WhatsAppIcon } from './WhatsAppContactButton';
 
 interface HeaderNavProps {
   plans: LessonPlan[];
@@ -9,6 +36,7 @@ interface HeaderNavProps {
   onSelectPlan: (id: string) => void;
   onOpenAiGenerator: () => void;
   onOpenAbacusModal: () => void;
+  onOpenWorksheetModal?: () => void;
   onOpenPrintView: () => void;
   onOpenResourcesModal: () => void;
   resourcesCount: number;
@@ -16,6 +44,15 @@ interface HeaderNavProps {
   onImportPlan: (plan: LessonPlan) => void;
   currentPlan: LessonPlan;
   onOpenExportModal: () => void;
+  onOpenBlankTemplateModal?: () => void;
+  onNewBlankPlan?: () => void;
+  onSelectBlankPlan?: () => void;
+  onDeletePlan?: (planId: string) => void;
+  onOpenPlansViewer?: () => void;
+  onRequestDeletePlan?: () => void;
+  isCurrentPlanBlank?: boolean;
+  currentView?: 'editor' | 'dashboard';
+  onChangeView?: (view: 'editor' | 'dashboard') => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -24,6 +61,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onSelectPlan,
   onOpenAiGenerator,
   onOpenAbacusModal,
+  onOpenWorksheetModal,
   onOpenPrintView,
   onOpenResourcesModal,
   resourcesCount,
@@ -31,8 +69,18 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onImportPlan,
   currentPlan,
   onOpenExportModal,
+  onOpenBlankTemplateModal,
+  onNewBlankPlan,
+  onSelectBlankPlan,
+  onDeletePlan,
+  onOpenPlansViewer,
+  onRequestDeletePlan,
+  isCurrentPlanBlank,
+  currentView = 'editor',
+  onChangeView,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(currentPlan, null, 2));
@@ -42,6 +90,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+    setIsMobileMenuOpen(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,154 +112,528 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setIsMobileMenuOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs no-print">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2">
-          {/* Logo & Platform Name */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-emerald-800 to-teal-700 flex items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20">
-              <BookOpen className="w-5 h-5 text-emerald-200" />
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print transition-all">
+      {/* 1. Top Identity & Title Header Bar */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
+          
+          {/* Logo, Title & Ministry Context (Home Link) */}
+          <div
+            onClick={onSelectBlankPlan || onNewBlankPlan}
+            className="flex items-center gap-3 shrink-0 cursor-pointer group select-none"
+            title="الصفحة الرئيسية للمنظومة: استمارة التحضير المفرغة المعتمدة"
+          >
+            <div className="relative group">
+              <img
+                src="/logo.png"
+                alt="شعار منظومة عبقور"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover shadow-md ring-2 ring-emerald-500/40 border-2 border-amber-300 transition-transform group-hover:scale-105 shrink-0"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  if (target.nextElementSibling) {
+                    (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                  }
+                }}
+              />
+              <div
+                style={{ display: 'none' }}
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-linear-to-tr from-emerald-800 to-teal-700 items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 shrink-0"
+              >
+                <BookOpen className="w-5 h-5 text-emerald-200" />
+              </div>
             </div>
+            
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-bold font-['Tajawal'] text-slate-900 leading-tight">
-                  منظومة خبير التخطيط التربوي
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-base md:text-lg font-black font-['Tajawal'] text-slate-900 leading-tight flex items-center gap-1.5">
+                  <span className="text-emerald-800 group-hover:text-emerald-700 transition-colors">منظومة عبقور</span>
+                  <span className="hidden sm:inline text-slate-800">للتخطيط التربوي وتحضير الدروس</span>
                 </h1>
-                <span className="hidden md:inline text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full border border-emerald-300">
-                  النموذج الوزاري المعتمد
+                <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                  عبقور التربوي 👑
+                </span>
+                <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full border border-emerald-300">
+                  <span>المعايير الوزارية</span>
+                </span>
+                <span className="hidden xl:inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-300" title="رخصة المشاع الإبداعي CC BY-NC-SA 4.0">
+                  <span>CC BY-NC-SA 4.0</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block">
-                إعداد وتحضير الخطط النموذجية المتكاملة وفق معايير التميز (الدرجة 4)
+              <p className="text-[10px] sm:text-[11px] text-slate-600 hidden sm:block truncate max-w-md lg:max-w-none mt-0.5">
+                إعداد وتصميم: <strong className="text-emerald-800 font-bold">الأستاذ عبد الرحمن دويكات</strong> | نظام التخطيط الصفي والتكافل المهني
               </p>
             </div>
           </div>
 
-          {/* Right Action buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Quick Plan Switcher */}
-            <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 px-2">الخطة:</span>
-              <select
-                value={activePlanId}
-                onChange={(e) => onSelectPlan(e.target.value)}
-                className="text-xs bg-white font-semibold text-slate-800 rounded-lg px-2.5 py-1 border border-slate-300 focus:outline-hidden"
-              >
-                {plans.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.header.subject} - {p.header.grade}: {p.header.lessonTitle}
-                  </option>
-                ))}
-              </select>
+          {/* Left Side: Active Plan Indicator, WhatsApp Contact & Mobile Menu Toggle */}
+          <div className="flex items-center gap-2">
+            {/* Direct WhatsApp Contact Button (Desktop / Tablet) */}
+            <div className="hidden sm:block">
+              <WhatsAppHeaderButton />
             </div>
 
-            {/* Interactive Abacus Button */}
-            <button
-              onClick={onOpenAbacusModal}
-              title="المعداد الرقمي التفاعلي ولوحة المنازل"
-              className="px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-            >
-              <Calculator className="w-4 h-4 text-emerald-600" />
-              <span className="hidden sm:inline">المعداد التفاعلي</span>
-            </button>
-
-            {/* Resources Manager CTA */}
-            <button
-              onClick={onOpenResourcesModal}
-              title="إدارة ورفع المصادر والمراجع التعليمية"
-              className="px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-            >
-              <Layers className="w-4 h-4 text-emerald-700" />
-              <span className="hidden md:inline">المصادر والمراجع</span>
-              <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold">
-                {toArabicDigits(resourcesCount)}
+            {/* Active Plan Quick Badge (Desktop / Tablet) */}
+            <div className="hidden lg:flex items-center gap-2 bg-slate-100/90 hover:bg-slate-200/80 px-3 py-1.5 rounded-xl border border-slate-200 text-xs transition-colors">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+              <span className="font-bold text-slate-700">الدرس الحالي:</span>
+              <span className="font-extrabold text-slate-900 truncate max-w-[180px] xl:max-w-[240px]">
+                {currentPlan.header?.lessonTitle || currentPlan.title || 'استمارة تحضير مفرغة'}
               </span>
-            </button>
-
-            {/* AI Plan Generator CTA */}
-            <button
-              onClick={onOpenAiGenerator}
-              className="px-3 sm:px-3.5 py-1.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-300" />
-              <span>توليد خطة جديدة بالذكاء الاصطناعي</span>
-            </button>
-
-            {/* Export Hub Button (Word, PDF, HTML) */}
-            <button
-              onClick={onOpenExportModal}
-              title="تصدير الخطة بصيغ Word و PDF و HTML"
-              className="px-2.5 sm:px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-            >
-              <FileDown className="w-4 h-4 text-blue-700" />
-              <span className="hidden sm:inline">تصدير</span>
-              <span className="text-[10px] bg-blue-700 text-white px-1.5 py-0.2 rounded-md font-bold">
-                Word • PDF • HTML
+              <span className="text-[10px] bg-white px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600 font-bold">
+                {currentPlan.header?.grade || 'الصف'}
               </span>
-            </button>
+            </div>
 
-            {/* Official Print View */}
-            <button
-              onClick={onOpenPrintView}
-              className="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-            >
-              <Printer className="w-4 h-4 text-slate-200" />
-              <span className="hidden sm:inline">الطباعة الرسمية (PDF)</span>
-            </button>
+            {/* Mobile WhatsApp Quick Icon */}
+            <div className="sm:hidden">
+              <WhatsAppHeaderButton compact />
+            </div>
 
-            {/* Export / Import drop or action */}
+            {/* Mobile Menu Hamburger Button */}
             <button
-              onClick={handleExportJson}
-              title="تصدير الخطة كملف JSON"
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors md:hidden"
+              aria-label="قائمة الخيارات والأدوات"
             >
-              <Download className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              title="استيراد خطة من ملف JSON"
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              <Upload className="w-4 h-4" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".json"
-              className="hidden"
-            />
-
-            <button
-              onClick={onResetToDefault}
-              title="استعادة نموذج درس القيمة المنزلية الأصلي المرفق"
-              className="p-2 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
+              {isMobileMenuOpen ? <X className="w-5 h-5 text-rose-600" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Plan selector bar */}
-        <div className="lg:hidden pb-2 pt-1 border-t border-slate-100 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-slate-500">اختر الخطة:</span>
-          <select
-            value={activePlanId}
-            onChange={(e) => onSelectPlan(e.target.value)}
-            className="text-xs bg-slate-50 font-semibold text-slate-800 rounded-lg px-2 py-1 border border-slate-300 w-full"
-          >
-            {plans.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.header.subject} - {p.header.grade}: {p.header.lessonTitle}
-              </option>
-            ))}
-          </select>
+      {/* 2. Dedicated Main Toolbar Below Title (شريط الأدوات المنظّم أسفل العنوان) */}
+      <div className="bg-slate-50/95 border-t border-slate-200/90 py-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 py-1">
+            
+            {/* Group 1: Navigation & Workspace Modes (أنماط العمل والتنقل) */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {onChangeView && (
+                <div className="flex flex-wrap items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
+                  {/* Plan Editor Button */}
+                  <button
+                    onClick={() => onChangeView('editor')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'editor' && !isCurrentPlanBlank
+                        ? 'bg-emerald-700 text-white shadow-xs ring-1 ring-emerald-800/20'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                    title="الانتقال إلى محرر الخطة للتعديل والكتابة"
+                  >
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <span>محرر الخطة</span>
+                  </button>
+
+                  {/* Productivity Dashboard Button */}
+                  <button
+                    onClick={() => onChangeView('dashboard')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'dashboard'
+                        ? 'bg-emerald-700 text-white shadow-xs ring-1 ring-emerald-800/20'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                    title="لوحة الإنتاجية المفهرسة حسب المادة واسم المعلم"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
+                    <span>لوحة الإنتاجية</span>
+                    <span className="px-1.5 py-0.2 bg-emerald-800/80 text-white rounded-full text-[10px] font-extrabold tabular-nums">
+                      {toArabicDigits(plans.length)}
+                    </span>
+                  </button>
+
+                  {/* Blank Official Template Tab Button (Home Page) */}
+                  <button
+                    onClick={onSelectBlankPlan || onNewBlankPlan}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'editor' && isCurrentPlanBlank
+                        ? 'bg-amber-500 text-white shadow-xs ring-1 ring-amber-600/30'
+                        : 'text-amber-800 hover:bg-amber-50'
+                    }`}
+                    title="استمارة التحضير المفرغة المعتمدة (الصفحة الرئيسية للمنظومة)"
+                  >
+                    <FileEdit className="w-3.5 h-3.5 shrink-0" />
+                    <span>الاستمارة المفرغة (📌)</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Group 2: Plans Catalog & Delete on Errors (سجل الخطط وحذف الأخطاء) */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {/* View Plans Modal Trigger Button */}
+              <button
+                onClick={onOpenPlansViewer}
+                title="عرض واستعراض كافة خطط الدروس المحفوظة في المنظومة والتبديل المباشر بينها"
+                className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300/80 hover:border-emerald-400 rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <FolderKanban className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>عرض الخطط</span>
+                <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold tabular-nums">
+                  {toArabicDigits(plans.length)}
+                </span>
+              </button>
+
+              {/* Delete Current Plan when Errors Exist Button */}
+              <button
+                onClick={() => {
+                  if (onRequestDeletePlan) {
+                    onRequestDeletePlan();
+                  } else if (onDeletePlan) {
+                    onDeletePlan(activePlanId);
+                  }
+                }}
+                title="حذف الخطة المعروضة الحالية عند وجود أخطاء في التحضير أو الرغبة بالتراجع"
+                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300/80 hover:border-rose-400 rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600 group-hover:text-rose-700 shrink-0 transition-colors" />
+                <span>حذف الخطة</span>
+              </button>
+            </div>
+
+            {/* Group 3: Smart Teacher Tools (الأدوات التربوية الذكية) */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {/* AI Plan Generator CTA */}
+              <button
+                onClick={onOpenAiGenerator}
+                className="px-2.5 py-1.5 bg-linear-to-r from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="توليد خطة درس نموذجية بالذكاء الاصطناعي وفق معايير التميز الوزارية"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                <span>تحضير بالـ AI</span>
+              </button>
+
+              {/* Interactive Worksheet CTA */}
+              {onOpenWorksheetModal && (
+                <button
+                  onClick={onOpenWorksheetModal}
+                  title="توليد ورقة عمل تفاعلية ذكية متوافقة مع الدرس بالذكاء الاصطناعي"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 to-emerald-800 hover:from-teal-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                >
+                  <FileCheck2 className="w-3.5 h-3.5 text-teal-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>ورقة عمل AI</span>
+                </button>
+              )}
+
+              {/* Interactive Tool / Simulator */}
+              <button
+                onClick={onOpenAbacusModal}
+                title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس المحضر"
+                className="px-2.5 py-1.5 bg-white hover:bg-emerald-50/80 text-emerald-900 border border-emerald-300/80 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>المحاكي التفاعلي</span>
+              </button>
+
+              {/* Resources Manager CTA */}
+              <button
+                onClick={onOpenResourcesModal}
+                title="إدارة ورفع المصادر والمناهج والمراجع التعليمية"
+                className="px-2.5 py-1.5 bg-white hover:bg-emerald-50/80 text-emerald-900 border border-emerald-300/80 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <Layers className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>المصادر</span>
+                <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold tabular-nums">
+                  {toArabicDigits(resourcesCount)}
+                </span>
+              </button>
+
+              {/* Blank Form Modal CTA */}
+              {onOpenBlankTemplateModal && (
+                <button
+                  onClick={onOpenBlankTemplateModal}
+                  title="استمارة تحضير مفرغة رسمية للطباعة أو البدء الفوري"
+                  className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <FileEdit className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>استمارة مفرغة</span>
+                </button>
+              )}
+            </div>
+
+            {/* Group 4: Output, Export & Print Hub (المخرجات والطباعة الرسمية) */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {/* Export Hub Button */}
+              <button
+                onClick={onOpenExportModal}
+                title="تصدير الخطة بصيغ Word و PDF و HTML و JSON"
+                className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300/80 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <FileDown className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                <span>تصدير</span>
+              </button>
+
+              {/* Official Print View */}
+              <button
+                onClick={onOpenPrintView}
+                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                title="معاينة وطباعة استمارة الدرس الرسمية A4"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-200 shrink-0" />
+                <span>الطباعة الرسمية</span>
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
+
+        {/* Mobile Plan selector bar & view switch (Below main bar) */}
+        <div className="md:hidden pb-2.5 pt-1 border-t border-slate-100 flex flex-col gap-2">
+          {onChangeView && (
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => {
+                  if (onSelectBlankPlan) onSelectBlankPlan();
+                  else if (onNewBlankPlan) onNewBlankPlan();
+                  if (onChangeView) onChangeView('editor');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                  currentView === 'editor' && isCurrentPlanBlank
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-amber-800'
+                }`}
+              >
+                <FileEdit className="w-3.5 h-3.5" />
+                <span>المفرغة 📌</span>
+              </button>
+              <button
+                onClick={() => onChangeView('editor')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  currentView === 'editor' && !isCurrentPlanBlank
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>المحرر</span>
+              </button>
+              <button
+                onClick={() => onChangeView('dashboard')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  currentView === 'dashboard'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600'
+                }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
+                <span>الإنتاجية ({toArabicDigits(plans.length)})</span>
+              </button>
+              <button
+                onClick={onOpenResourcesModal}
+                className="flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 text-slate-700 hover:text-emerald-900 transition-all"
+                title="المصادر التعليمية"
+              >
+                <Layers className="w-3.5 h-3.5 text-emerald-700" />
+                <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+              </button>
+            </div>
+          )}
+
+          {currentView === 'editor' && (
+            <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-600 shrink-0">الخطة:</span>
+                <select
+                  value={activePlanId}
+                  onChange={(e) => onSelectPlan(e.target.value)}
+                  className="text-xs bg-white font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 w-full focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                >
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.header.lessonTitle
+                        ? `${p.header.subject || 'مبحث'} - ${p.header.grade || 'الصف'}: ${p.header.lessonTitle}`
+                        : p.title || 'استمارة تحضير مفرغة'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Mobile View Plans & Delete Plan Button Row */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={onOpenPlansViewer}
+                  className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                  title="عرض كافة الخطط المحفوظة"
+                >
+                  <FolderKanban className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>عرض الخطط ({toArabicDigits(plans.length)})</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (onRequestDeletePlan) {
+                      onRequestDeletePlan();
+                    } else if (onDeletePlan) {
+                      onDeletePlan(activePlanId);
+                    }
+                  }}
+                  className="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                  title="حذف الخطة المعروضة عند وجود أخطاء"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>حذف الخطة (أخطاء)</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Dropdown Drawer when open */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-3 border-t border-slate-200 bg-white space-y-2 animate-in slide-in-from-top-2 duration-150">
+            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+              {/* WhatsApp Quick Direct Link */}
+              <a
+                href="https://wa.me/972569560022?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D9%88%D8%B1%D8%AD%D9%85%D8%A9%20%D8%A7%D9%84%D9%84%D9%87%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%88%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%B9%D8%A8%D9%82%D9%88%D8%B1%20%D9%84%D9%84%D8%AA%D8%AE%D8%B7%D9%8A%D8%B7%20%D8%A7%D9%84%D8%AA%D8%B1%D8%A8%D9%88%D9%8A."
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs font-bold"
+              >
+                <WhatsAppIcon className="w-4 h-4 text-white" />
+                <span>اتصل بنا عبر الواتساب</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  if (onOpenPlansViewer) onOpenPlansViewer();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="p-2.5 bg-emerald-700 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs"
+              >
+                <FolderKanban className="w-4 h-4 text-emerald-200" />
+                <span>عرض كافة الخطط المحفوظة ({toArabicDigits(plans.length)})</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onOpenPrintView();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="p-2.5 bg-slate-800 text-white rounded-xl flex items-center justify-center gap-2"
+              >
+                <Printer className="w-4 h-4 text-slate-300" />
+                <span>الطباعة الرسمية (PDF)</span>
+              </button>
+
+              {onOpenWorksheetModal && (
+                <button
+                  onClick={() => {
+                    onOpenWorksheetModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-teal-700 text-white rounded-xl flex items-center justify-center gap-2"
+                >
+                  <FileCheck2 className="w-4 h-4 text-teal-200" />
+                  <span>أوراق عمل تفاعلية (AI)</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  onOpenAbacusModal();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span>الأداة التفاعلية المتوافقة</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onOpenResourcesModal();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl flex items-center justify-center gap-2"
+              >
+                <Layers className="w-4 h-4 text-emerald-700" />
+                <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+              </button>
+
+              {onOpenBlankTemplateModal && (
+                <button
+                  onClick={() => {
+                    onOpenBlankTemplateModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <FileEdit className="w-4 h-4 text-amber-700" />
+                  <span>استمارة مفرغة</span>
+                </button>
+              )}
+            </div>
+
+            {/* Additional Actions row */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 px-1">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportJson}
+                  className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1 font-semibold"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                  <span>حفظ JSON</span>
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1 font-semibold"
+                >
+                  <Upload className="w-3.5 h-3.5 text-slate-600" />
+                  <span>استيراد JSON</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (onRequestDeletePlan) {
+                      onRequestDeletePlan();
+                    } else if (onDeletePlan) {
+                      onDeletePlan(activePlanId);
+                    }
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="px-2.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg flex items-center gap-1 font-bold"
+                  title="حذف الخطة الحالية لوجود أخطاء"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>حذف الخطة (أخطاء)</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  onResetToDefault();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="px-2.5 py-1.5 text-rose-700 hover:bg-rose-50 rounded-lg flex items-center gap-1 font-bold"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>استعادة الأصلي</span>
+              </button>
+            </div>
+
+            {/* Creator Credit & License in Mobile Menu */}
+            <div className="p-2 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11px] text-slate-700 text-center space-y-0.5">
+              <p className="font-bold text-emerald-950">
+                إعداد وتصميم: الأستاذ عبد الرحمن دويكات
+              </p>
+              <p className="text-slate-500 text-[10px]">
+                الحقوق محفوظة برخصة المشاع الإبداعي (CC BY-NC-SA 4.0)
+              </p>
+            </div>
+          </div>
+        )}
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+      />
     </header>
   );
 };

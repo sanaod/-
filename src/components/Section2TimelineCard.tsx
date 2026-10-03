@@ -17,6 +17,8 @@ import {
   Cpu,
   Target,
   Wand2,
+  ShieldCheck,
+  FileCheck2,
 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
@@ -25,6 +27,7 @@ interface Section2TimelineCardProps {
   totalMinutes: number;
   onOpenAbacusModal: () => void;
   onOpenExitTicketModal: () => void;
+  onOpenWorksheetModal?: () => void;
   onChange: (timeline: LessonPhase[]) => void;
   plan?: LessonPlan;
 }
@@ -34,6 +37,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
   totalMinutes,
   onOpenAbacusModal,
   onOpenExitTicketModal,
+  onOpenWorksheetModal,
   onChange,
   plan,
 }) => {
@@ -87,10 +91,24 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
         icon: Cpu,
         btnColor: 'bg-indigo-600/80 hover:bg-indigo-600 border-indigo-400/40',
       };
+    } else if (/إسلام|دين|قرآن|حديث|أخلاق|آداب/i.test(subject) || /آداب|صلاة|استئذان/i.test(lessonTitle)) {
+      return {
+        label: 'محاكي الآداب والمواقف الإسلامية التفاعلي',
+        shortDesc: 'محاكاة القرارات الأخلاقية والتطبيق السلوكي',
+        icon: ShieldCheck,
+        btnColor: 'bg-emerald-600/80 hover:bg-emerald-600 border-emerald-400/40',
+      };
+    } else if (/إنجليز|english|انجليز/i.test(subject)) {
+      return {
+        label: 'Interactive English Language Lab',
+        shortDesc: 'Vocabulary, phonics & speaking practice',
+        icon: BookOpen,
+        btnColor: 'bg-teal-600/80 hover:bg-teal-600 border-teal-400/40',
+      };
     }
     return {
       label: 'الوسيلة الرقمية والمحاكي التفاعلي',
-      shortDesc: 'محاكاة تفاعلية للمفاهيم',
+      shortDesc: 'محاكاة تفاعلية متطابقة مع مفاهيم الدرس المحضر',
       icon: Sparkles,
       btnColor: 'bg-emerald-600/80 hover:bg-emerald-600 border-emerald-400/40',
     };
@@ -137,6 +155,18 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Interactive Worksheet Shortcut */}
+          {onOpenWorksheetModal && (
+            <button
+              onClick={onOpenWorksheetModal}
+              className="px-3 py-1.5 bg-teal-700/90 hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-teal-400/40 shadow-2xs cursor-pointer"
+              title="توليد ورقة عمل تفاعلية ذكية للحصة بالذكاء الاصطناعي"
+            >
+              <FileCheck2 className="w-3.5 h-3.5 text-teal-200" />
+              <span>ورقة عمل تفاعلية AI</span>
+            </button>
+          )}
+
           {/* Dynamic interactive simulator shortcut */}
           <button
             onClick={onOpenAbacusModal}
@@ -246,9 +276,9 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
 
               {/* Special Contextual Tool Banner in Phase 2 */}
               {isPhase2 && (
-                <div className="p-3 bg-linear-to-r from-emerald-100/90 to-teal-50 border border-emerald-300 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs text-xs">
+                <div className="p-3 bg-linear-to-r from-emerald-100/90 to-teal-50 border border-emerald-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-emerald-700 text-white rounded-lg">
+                    <div className="p-1.5 bg-emerald-700 text-white rounded-lg shrink-0">
                       <ToolIcon className="w-4 h-4" />
                     </div>
                     <div>
@@ -260,7 +290,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                   <button
                     type="button"
                     onClick={onOpenAbacusModal}
-                    className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                    className="w-full sm:w-auto px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors shadow-2xs shrink-0"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>تشغيل الأداة التفاعلية</span>
@@ -270,9 +300,9 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
 
               {/* Special Contextual Exit Ticket Banner in Phase 4 */}
               {isPhase4 && (
-                <div className="p-3 bg-linear-to-r from-rose-100/90 to-amber-50 border border-rose-300 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs text-xs">
+                <div className="p-3 bg-linear-to-r from-rose-100/90 to-amber-50 border border-rose-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-rose-700 text-white rounded-lg">
+                    <div className="p-1.5 bg-rose-700 text-white rounded-lg shrink-0">
                       <Flag className="w-4 h-4" />
                     </div>
                     <div>
@@ -287,7 +317,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                   <button
                     type="button"
                     onClick={onOpenExitTicketModal}
-                    className="px-3 py-1 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                    className="w-full sm:w-auto px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors shadow-2xs shrink-0"
                   >
                     <Flag className="w-3.5 h-3.5" />
                     <span>معاينة وطباعة البطاقة</span>
@@ -342,12 +372,18 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                     </div>
                   ) : (
                     <ul className="space-y-1.5 text-slate-700 leading-relaxed">
-                      {phase.teacherAndStudentActions.map((act, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-blue-500 font-bold">•</span>
-                          <span>{toArabicDigits(act)}</span>
-                        </li>
-                      ))}
+                      {phase.teacherAndStudentActions.filter((a) => a && a.trim() !== '').length > 0 ? (
+                        phase.teacherAndStudentActions.filter((a) => a && a.trim() !== '').map((act, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-blue-500 font-bold">•</span>
+                            <span>{toArabicDigits(act)}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 italic text-[11px] block">
+                          [انقر على "تعديل الجدول الزمني" أو استخدم التوليد بالذكاء الاصطناعي لكتابة إجراءات هذه المرحلة...]
+                        </span>
+                      )}
                     </ul>
                   )}
                 </div>
@@ -365,6 +401,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                           <input
                             type="text"
                             value={strat}
+                            placeholder="الاستراتيجية أو مصدر التعلم..."
                             onChange={(e) => {
                               const updated = [...timeline];
                               updated[idx].strategiesAndResources[i] = e.target.value;
@@ -387,7 +424,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                       <button
                         onClick={() => {
                           const updated = [...timeline];
-                          updated[idx].strategiesAndResources.push('استراتيجية جديدة...');
+                          updated[idx].strategiesAndResources.push('');
                           onChange(updated);
                         }}
                         className="text-[11px] text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
@@ -397,12 +434,18 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                     </div>
                   ) : (
                     <ul className="space-y-1.5 text-slate-700 leading-relaxed">
-                      {phase.strategiesAndResources.map((strat, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-emerald-500 font-bold">•</span>
-                          <span>{toArabicDigits(strat)}</span>
-                        </li>
-                      ))}
+                      {phase.strategiesAndResources.filter((s) => s && s.trim() !== '').length > 0 ? (
+                        phase.strategiesAndResources.filter((s) => s && s.trim() !== '').map((strat, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-emerald-500 font-bold">•</span>
+                            <span>{toArabicDigits(strat)}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 italic text-[11px] block">
+                          [طرق التدريس، الوسائل، الاستراتيجيات والمصادر...]
+                        </span>
+                      )}
                     </ul>
                   )}
                 </div>
@@ -420,6 +463,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                           <input
                             type="text"
                             value={evalItem}
+                            placeholder="أداة التقويم أو التغذية الراجعة..."
                             onChange={(e) => {
                               const updated = [...timeline];
                               updated[idx].assessmentAndFeedback[i] = e.target.value;
@@ -442,7 +486,7 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                       <button
                         onClick={() => {
                           const updated = [...timeline];
-                          updated[idx].assessmentAndFeedback.push('أداة تقويم جديدة...');
+                          updated[idx].assessmentAndFeedback.push('');
                           onChange(updated);
                         }}
                         className="text-[11px] text-purple-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
@@ -452,12 +496,18 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
                     </div>
                   ) : (
                     <ul className="space-y-1.5 text-slate-700 leading-relaxed">
-                      {phase.assessmentAndFeedback.map((evalItem, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-purple-500 font-bold">•</span>
-                          <span>{toArabicDigits(evalItem)}</span>
-                        </li>
-                      ))}
+                      {phase.assessmentAndFeedback.filter((a) => a && a.trim() !== '').length > 0 ? (
+                        phase.assessmentAndFeedback.filter((a) => a && a.trim() !== '').map((fb, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-purple-500 font-bold">•</span>
+                            <span>{toArabicDigits(fb)}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 italic text-[11px] block">
+                          [التقويم التكويني والتشخيصي والتغذية الراجعة الفورية...]
+                        </span>
+                      )}
                     </ul>
                   )}
                 </div>

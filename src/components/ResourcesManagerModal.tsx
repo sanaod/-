@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X,
   BookOpen,
@@ -9,16 +9,21 @@ import {
   Plus,
   Trash2,
   Upload,
-  ExternalLink,
   CheckCircle2,
   FileCheck,
   StickyNote,
   Image as ImageIcon,
   Layers,
-  ArrowRight,
   Info,
   Wand2,
-  GraduationCap,
+  Video,
+  Music,
+  Presentation,
+  FileSpreadsheet,
+  FileCheck2,
+  Paperclip,
+  Check,
+  Compass,
 } from 'lucide-react';
 import { EducationalResource, ResourceType } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -31,6 +36,8 @@ interface ResourcesManagerModalProps {
   onAddResource: (resource: EducationalResource) => void;
   onDeleteResource: (id: string) => void;
   onGenerateWithResources: (selectedResource?: EducationalResource) => void;
+  onApplyToCurrentPlan?: (resource: EducationalResource) => void;
+  currentPlanTitle?: string;
 }
 
 export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
@@ -40,6 +47,8 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
   onAddResource,
   onDeleteResource,
   onGenerateWithResources,
+  onApplyToCurrentPlan,
+  currentPlanTitle,
 }) => {
   const [activeType, setActiveType] = useState<ResourceType>('textbook');
   const [title, setTitle] = useState('');
@@ -49,77 +58,180 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
   const [inferredMeta, setInferredMeta] = useState<InferredResourceMeta | null>(null);
   const [autoUpdatedNotice, setAutoUpdatedNotice] = useState<string | null>(null);
   const [isSuccessFeedback, setIsSuccessFeedback] = useState(false);
+  const [attachedFileName, setAttachedFileName] = useState<string>('');
+  const [attachedFileSize, setAttachedFileSize] = useState<string>('');
+  const [attachedFileExt, setAttachedFileExt] = useState<string>('');
+  const [attachedFileDataUrl, setAttachedFileDataUrl] = useState<string>('');
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [appliedResourceId, setAppliedResourceId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Automatically update titles whenever meaningful content is entered or pasted
-  const applyAutoInference = (rawText: string, fileName?: string) => {
-    if (!rawText || rawText.trim().length < 8) return;
-    const meta = analyzeContentLocally(rawText, fileName);
+  // Automatically update titles whenever a source is attached or content entered
+  const applyAutoInference = (
+    rawText: string,
+    fileName?: string,
+    fileExt?: string,
+    fileSizeStr?: string,
+    dataUrl?: string
+  ) => {
+    const meta = analyzeContentLocally(rawText, fileName, fileExt);
     setInferredMeta(meta);
 
-    // Auto-update title if empty or default
+    // Auto-update title to match the attached source
     setTitle(meta.title);
-    if (meta.sourceInfo && !sourceInfo) {
+
+    // Auto-update active type if detected
+    if (meta.inferredType) {
+      setActiveType(meta.inferredType);
+    }
+
+    // Auto-update sourceInfo if empty or if new file
+    if (fileName && fileSizeStr) {
+      setSourceInfo(`ملف مرفق: ${fileName} (${fileSizeStr})`);
+    } else if (meta.sourceInfo && !sourceInfo) {
       setSourceInfo(meta.sourceInfo);
     }
+
+    // Auto-update tags
     if (meta.tags.length > 0) {
       setTagInput(meta.tags.join('، '));
     }
 
-    setAutoUpdatedNotice(`تم تغيير العنوان تلقائياً: «${meta.title}» (${meta.subject} - ${meta.grade})`);
-    setTimeout(() => setAutoUpdatedNotice(null), 3500);
+    if (fileName) {
+      setAttachedFileName(fileName);
+      setAttachedFileExt(fileExt || (fileName.includes('.') ? fileName.split('.').pop() || '' : ''));
+    }
+    if (fileSizeStr) {
+      setAttachedFileSize(fileSizeStr);
+    }
+    if (dataUrl) {
+      setAttachedFileDataUrl(dataUrl);
+    }
+
+    setAutoUpdatedNotice(`تم تغيير العنوان والنوع تلقائياً ليتوافق مع المصدر: «${meta.title}» (${meta.subject} - ${meta.grade})`);
+    setTimeout(() => setAutoUpdatedNotice(null), 4500);
   };
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
-    // Auto-infer if substantial text is pasted
-    if (newContent.length > 25 && (!title || title.startsWith('كتاب') || title.length < 5)) {
-      applyAutoInference(newContent);
+    // Auto-infer if substantial text is pasted or if it's a URL
+    if (newContent.trim().startsWith('http://') || newContent.trim().startsWith('https://')) {
+      setActiveType('link');
+      applyAutoInference(newContent, 'رابط إلكتروني');
+    } else if (newContent.length > 15) {
+      applyAutoInference(newContent, attachedFileName || undefined, attachedFileExt || undefined);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const processFile = (file: File) => {
     if (!file) return;
 
     const fileName = file.name;
-    const fileSizeKb = Math.round(file.size / 1024);
-    const cleanFileName = fileName.replace(/\.[^/.]+$/, '');
+    const fileExt = fileName.includes('.') ? fileName.split('.').pop()?.toLowerCase() || '' : '';
+    const sizeInKb = file.size / 1024;
+    const fileSizeFormatted =
+      sizeInKb > 1024
+        ? `${toArabicDigits((sizeInKb / 1024).toFixed(1))} ميغابايت`
+        : `${toArabicDigits(Math.round(sizeInKb))} ك.ب`;
 
-    setSourceInfo(`ملف مرفق: ${fileName} (${toArabicDigits(fileSizeKb)} كيلوبايت)`);
+    const cleanName = fileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
-    // If text file, read text and auto-infer
-    if (file.type.includes('text') || fileName.endsWith('.txt') || fileName.endsWith('.md') || fileName.endsWith('.json')) {
+    // Read based on file category (supports ALL types!)
+    if (
+      file.type.includes('text') ||
+      file.type.includes('json') ||
+      ['txt', 'md', 'json', 'csv', 'xml', 'html', 'rtf'].includes(fileExt)
+    ) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const textResult = (event.target?.result as string) || '';
         setContent(textResult);
-        applyAutoInference(textResult, cleanFileName);
+        applyAutoInference(textResult, fileName, fileExt, fileSizeFormatted);
       };
       reader.readAsText(file);
+    } else if (file.type.startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'bmp'].includes(fileExt)) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = (event.target?.result as string) || '';
+        const imageContent = `[وسيلة بصرية / صورة مرفقة: ${fileName}] - توظف في استثارة تفكير الطلبة والمحاكاة البصرية لموضوع الدرس وتثبيت المفاهيم.`;
+        setContent(imageContent);
+        applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted, dataUrl);
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'ogg', 'aac'].includes(fileExt)) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = (event.target?.result as string) || '';
+        const audioContent = `[تسجيل صوتي مرفق: ${fileName}] - يوظف في مهارات الاستماع والإنصات وتنمية الذكاء اللغوي والتذوق الصوتي للدرس.`;
+        setContent(audioContent);
+        applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted, dataUrl);
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/') || ['mp4', 'webm', 'mov', 'avi'].includes(fileExt)) {
+      const videoContent = `[مقطع فيديو تعليمي مرفق: ${fileName}] - يعرض في مرحلة التهيئة أو العرض التفاعلي لربط المفهوم بالواقع الحياتي.`;
+      setContent(videoContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
+    } else if (['ppt', 'pptx'].includes(fileExt)) {
+      const pptContent = `[عرض تقديمي PowerPoint مرفق: ${fileName}] - شرائح منظمة تتضمن أنشطة تمهيدية، تدريبات جماعية، ومخططات إيضاحية لسير الحصة.`;
+      setContent(pptContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
+    } else if (['xls', 'xlsx'].includes(fileExt)) {
+      const xlsContent = `[جدول بيانات Excel مرفق: ${fileName}] - يتضمن قوائم المعايير والدرجات وجداول قياس مؤشرات أداء الطلبة في الحصة.`;
+      setContent(xlsContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
+    } else if (fileExt === 'pdf') {
+      const pdfContent = `[وثيقة PDF مرفقة: ${fileName}] - كتاب مقرّر أو أوراق عمل مرجعية تتضمن نصوص الدرس والتمارين المعتمدة.`;
+      setContent(pdfContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
+    } else if (['doc', 'docx'].includes(fileExt)) {
+      const docContent = `[مستند Word مرفق: ${fileName}] - خطة دراسية أو ورقة عمل إثرائية وتدريبات تقويمية معتمدة.`;
+      setContent(docContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
     } else {
-      const defaultContent = `[مستند مرفق: ${fileName}] - يرجى كتابة أو لصق ملخص محتوى الدرس والأهداف المراد إعداد الخطة على أساسها.`;
-      setContent(defaultContent);
-      applyAutoInference(cleanFileName, cleanFileName);
+      // General fallback for ANY other format (zip, rar, epub, etc.)
+      const otherContent = `[ملف تعليمي مرفق: ${fileName}] - صيغة (${fileExt.toUpperCase() || 'ملف'}). يدعم التخطيط التكاملي ومصادر التعلم.`;
+      setContent(otherContent);
+      applyAutoInference(cleanName, fileName, fileExt, fileSizeFormatted);
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDraggingOver(false);
+  };
+
   const handleManualAutoDetect = () => {
-    if (!content.trim()) {
-      alert('يرجى كتابة أو لصق نص المصدر أولاً ليتمكن النظام من استخراج العناوين تلقائياً.');
+    if (!content.trim() && !title.trim() && !attachedFileName) {
+      alert('يرجى كتابة نص، أو إدخال رابط، أو رفع ملف ليتمكن النظام من ملاءمة العناوين تلقائياً.');
       return;
     }
-    applyAutoInference(content);
+    applyAutoInference(content || title, attachedFileName || undefined, attachedFileExt || undefined);
   };
 
   const handleSaveResource = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 
-    const meta = inferredMeta || analyzeContentLocally(content);
+    const meta = inferredMeta || analyzeContentLocally(content, attachedFileName, attachedFileExt);
     const tags = tagInput
       .split(/[,،]+/)
       .map((t) => t.trim())
@@ -133,6 +245,10 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
       sourceInfo: sourceInfo.trim() || undefined,
       createdAt: new Date().toLocaleDateString('ar-EG'),
       tags: tags.length > 0 ? tags : meta.tags,
+      fileName: attachedFileName || undefined,
+      fileExt: attachedFileExt || undefined,
+      fileSize: attachedFileSize || undefined,
+      fileDataUrl: attachedFileDataUrl || undefined,
       inferredSubject: meta.subject,
       inferredGrade: meta.grade,
       inferredLessonTitle: meta.lessonTitle,
@@ -143,9 +259,13 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
     setContent('');
     setSourceInfo('');
     setTagInput('');
+    setAttachedFileName('');
+    setAttachedFileSize('');
+    setAttachedFileExt('');
+    setAttachedFileDataUrl('');
     setInferredMeta(null);
     setIsSuccessFeedback(true);
-    setTimeout(() => setIsSuccessFeedback(false), 2000);
+    setTimeout(() => setIsSuccessFeedback(false), 2500);
   };
 
   const handleApplyPreset = (preset: {
@@ -163,6 +283,10 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
     setContent(preset.content);
     setSourceInfo(preset.info);
     setTagInput(preset.tags);
+    setAttachedFileName('');
+    setAttachedFileSize('');
+    setAttachedFileExt('');
+    setAttachedFileDataUrl('');
     setInferredMeta({
       title: preset.title,
       lessonTitle: preset.lesson,
@@ -170,61 +294,100 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
       grade: preset.grade,
       sourceInfo: preset.info,
       tags: preset.tags.split('، '),
+      inferredType: preset.type,
     });
-    setAutoUpdatedNotice(`تم تغيير العنوان للمصدر المختار: «${preset.title}»`);
-    setTimeout(() => setAutoUpdatedNotice(null), 3000);
+    setAutoUpdatedNotice(`تم تغيير العنوان والنوع تلقائياً للمصدر: «${preset.title}»`);
+    setTimeout(() => setAutoUpdatedNotice(null), 3500);
   };
 
   const samplePresets = [
     {
+      type: 'worksheet' as ResourceType,
+      title: 'ورقة عمل: الرياضيات (الصف الرابع) - ضرب عدد من منزلتين في عدد من منزلة',
+      content: 'أوراق عمل تدريبية تتضمن مسائل رياضية حسابية تطبيقية، واستخدام لوحة المنازل، وربط نواتج الضرب بمواقف تسوق وحساب كميات التمور والزيتون في المزارع الفلسطينية.',
+      info: 'ورقة عمل علاجية وإثرائية معتمدة',
+      tags: 'الرياضيات، ورقة عمل، الرابع الأساسي، ضرب الأعداد',
+      sub: 'الرياضيات',
+      grade: 'الصف الرابع الأساسي',
+      lesson: 'ضرب عدد من منزلتين في عدد من منزلة',
+    },
+    {
+      type: 'presentation' as ResourceType,
+      title: 'عرض تقديمي: العلوم والحياة (الصف الخامس) - أجهزة جسم الإنسان',
+      content: 'شرائح عرض PowerPoint تفاعلية تشرح الجهاز الهضمي والجهاز التنفسي، وظائف الأعضاء، وأهمية الغذاء المتوازن والتمارين الرياضية للحفاظ على صحة الأجهزة الحيوية.',
+      info: 'عرض تقديمي PowerPoint (٢٤ شريحة)',
+      tags: 'العلوم والحياة، عرض تقديمي، الخامس الأساسي، أجهزة الجسم',
+      sub: 'العلوم والحياة',
+      grade: 'الصف الخامس الأساسي',
+      lesson: 'أجهزة جسم الإنسان ووظائفها الحيوية',
+    },
+    {
+      type: 'audio' as ResourceType,
+      title: 'تسجيل صوتي: اللغة العربية (الصف الثالث) - استماع: القدس زهرة المدائن',
+      content: 'تسجيل صوتي لنص الاستماع القرائي يوضح تاريخ مدينة القدس، أسوارها وأبوابها التاريخية ومعالمها الدينية والحضارية، متبوعاً بأسئلة قياس الفهم القرائي والاستيعاب.',
+      info: 'ملف صوتي MP3 عالي النقاء (٣ دقائق)',
+      tags: 'اللغة العربية، استماع، ملف صوتي، الثالث الأساسي، القدس',
+      sub: 'اللغة العربية',
+      grade: 'الصف الثالث الأساسي',
+      lesson: 'القدس زهرة المدائن - استماع وتذوق أدبي',
+    },
+    {
       type: 'textbook' as ResourceType,
-      title: 'كتاب العلوم - درس دورة الماء في الطبيعة ص ٤٢',
+      title: 'كتاب العلوم والحياة (الصف الرابع) - دورة الماء في الطبيعة ص ٤٢',
       content: 'تتبخر مياه البحار والمحيطات بفعل حرارة الشمس، ثم يتصاعد بخار الماء لطبقات الجو العليا ويتكاثف ليشكل الغيوم، وعندما تبرد تسقط على شكل أمطار وثلوج وتعود للمياه الجوفية والوديان والينابيع في فلسطين.',
       info: 'المنهاج الفلسطيني للصف الرابع - الفصل الأول',
-      tags: 'العلوم والحياة، بيئة، دورة الماء، الرابع الأساسي',
+      tags: 'العلوم والحياة، كتاب مدرسي، الرابع الأساسي، دورة الماء',
       sub: 'العلوم والحياة',
-      grade: 'الرابع الأساسي',
+      grade: 'الصف الرابع الأساسي',
       lesson: 'دورة الماء في الطبيعة والتحولات الفيزيائية',
     },
     {
-      type: 'standard' as ResourceType,
-      title: 'كتاب اللغة العربية - قراءة نص فلسطين قلب العروبة',
-      content: 'قراءة جهرية معبرة مراعياً علامات الترقيم، استخراج الأفكار الرئيسة، والتمييز بين الجمل التي تعبر عن حقائق تاريخية عن مدن القدس ويافا وحيفا والجمل التي تعبر عن مشاعر الشاعر وعواطفه.',
-      info: 'كتاب لغتنا الجميلة للصف الخامس ص ٢٨',
-      tags: 'اللغة العربية، قراءة استيعابية، مهارات تفكير، الخامس الأساسي',
-      sub: 'اللغة العربية',
-      grade: 'الخامس الأساسي',
-      lesson: 'فلسطين قلب العروبة - قراءة استيعابية وتعبير أدبي',
+      type: 'exam' as ResourceType,
+      title: 'اختبار تقويمي: التربية الإسلامية (الصف السادس) - أحكام التجويد وسورة لقمان',
+      content: 'اختبار تقويمي قصير وبنك أسئلة حول أحكام النون الساكنة والتنوين (الإظهار والإدغام)، مع تدبر وصايا لقمان الحكيم لابنه في التواضع وبر الوالدين وإقامة الصلاة.',
+      info: 'ورقة اختبار تقويمي (٢٠ علامة)',
+      tags: 'التربية الإسلامية، اختبار تقويمي، السادس الأساسي، تجويد',
+      sub: 'التربية الإسلامية',
+      grade: 'الصف السادس الأساسي',
+      lesson: 'أحكام النون الساكنة والتنوين ووصايا لقمان',
     },
     {
-      type: 'textbook' as ResourceType,
-      title: 'كتاب الرياضيات - جمع الكسور غير متجانسة المقامات',
-      content: 'لجمع كسرين عاديين مقامهما مختلف، نوحد المقامات أولاً بإيجاد المضاعف المشترك الأصغر للمقامين، ثم نجمع البسطين ونبقي المقام الموحد كما هو، مع كتابة الناتج في أبسط صورة ممكنة.',
-      info: 'كتاب الرياضيات للصف الخامس ص ٦٤',
-      tags: 'الرياضيات، الكسور العادية، جمع الكسور، الخامس الأساسي',
-      sub: 'الرياضيات',
-      grade: 'الخامس الأساسي',
-      lesson: 'جمع الكسور العادية غير متجانسة المقامات وطرحها',
-    },
-    {
-      type: 'note' as ResourceType,
-      title: 'كتاب التكنولوجيا - أمن المعلومات والحوسبة السحابية',
-      content: 'مفهوم الأمان الرقمي وكلمات المرور القوية والتشفير، مخاطر التصيد الإلكتروني، وتطبيق قواعد الاستخدام الآمن للإنترنت في إنجاز البحوث المدرسية وحماية الخصوصية.',
-      info: 'منهاج التكنولوجيا للصف السابع ص ٥٢',
-      tags: 'التكنولوجيا، الأمان الرقمي، الحوسبة السحابية، السابع الأساسي',
+      type: 'link' as ResourceType,
+      title: 'رابط تعليمي: التكنولوجيا - محاكي البرمجة وتصميم الخوارزميات',
+      content: 'منصة ومحاكي رقمي تفاعلي لتعليم الطلبة التفكير المنطقي وبناء الخوارزميات المتسلسلة واستخدام الحلقات التكرارية والشروط البرمجية في بيئة بصرية ممتعة.',
+      info: 'رابط منصة تعليمية تفاعلية',
+      tags: 'التكنولوجيا، روابط تعليمية، محاكي، خوارزميات',
       sub: 'التكنولوجيا',
-      grade: 'السابع الأساسي',
-      lesson: 'أمن المعلومات والحوسبة السحابية والأمان الرقمي',
+      grade: 'الصف السابع الأساسي',
+      lesson: 'الخوارزميات والتفكير المنطقي البرمجي',
     },
   ];
 
-  const typeIcons: Record<ResourceType, { icon: any; label: string; color: string; bg: string }> = {
-    textbook: { icon: BookOpen, label: 'كتاب مدرسي / منهاج', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    document: { icon: FileText, label: 'ملف أو مستند مرفق', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-    link: { icon: LinkIcon, label: 'رابط أو موقع إلكتروني', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-    standard: { icon: Target, label: 'معايير ونتاجات وزارية', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-    note: { icon: StickyNote, label: 'ملاحظات وأفكار المعلم', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200' },
-    image: { icon: ImageIcon, label: 'صورة أو وسيلة بصرية', color: 'text-teal-700', bg: 'bg-teal-50 border-teal-200' },
+  const typeConfig: Record<
+    ResourceType,
+    { icon: any; label: string; color: string; bg: string; badge: string }
+  > = {
+    textbook: { icon: BookOpen, label: 'كتاب مدرسي / منهاج', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', badge: 'كتاب' },
+    curriculum_guide: { icon: Compass, label: 'دليل المعلم / خطة سنوية', color: 'text-sky-700', bg: 'bg-sky-50 border-sky-200', badge: 'دليل' },
+    worksheet: { icon: FileCheck2, label: 'ورقة عمل / نشاط إثرائي', color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200', badge: 'ورقة عمل' },
+    presentation: { icon: Presentation, label: 'عرض تقديمي (PowerPoint)', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', badge: 'عرض PPT' },
+    spreadsheet: { icon: FileSpreadsheet, label: 'جدول بيانات (Excel)', color: 'text-teal-700', bg: 'bg-teal-50 border-teal-200', badge: 'Excel' },
+    image: { icon: ImageIcon, label: 'صورة / وسيلة بصرية', color: 'text-pink-700', bg: 'bg-pink-50 border-pink-200', badge: 'صورة' },
+    audio: { icon: Music, label: 'تسجيل صوتي / استماع', color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200', badge: 'صوت' },
+    video: { icon: Video, label: 'مقطع فيديو تعليمي', color: 'text-red-700', bg: 'bg-red-50 border-red-200', badge: 'فيديو' },
+    exam: { icon: Target, label: 'اختبار / بنك أسئلة', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', badge: 'اختبار' },
+    document: { icon: FileText, label: 'مستند (Word / PDF / نص)', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', badge: 'مستند' },
+    link: { icon: LinkIcon, label: 'رابط أو موقع إلكتروني', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', badge: 'رابط' },
+    standard: { icon: FileCheck, label: 'معايير ونتاجات وزارية', color: 'text-emerald-800', bg: 'bg-emerald-50 border-emerald-300', badge: 'معايير' },
+    note: { icon: StickyNote, label: 'ملاحظات وأفكار المعلم', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200', badge: 'ملاحظة' },
+  };
+
+  const handleApplyToCurrentPlanClick = (res: EducationalResource) => {
+    if (onApplyToCurrentPlan) {
+      onApplyToCurrentPlan(res);
+      setAppliedResourceId(res.id);
+      setTimeout(() => setAppliedResourceId(null), 3000);
+    }
   };
 
   if (!isOpen) return null;
@@ -232,9 +395,9 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto text-right"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto text-right font-['Cairo',sans-serif]"
     >
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden my-4 flex flex-col max-h-[92vh]">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full border border-slate-200 overflow-hidden my-4 flex flex-col max-h-[94vh]">
         {/* Header */}
         <div className="bg-linear-to-r from-slate-900 via-emerald-950 to-teal-900 text-white p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -244,14 +407,14 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold font-['Tajawal']">
-                  مركز إضافة المصادر مع التعديل التلقائي للعناوين
+                  مركز رفع جميع أنواع المصادر مع التغيير التلقائي للعناوين
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  {toArabicDigits(resources.length)} مصادر مضافة
+                  {toArabicDigits(resources.length)} مصادر متاحة
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                تغيير العناوين والمباحث تلقائياً بمجرد إرفاق نصوص الكتب أو الملفات لتوليد خطط دقيقة متطابقة مع مراجعك
+                يدعم رفع كافة أنواع الملفات (PDF, Word, PowerPoint, Excel, صور، صوت، فيديو، وروابط) وتغيير العناوين تلقائياً لتتطابق تماماً مع المصدر
               </p>
             </div>
           </div>
@@ -265,11 +428,11 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1">
-          {/* Top Quick Presets */}
+          {/* Quick Presets Carousel */}
           <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
             <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-2">
               <Sparkles className="w-4 h-4 text-emerald-600" />
-              نماذج جاهزة سريعة (انقر لتطبيق المصدر وتغيير العناوين فوراً):
+              نماذج جاهزة سريعة لمختلف المصادر (انقر لتطبيقها وتغيير العناوين فوراً):
             </span>
             <div className="flex flex-wrap gap-2">
               {samplePresets.map((sp, idx) => (
@@ -279,14 +442,14 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                   onClick={() => handleApplyPreset(sp)}
                   className="text-xs px-3 py-1.5 bg-white hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-300 border border-slate-200 rounded-xl text-slate-700 transition-colors shadow-2xs text-right flex items-center gap-1.5"
                 >
-                  <Wand2 className="w-3 h-3 text-emerald-600" />
-                  <span>{sp.title}</span>
+                  <Wand2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="line-clamp-1">{sp.title}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Auto Updated Toast Banner */}
+          {/* Toast / Notification Banner */}
           {autoUpdatedNotice && (
             <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 font-bold flex items-center gap-2 animate-fade-in shadow-2xs">
               <Wand2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -295,132 +458,173 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Form: Add New Resource (7 cols) */}
+            {/* Left Form: Add/Upload Resource (7 cols) */}
             <form onSubmit={handleSaveResource} className="lg:col-span-7 space-y-4">
-              <div className="border border-slate-200 rounded-2xl p-4.5 bg-white shadow-2xs space-y-3.5">
+              <div className="border border-slate-200 rounded-2xl p-4.5 bg-white shadow-2xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <Plus className="w-4 h-4 text-emerald-600" />
-                    إضافة مصدر وتحديث بيانات التخطيط
+                    إرفاق مصدر تعليمي (تغيير تلقائي وفوري للعناوين)
                   </h4>
                   {isSuccessFeedback && (
                     <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> تم الحفظ في قائمة المصادر!
+                      <CheckCircle2 className="w-3.5 h-3.5" /> تم الحفظ في بنك المصادر!
                     </span>
                   )}
                 </div>
 
-                {/* Resource Type Selector Pills */}
+                {/* Drag & Drop Universal Upload Zone (All formats supported) */}
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${
+                    isDraggingOver
+                      ? 'border-emerald-500 bg-emerald-50/80 scale-[1.01]'
+                      : 'border-slate-300 hover:border-emerald-400 bg-slate-50/60 hover:bg-emerald-50/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold text-xs mb-1">
+                    <Upload className="w-4 h-4" />
+                    <span>انقر لاختيار أي ملف أو اسحب وأفلت الملف هنا مباشرة</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    مسموح بجميع الأنواع: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), صور، صوت (mp3)، فيديو (mp4)، نصوص، وأرشيف
+                  </p>
+                  {attachedFileName && (
+                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100/90 text-emerald-900 rounded-xl text-xs font-bold border border-emerald-300">
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>{attachedFileName} ({attachedFileSize})</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="*"
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Resource Type Selector Pills (All Types Allowed) */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    نوع المصدر أو المرجع:
+                    نوع وتصنيف المصدر (يتغير تلقائياً ويمكنك تحديده يدوياً):
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {(Object.keys(typeIcons) as ResourceType[]).map((t) => {
-                      const item = typeIcons[t];
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                    {(Object.keys(typeConfig) as ResourceType[]).map((t) => {
+                      const item = typeConfig[t];
                       const Icon = item.icon;
                       const isSelected = activeType === t;
                       return (
                         <button
                           key={t}
                           type="button"
-                          onClick={() => setActiveType(t)}
-                          className={`p-2 rounded-xl text-[11px] font-bold border transition-all flex flex-col items-center gap-1 text-center ${
+                          onClick={() => {
+                            setActiveType(t);
+                            if (content.trim()) {
+                              applyAutoInference(content, attachedFileName || undefined, attachedFileExt || undefined);
+                            }
+                          }}
+                          className={`p-2 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1.5 text-right ${
                             isSelected
                               ? `${item.bg} ${item.color} ring-2 ring-emerald-500 font-extrabold shadow-xs`
                               : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                           }`}
                         >
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+                          <Icon className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{item.label}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Content / Excerpt First with Auto-detect trigger */}
+                {/* Content / Text / URL Input with Auto-detect trigger */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-slate-700">
-                      نص المحتوى أو المقتطف أو التلخيص من الكتاب المدرسي *
+                      نص المحتوى، المقتطف، أو الرابط الإلكتروني *
                     </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-[11px] text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200"
-                      >
-                        <Upload className="w-3 h-3" />
-                        رفع ملف من الجهاز
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleManualAutoDetect}
-                        className="text-[11px] text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200"
-                      >
-                        <Wand2 className="w-3 h-3" />
-                        تحديث العناوين تلقائياً
-                      </button>
-                    </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".txt,.md,.json,.pdf,.doc,.docx"
-                      className="hidden"
-                    />
+                    <button
+                      type="button"
+                      onClick={handleManualAutoDetect}
+                      className="text-[11px] text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200 transition-colors"
+                      title="تحليل النص وتعديل العناوين تلقائياً"
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      تحديث العناوين فوراً
+                    </button>
                   </div>
                   <textarea
                     rows={4}
                     required
                     value={content}
                     onChange={(e) => handleContentChange(e.target.value)}
-                    placeholder="الصق نص الدرس من الكتاب المدرسي، أو الأهداف والنتاجات، وسيقوم النظام فوراً بتحليل النص وتحديث العنوان والمبحث تلقائياً..."
+                    placeholder="الصق نص الدرس، أو أهداف النشاط، أو رابط المنصة، وسيقوم النظام فوراً بتغيير العنوان والمبحث والصف ليتطابق مع المصدر..."
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden leading-relaxed"
                   />
                 </div>
 
+                {/* Live Preview for Image / Audio if present */}
+                {attachedFileDataUrl && (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-1.5">معاينة الملف المرفق:</span>
+                    {activeType === 'image' && (
+                      <img
+                        src={attachedFileDataUrl}
+                        alt="معاينة الصورة"
+                        className="max-h-36 max-w-full rounded-lg object-contain border border-slate-300 shadow-2xs mx-auto"
+                      />
+                    )}
+                    {activeType === 'audio' && (
+                      <audio controls className="w-full h-8">
+                        <source src={attachedFileDataUrl} />
+                        المتصفح لا يدعم تشغيل الصوت.
+                      </audio>
+                    )}
+                  </div>
+                )}
+
                 {/* Inferred Live Intelligence Bar */}
                 {inferredMeta && (
-                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-1">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-1.5 animate-fade-in">
                     <div className="flex items-center justify-between text-emerald-900 font-bold">
                       <span className="flex items-center gap-1.5">
                         <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
-                        تم استنتاج بيانات الدرس تلقائياً من المحتوى:
+                        تمت مطابقة واستنتاج العناوين تلقائياً مع المصدر:
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-emerald-200/60">
+                    <div className="grid grid-cols-3 gap-2 text-[11px] pt-1.5 border-t border-emerald-200/60">
                       <div>
-                        <span className="text-slate-500">المبحث: </span>
-                        <strong className="text-emerald-800">{inferredMeta.subject}</strong>
+                        <span className="text-slate-500 block">المبحث الدراسي:</span>
+                        <strong className="text-emerald-800 font-bold">{inferredMeta.subject}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-500">الصف: </span>
-                        <strong className="text-emerald-800">{inferredMeta.grade}</strong>
+                        <span className="text-slate-500 block">الصف الدراسي:</span>
+                        <strong className="text-emerald-800 font-bold">{inferredMeta.grade}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-500">الدرس: </span>
-                        <strong className="text-emerald-800 line-clamp-1">{inferredMeta.lessonTitle}</strong>
+                        <span className="text-slate-500 block">موضوع/عنوان الدرس:</span>
+                        <strong className="text-emerald-800 font-bold line-clamp-1">{inferredMeta.lessonTitle}</strong>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Title (Auto-updated or editable) */}
+                {/* Title (Automatically changed to match the source) */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">
-                      عنوان المصدر (يتغير تلقائياً حسب المحتوى ويمكنك تعديله) *
-                    </label>
-                  </div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    عنوان المصدر (يتغير تلقائياً ليتوافق مع المصدر المرفق) *
+                  </label>
                   <input
                     type="text"
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="مثال: كتاب العلوم - حالات المادة والتحولات الفيزيائية"
-                    className="w-full px-3 py-2 text-xs font-bold text-slate-900 bg-slate-50/70 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    placeholder="مثال: ورقة عمل: الرياضيات (الصف الرابع) - القيمة المنزلية للأعداد"
+                    className="w-full px-3 py-2 text-xs font-bold text-slate-900 bg-amber-50/30 border border-amber-300/80 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden shadow-2xs"
                   />
                 </div>
 
@@ -434,7 +638,7 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                       type="text"
                       value={sourceInfo}
                       onChange={(e) => setSourceInfo(e.target.value)}
-                      placeholder="مثال: الفصل الأول، صفحة ٤٢، نشاط (٣)"
+                      placeholder="مثال: كتاب الطالب ص ٤٢ أو ملف ورقة العمل"
                       className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
                     />
                   </div>
@@ -446,7 +650,7 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="مثال: علوم، تجارب، الصف الخامس"
+                      placeholder="مثال: رياضيات، الصف الرابع، ضرب الأعداد"
                       className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
                     />
                   </div>
@@ -457,7 +661,7 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                   className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
-                  حفظ المصدر وتحديث العناوين المقترحة
+                  حفظ المصدر في المنظومة
                 </button>
               </div>
             </form>
@@ -467,10 +671,10 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-emerald-600" />
-                  المصادر المرفقة حالياً ({toArabicDigits(resources.length)}):
+                  المصادر المرفوعة ({toArabicDigits(resources.length)}):
                 </h4>
                 {resources.length > 0 && (
-                  <span className="text-[11px] text-slate-500">جاهزة للاستخدام</span>
+                  <span className="text-[11px] text-slate-500">جاهزة للتوليد والربط</span>
                 )}
               </div>
 
@@ -479,30 +683,41 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                   <BookOpen className="w-8 h-8 text-slate-400 mx-auto" />
                   <div className="text-xs font-bold text-slate-700">لا توجد مصادر مضافة بعد</div>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    الصق مقتطف كتاب أو ارفع ملفاً، وسيتغير عنوان الدرس والمبحث تلقائياً بما يلائم المصدر.
+                    ارفع أي ملف (Word, PDF, PowerPoint, Excel, صور، صوت، روابط) أو الصق نصاً، وسيتغير عنوان الدرس والمبحث تلقائياً ليتوافق مع المصدر المرفق فوراً.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
                   {resources.map((res) => {
-                    const iconConfig = typeIcons[res.type] || typeIcons.textbook;
+                    const iconConfig = typeConfig[res.type] || typeConfig.textbook;
                     const Icon = iconConfig.icon;
+                    const isApplied = appliedResourceId === res.id;
                     return (
                       <div
                         key={res.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs hover:border-emerald-300 transition-all space-y-2"
+                        className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs hover:border-emerald-300 transition-all space-y-2.5"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span className={`p-1.5 rounded-lg border ${iconConfig.bg} ${iconConfig.color}`}>
-                              <Icon className="w-3.5 h-3.5" />
+                              <Icon className="w-4 h-4" />
                             </span>
                             <div>
                               <h5 className="text-xs font-bold text-slate-900 line-clamp-1">
                                 {res.title}
                               </h5>
-                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                                <span>{iconConfig.label}</span>
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                <span className={`px-1.5 py-0.2 rounded-md font-bold ${iconConfig.bg} ${iconConfig.color}`}>
+                                  {iconConfig.badge}
+                                </span>
+                                {res.fileExt && (
+                                  <span className="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.2 rounded-md uppercase">
+                                    .{res.fileExt}
+                                  </span>
+                                )}
+                                {res.fileSize && (
+                                  <span className="text-slate-400">({res.fileSize})</span>
+                                )}
                                 {res.inferredSubject && (
                                   <span className="bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.2 rounded-md border border-emerald-200">
                                     {res.inferredSubject}
@@ -524,25 +739,51 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                           </button>
                         </div>
 
+                        {/* Thumbnail preview for images */}
+                        {res.fileDataUrl && res.type === 'image' && (
+                          <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100 flex justify-center">
+                            <img
+                              src={res.fileDataUrl}
+                              alt={res.title}
+                              className="max-h-24 rounded-lg object-contain"
+                            />
+                          </div>
+                        )}
+
                         <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-xl border border-slate-100 leading-relaxed">
                           {res.content}
                         </p>
 
-                        <div className="flex items-center justify-between pt-1">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-100 text-[11px]">
+                          {/* Apply directly to current open plan */}
+                          {onApplyToCurrentPlan && (
+                            <button
+                              type="button"
+                              onClick={() => handleApplyToCurrentPlanClick(res)}
+                              className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition-all ${
+                                isApplied
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200'
+                              }`}
+                              title="تحديث عناوين الخطة المفتوحة حالياً لتتوافق مع هذا المصدر"
+                            >
+                              {isApplied ? <Check className="w-3 h-3" /> : <Wand2 className="w-3 h-3" />}
+                              <span>{isApplied ? 'تم تحديث الخطة المفتوحة!' : 'تحديث عناوين الخطة الحالية به'}</span>
+                            </button>
+                          )}
+
+                          {/* Generate with AI */}
                           <button
                             type="button"
                             onClick={() => {
                               onClose();
                               onGenerateWithResources(res);
                             }}
-                            className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 hover:underline"
+                            className="font-bold text-teal-800 hover:text-teal-950 flex items-center gap-1 hover:underline"
                           >
-                            <Sparkles className="w-3 h-3 text-emerald-600" />
-                            توليد خطة درس بهذا المصدر ➜
+                            <Sparkles className="w-3 h-3 text-teal-600" />
+                            توليد خطة جديدة بهذا المصدر ➜
                           </button>
-                          {res.sourceInfo && (
-                            <span className="text-[10px] text-slate-400">{res.sourceInfo}</span>
-                          )}
                         </div>
                       </div>
                     );
@@ -558,7 +799,7 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
           <div className="text-xs text-slate-600 flex items-center gap-2">
             <Info className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              يتم استخراج المبحث والصف وعنوان الدرس تلقائياً ونقلها مباشرة إلى نافذة التوليد.
+              يتم استخراج المبحث والصف وعنوان الدرس تلقائياً ومواءمتها مع أي مصدر يتم رفعه.
             </span>
           </div>
 

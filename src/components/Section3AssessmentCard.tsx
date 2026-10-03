@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Section3ContinuousAssessment } from '../types/lessonPlan';
-import { Target, Award, Stethoscope, Lightbulb, MessageSquare, Edit3, Check, Sparkles } from 'lucide-react';
+import { Target, Award, Stethoscope, Lightbulb, MessageSquare, Edit3, Check, Sparkles, FileCheck2 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface Section3AssessmentCardProps {
   data: Section3ContinuousAssessment;
   onChange: (data: Section3ContinuousAssessment) => void;
+  onOpenWorksheetModal?: () => void;
 }
 
-export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ data, onChange }) => {
+export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ data, onChange, onOpenWorksheetModal }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeRubricTab, setActiveRubricTab] = useState<'matrix' | 'grader'>('matrix');
   // Interactive grader state (for teacher live evaluation of a student)
@@ -37,22 +38,35 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
           </div>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors"
-        >
-          {isEditing ? (
-            <>
-              <Check className="w-4 h-4 text-emerald-300" />
-              حفظ
-            </>
-          ) : (
-            <>
-              <Edit3 className="w-4 h-4" />
-              تعديل التقويم
-            </>
+        <div className="flex items-center gap-2">
+          {onOpenWorksheetModal && (
+            <button
+              onClick={onOpenWorksheetModal}
+              className="px-3 py-1.5 bg-linear-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              title="توليد ورقة عمل تفاعلية ذكية متوافقة مع هذا الدرس"
+            >
+              <FileCheck2 className="w-4 h-4 text-teal-200" />
+              <span>ورقة عمل تفاعلية بالـ AI</span>
+            </button>
           )}
-        </button>
+
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            {isEditing ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                حفظ
+              </>
+            ) : (
+              <>
+                <Edit3 className="w-4 h-4" />
+                تعديل التقويم
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="p-5 space-y-6">
@@ -81,7 +95,7 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
                   className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-right"
                 />
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
                 <div>
                   <label className="text-[11px] font-bold text-slate-600">الدور (Role):</label>
                   <input
@@ -143,24 +157,30 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
           ) : (
             <div>
               <p className="text-xs text-purple-900 leading-relaxed font-medium bg-white/70 p-3 rounded-xl border border-purple-200/60 my-2">
-                {toArabicDigits(data.graspsTask.fullDescription)}
+                {data.graspsTask.fullDescription ? (
+                  toArabicDigits(data.graspsTask.fullDescription)
+                ) : (
+                  <span className="text-slate-400 font-normal italic text-[11px] block">
+                    [انقر على "تعديل التقويم" لكتابة سيناريو مهمة التقويم الأصيل GRASPS أو استخدم التوليد الذكي بالـ AI...]
+                  </span>
+                )}
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-slate-700 mt-3 pt-2 border-t border-purple-200/50">
-                <div className="bg-white/60 p-2 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-slate-700 mt-3 pt-2 border-t border-purple-200/50">
+                <div className="bg-white/60 p-2.5 rounded-lg">
                   <span className="font-bold text-purple-900 block">الدور (Role):</span>
-                  {data.graspsTask.role}
+                  {data.graspsTask.role || <span className="text-slate-400 italic font-normal">[الدور]</span>}
                 </div>
-                <div className="bg-white/60 p-2 rounded-lg">
+                <div className="bg-white/60 p-2.5 rounded-lg">
                   <span className="font-bold text-purple-900 block">الجمهور (Audience):</span>
-                  {data.graspsTask.audience}
+                  {data.graspsTask.audience || <span className="text-slate-400 italic font-normal">[الجمهور]</span>}
                 </div>
-                <div className="bg-white/60 p-2 rounded-lg">
+                <div className="bg-white/60 p-2.5 rounded-lg">
                   <span className="font-bold text-purple-900 block">الموقف (Situation):</span>
-                  {data.graspsTask.situation}
+                  {data.graspsTask.situation || <span className="text-slate-400 italic font-normal">[الموقف]</span>}
                 </div>
-                <div className="bg-white/60 p-2 rounded-lg">
+                <div className="bg-white/60 p-2.5 rounded-lg">
                   <span className="font-bold text-purple-900 block">المنتج (Product):</span>
-                  {data.graspsTask.product}
+                  {data.graspsTask.product || <span className="text-slate-400 italic font-normal">[المنتج]</span>}
                 </div>
               </div>
             </div>
@@ -199,8 +219,8 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
           </div>
 
           {activeRubricTab === 'matrix' ? (
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-xs text-right border-collapse">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 touch-pan-x">
+              <table className="w-full text-xs text-right border-collapse min-w-[620px]">
                 <thead>
                   <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200 text-center">
                     <th className="p-3 border-l border-slate-200 w-1/4 text-right">المعيار التقييمي</th>
@@ -214,19 +234,19 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
                   {data.rubric.map((r, i) => (
                     <tr key={i} className="hover:bg-slate-50/50">
                       <td className="p-3 font-bold text-slate-900 border-l border-slate-200 align-top">
-                        {toArabicDigits(r.criterion)}
+                        {toArabicDigits(r.criterion || `المعيار ${i + 1}`)}
                       </td>
                       <td className="p-3 text-slate-600 border-l border-slate-200 align-top leading-relaxed">
-                        {toArabicDigits(r.level1)}
+                        {r.level1 ? toArabicDigits(r.level1) : <span className="text-slate-400 italic text-[11px]">[المستوى ١: مبتدئ]</span>}
                       </td>
                       <td className="p-3 text-slate-600 border-l border-slate-200 align-top leading-relaxed">
-                        {toArabicDigits(r.level2)}
+                        {r.level2 ? toArabicDigits(r.level2) : <span className="text-slate-400 italic text-[11px]">[المستوى ٢: نامٍ]</span>}
                       </td>
                       <td className="p-3 text-slate-700 border-l border-slate-200 align-top leading-relaxed">
-                        {toArabicDigits(r.level3)}
+                        {r.level3 ? toArabicDigits(r.level3) : <span className="text-slate-400 italic text-[11px]">[المستوى ٣: كفء]</span>}
                       </td>
                       <td className="p-3 text-emerald-950 font-medium align-top leading-relaxed bg-emerald-50/20">
-                        {toArabicDigits(r.level4)}
+                        {r.level4 ? toArabicDigits(r.level4) : <span className="text-emerald-700/60 italic text-[11px]">[المستوى ٤: متميز]</span>}
                       </td>
                     </tr>
                   ))}

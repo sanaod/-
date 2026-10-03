@@ -15,6 +15,8 @@ import {
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { exportToWord, exportToHtml } from '../utils/exportUtils';
+import { exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
+import { FileEdit } from 'lucide-react';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -198,6 +200,37 @@ ${plan.section3Assessment.graspsTask.fullDescription}
               </div>
               <Download className="w-5 h-5 text-emerald-700 shrink-0" />
             </button>
+
+            {/* 4. Blank Ministerial Template (.doc) */}
+            <button
+              type="button"
+              onClick={() => {
+                exportBlankTemplateToWord();
+                setSuccessMsg('تم تنزيل استمارة التحضير المفرغة (.doc) بنجاح!');
+                setTimeout(() => setSuccessMsg(null), 3500);
+              }}
+              className="p-4 rounded-2xl border-2 border-amber-200 hover:border-amber-500 bg-amber-50/40 hover:bg-amber-50 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                  <FileEdit className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
+                      تنزيل استمارة تحضير مفرغة (Word .doc)
+                    </h4>
+                    <span className="text-[10px] bg-amber-600 text-white px-2 py-0.2 rounded-full font-bold">
+                      نسخة بيضاء للتحضير
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    استمارة وزارية فارغة بجداول ومساحات مسطرة لمساعدة المعلم على إعداد دروس جديدة
+                  </p>
+                </div>
+              </div>
+              <Download className="w-5 h-5 text-amber-600 shrink-0" />
+            </button>
           </div>
 
           {/* Quick Copy Action */}
@@ -223,11 +256,16 @@ ${plan.section3Assessment.graspsTask.fullDescription}
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-          <span>* جميع الصيغ تدعم الأرقام العربية المشرقية والاتجاه الكامل من اليمين لليسار (RTL).</span>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500">
+          <div className="text-right">
+            <span className="block">* جميع الصيغ تدعم الأرقام العربية المشرقية والاتجاه الكامل من اليمين لليسار (RTL).</span>
+            <span className="text-[11px] text-emerald-800 font-semibold block mt-0.5">
+              إعداد وتصميم: الأستاذ عبد الرحمن دويكات (الحقوق محفوظة برخصة المشاع الإبداعي CC BY-NC-SA 4.0)
+            </span>
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-colors"
+            className="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-colors shrink-0"
           >
             إغلاق
           </button>

@@ -112,7 +112,20 @@ export interface Section6Signatures {
   };
 }
 
-export type ResourceType = 'textbook' | 'document' | 'link' | 'standard' | 'image' | 'note';
+export type ResourceType =
+  | 'textbook'
+  | 'curriculum_guide'
+  | 'worksheet'
+  | 'document'
+  | 'presentation'
+  | 'spreadsheet'
+  | 'image'
+  | 'audio'
+  | 'video'
+  | 'exam'
+  | 'link'
+  | 'standard'
+  | 'note';
 
 export interface EducationalResource {
   id: string;
@@ -123,6 +136,9 @@ export interface EducationalResource {
   createdAt: string;
   tags?: string[];
   fileSize?: string;
+  fileName?: string;
+  fileExt?: string;
+  fileDataUrl?: string;
   inferredSubject?: string;
   inferredGrade?: string;
   inferredLessonTitle?: string;
@@ -140,3 +156,18 @@ export interface LessonPlan {
   section6Signatures: Section6Signatures;
   attachedResources?: EducationalResource[];
 }
+
+export const STANDARD_GRADES = [
+  'الصف الأول',
+  'الصف الثاني',
+  'الصف الأول الأساسي',
+  'الصف الثاني الأساسي',
+  'الصف الثالث الأساسي',
+  'الرابع الأساسي',
+  'الخامس الأساسي',
+  'السادس الأساسي',
+  'السابع الأساسي',
+  'الثامن الأساسي',
+  'التاسع الأساسي',
+  'العاشر الأساسي',
+];

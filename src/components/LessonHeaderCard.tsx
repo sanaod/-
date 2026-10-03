@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LessonHeader } from '../types/lessonPlan';
+import { LessonHeader, STANDARD_GRADES } from '../types/lessonPlan';
 import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
@@ -21,21 +21,21 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
   return (
     <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:shadow-md text-right">
       {/* Top Banner */}
-      <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-950 text-white p-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-950 text-white p-3.5 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-200 tracking-wide">
-            <span>{header.country}</span>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-emerald-200 tracking-wide">
+            <span>{header.country || 'دولة فلسطين'}</span>
             <span>•</span>
-            <span>{header.ministry}</span>
+            <span>{header.ministry || 'وزارة التربية والتعليم'}</span>
             <span>•</span>
-            <span>{header.directorate}</span>
+            <span>{header.directorate || 'مديرية التربية والتعليم'}</span>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold font-['Tajawal'] mt-1 flex items-center gap-2">
-            <School className="w-6 h-6 text-emerald-300 shrink-0" />
-            {header.school}
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold font-['Tajawal'] mt-1 flex items-center gap-2">
+            <School className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300 shrink-0" />
+            <span className="truncate">{header.school || 'اسم المدرسة / الصرح التعليمي'}</span>
           </h2>
-          <p className="text-xs text-emerald-100/90 mt-1">
-            نموذج تحضير درس مكتمل التطبيق (مستند إلى إطار تقييم أداء المعلم وكتب {header.subject})
+          <p className="text-[11px] sm:text-xs text-emerald-100/90 mt-1">
+            نموذج تحضير صفي مفرغ ومعتمد (مستند إلى إطار تقييم أداء المعلم ومعايير التميز الوزارية)
           </p>
         </div>
 
@@ -58,9 +58,9 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
       </div>
 
       {/* Grid of Lesson Details */}
-      <div className="p-5">
+      <div className="p-3.5 sm:p-5">
         {isEditing ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
             <div>
               <label className="block font-bold text-slate-700 mb-1">اسم المعلم/ة</label>
               <input
@@ -89,15 +89,49 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
               />
             </div>
             <div>
-              <label className="block font-bold text-slate-700 mb-1">الصف والشعبة</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-700">الصف والشعبة</label>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('grade', 'الصف الأول')}
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
+                      header.grade === 'الصف الأول' || header.grade === 'الصف الأول الأساسي'
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    الصف الأول
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('grade', 'الصف الثاني')}
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
+                      header.grade === 'الصف الثاني' || header.grade === 'الصف الثاني الأساسي'
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    الصف الثاني
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
-                  type="text"
-                  value={header.grade}
-                  onChange={(e) => handleChange('grade', e.target.value)}
-                  placeholder="الصف"
-                  className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-right"
-                />
+                <div>
+                  <input
+                    type="text"
+                    list="header-grade-datalist"
+                    value={header.grade}
+                    onChange={(e) => handleChange('grade', e.target.value)}
+                    placeholder="الصف (اختر أو اكتب)"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-medium focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <datalist id="header-grade-datalist">
+                    {STANDARD_GRADES.map((g) => (
+                      <option key={g} value={g} />
+                    ))}
+                  </datalist>
+                </div>
                 <input
                   type="text"
                   value={header.section}
@@ -144,59 +178,63 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-emerald-600" />
                 المعلم/ة
               </span>
-              <span className="text-xs font-bold text-slate-800 line-clamp-1">{header.teacherName}</span>
+              <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                {header.teacherName ? header.teacherName : <span className="text-slate-400 font-normal italic">[اسم المعلم/ة]</span>}
+              </span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
                 المادة والمبحث
               </span>
-              <span className="text-xs font-bold text-slate-800 line-clamp-1">{header.subject}</span>
+              <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                {header.subject ? header.subject : <span className="text-slate-400 font-normal italic">[المادة / المبحث]</span>}
+              </span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <Layers className="w-3.5 h-3.5 text-emerald-600" />
                 الصف والشعبة
               </span>
-              <span className="text-xs font-bold text-slate-800">
-                {header.grade} ({header.section})
+              <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                {header.grade || 'الصف الدراسي'} ({header.section || 'الشعبة'})
               </span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-emerald-600" />
                 الحصص المستهدفة
               </span>
               <span className="text-xs font-bold text-slate-800">
-                الحصة {toArabicDigits(header.currentPeriod)} من {toArabicDigits(header.totalPeriods)}
+                الحصة {toArabicDigits(header.currentPeriod || 1)} من {toArabicDigits(header.totalPeriods || 1)}
               </span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-emerald-600" />
                 فترة الحصة
               </span>
               <span className="text-xs font-bold text-emerald-700">
-                {toArabicDigits(header.periodDurationMinutes)} دقيقة
+                {toArabicDigits(header.periodDurationMinutes || 40)} دقيقة
               </span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                 التاريخ
               </span>
-              <span className="text-xs font-bold text-slate-800">{toArabicDigits(header.date)}</span>
+              <span className="text-xs font-bold text-slate-800">{toArabicDigits(header.date || '٢٠٢٦م')}</span>
             </div>
           </div>
         )}
@@ -208,11 +246,15 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
               عنوان الدرس
             </span>
             <h3 className="text-sm md:text-base font-bold text-emerald-950 font-['Tajawal']">
-              {toArabicDigits(header.lessonTitle)}
+              {header.lessonTitle ? toArabicDigits(header.lessonTitle) : (
+                <span className="text-slate-500 font-normal italic text-xs md:text-sm">
+                  [انقر على "تعديل بيانات الرأس" لكتابة عنوان الدرس أو "توليد خطة جديدة بالذكاء الاصطناعي"]
+                </span>
+              )}
             </h3>
           </div>
           <span className="text-xs text-emerald-800 font-medium hidden md:inline">
-            {header.directorate}
+            {header.directorate || header.ministry || 'النموذج الوزاري المعتمد'}
           </span>
         </div>
       </div>

@@ -47,8 +47,8 @@ export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({ 
         </button>
       </div>
 
-      <div className="p-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+      <div className="p-3.5 sm:p-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-xs">
           {/* المعلم */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">

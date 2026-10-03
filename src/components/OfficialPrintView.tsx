@@ -49,34 +49,34 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-200/80 p-3 sm:p-6 md:p-8 text-right font-['Cairo',sans-serif]">
+    <div dir="rtl" className="min-h-screen bg-slate-200/80 p-2 sm:p-5 md:p-8 text-right font-['Cairo',sans-serif]">
       {/* Top action toolbar (hidden on print) */}
-      <div className="max-w-4xl mx-auto mb-6 bg-white p-4 rounded-2xl shadow-md border border-slate-300 no-print">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 bg-white p-3.5 sm:p-4 rounded-2xl shadow-md border border-slate-300 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <button
             onClick={onBack}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors order-2 sm:order-1"
           >
             <ArrowRight className="w-4 h-4" />
-            العودة للمحرر التفاعلي
+            <span>العودة للمحرر التفاعلي</span>
           </button>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 order-1 sm:order-2">
             {/* Primary jsPDF Export Button */}
             <button
               onClick={handleExportJsPdf}
               disabled={isExportingPdf}
-              className="px-5 py-2.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md disabled:opacity-50"
+              className="col-span-2 sm:col-span-1 px-4 sm:px-5 py-2.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-50"
             >
               {isExportingPdf ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-emerald-200" />
-                  <span>{exportProgress || 'جاري معالجة الـ PDF...'}</span>
+                  <span className="truncate">{exportProgress || 'جاري المعالجة...'}</span>
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4 text-emerald-200" />
-                  <span>تصدير كملف PDF منظم (jsPDF)</span>
+                  <Download className="w-4 h-4 text-emerald-200 shrink-0" />
+                  <span>تصدير كملف PDF (jsPDF)</span>
                 </>
               )}
             </button>
@@ -84,32 +84,38 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
             {/* Native Browser Print Option */}
             <button
               onClick={handlePrintBrowser}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors shadow-2xs"
+              className="px-3 sm:px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
             >
-              <Printer className="w-4 h-4 text-slate-300" />
-              <span>طباعة PDF</span>
+              <Printer className="w-4 h-4 text-slate-300 shrink-0" />
+              <span>طباعة A4</span>
             </button>
 
             {/* Quick Word Export */}
             <button
               onClick={() => exportToWord(plan)}
-              className="px-3.5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="px-3 sm:px-3.5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               title="تصدير الخطة كملف Microsoft Word"
             >
-              <FileText className="w-4 h-4 text-blue-200" />
-              <span>Word (.doc)</span>
+              <FileText className="w-4 h-4 text-blue-200 shrink-0" />
+              <span>Word</span>
             </button>
 
             {/* Quick HTML Export */}
             <button
               onClick={() => exportToHtml(plan)}
-              className="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="col-span-2 sm:col-span-1 px-3 sm:px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               title="تصدير كصفحة ويب HTML"
             >
-              <FileCode className="w-4 h-4 text-emerald-200" />
-              <span>HTML</span>
+              <FileCode className="w-4 h-4 text-emerald-200 shrink-0" />
+              <span>HTML ويب</span>
             </button>
           </div>
+        </div>
+
+        {/* Mobile helper notice */}
+        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span>💡 للمعاينة المثالية: تدعم المنظومة الجوال والتابلت وشاشات الكمبيوتر.</span>
+          <span className="font-semibold text-emerald-800 hidden sm:inline">إعداد وتصميم: أ. عبد الرحمن دويكات</span>
         </div>
 
         {isExportingPdf && (
@@ -124,25 +130,50 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
       <div
         ref={documentContainerRef}
         dir="rtl"
-        className="max-w-4xl mx-auto space-y-8 print:space-y-0 official-document-wrapper text-right"
+        className="max-w-4xl mx-auto space-y-6 sm:space-y-8 print:space-y-0 official-document-wrapper text-right overflow-x-auto"
       >
         {/* ================= PAGE 1 ================= */}
         <div className="official-print-page bg-white border-2 border-black p-6 md:p-9 shadow-xl relative min-h-[1050px] flex flex-col justify-between">
           <div>
             {/* Top Header */}
-            <div className="text-center space-y-1 mb-5 border-b-2 border-black pb-3">
-              <h2 className="text-base font-bold text-black tracking-wide">
-                {plan.header.country} - {plan.header.ministry}
-              </h2>
-              <h3 className="text-sm font-semibold text-black">
-                {plan.header.school}
-              </h3>
-              <h1 className="text-lg md:text-xl font-extrabold text-black mt-2 font-['Tajawal'] underline decoration-1 underline-offset-4">
-                نموذج تحضير درس مكتمل التطبيق (مبحث {plan.header.subject})
-              </h1>
-              <p className="text-xs font-medium text-slate-700">
-                مستند إلى إطار تقييم أداء المعلم وكتب {plan.header.subject} للصف {plan.header.grade} ({plan.header.semester})
-              </p>
+            <div className="flex items-center justify-between gap-4 mb-5 border-b-2 border-black pb-3">
+              <div className="text-right space-y-0.5 text-xs font-bold text-black">
+                <p>{plan.header.country}</p>
+                <p>{plan.header.ministry}</p>
+                <p>{plan.header.school}</p>
+              </div>
+
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center gap-2">
+                  <img
+                    src="/logo.png"
+                    alt="شعار منظومة عبقور"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 shadow-xs"
+                  />
+                  <div>
+                    <h2 className="text-sm font-black text-black font-['Tajawal']">
+                      منظومة عبقور للتخطيط التربوي وتحضير الدروس
+                    </h2>
+                    <span className="text-[10px] text-slate-700 font-bold block">
+                      إعداد وتصميم: الأستاذ عبد الرحمن دويكات
+                    </span>
+                  </div>
+                </div>
+                <h1 className="text-base md:text-lg font-extrabold text-black font-['Tajawal'] underline decoration-1 underline-offset-4">
+                  {plan.header.subject ? `نموذج تحضير درس (مبحث ${plan.header.subject})` : 'نموذج استمارة تحضير درس مفرغة'}
+                </h1>
+                <p className="text-[11px] font-medium text-slate-700">
+                  {plan.header.grade
+                    ? `مستند إلى إطار تقييم أداء المعلم وكتب المنهاج المعتمدة (${plan.header.grade})`
+                    : 'مستند إلى إطار تقييم أداء المعلم ومعايير التميز والتخطيط التكيفي الوزاري'}
+                </p>
+              </div>
+
+              <div className="text-left space-y-0.5 text-xs font-bold text-black">
+                <p>العام الدراسي: ٢٠٢٦/٢٠٢٥م</p>
+                <p>الفصل: {plan.header.semester}</p>
+                <p className="text-emerald-800">النموذج الوزاري المعتمد</p>
+              </div>
             </div>
 
             {/* General Info Grid Box */}
@@ -271,8 +302,9 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           </div>
 
           {/* Page 1 Footer */}
-          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-600">
             <span>{plan.header.ministry} - {plan.header.school}</span>
+            <span className="font-semibold text-slate-700">إعداد وتصميم: الأستاذ عبد الرحمن دويكات (الحقوق محفوظة برخصة المشاع الإبداعي CC BY-NC-SA 4.0)</span>
             <span>الصفحة ١ من ٤</span>
           </div>
         </div>
@@ -333,8 +365,9 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           </div>
 
           {/* Page 2 Footer */}
-          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-600">
             <span>مخطط سير الحصة المتمركزة حول المتعلم</span>
+            <span className="font-semibold text-slate-700">إعداد وتصميم: الأستاذ عبد الرحمن دويكات (الحقوق محفوظة برخصة المشاع الإبداعي CC BY-NC-SA 4.0)</span>
             <span>الصفحة ٢ من ٤</span>
           </div>
         </div>
@@ -483,8 +516,9 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           </div>
 
           {/* Page 3 Footer */}
-          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="pt-4 border-t border-slate-300 mt-4 flex items-center justify-between text-[10px] text-slate-600">
             <span>التقويم الأصيل وإدارة بيئة التعلم</span>
+            <span className="font-semibold text-slate-700">إعداد وتصميم: الأستاذ عبد الرحمن دويكات (الحقوق محفوظة برخصة المشاع الإبداعي CC BY-NC-SA 4.0)</span>
             <span>الصفحة ٣ من ٤</span>
           </div>
         </div>
@@ -591,8 +625,9 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           </div>
 
           {/* Page 4 Footer & Official Seal Stamp watermark */}
-          <div className="pt-4 border-t border-slate-300 mt-4 text-[10px] text-slate-500 flex justify-between items-center">
+          <div className="pt-4 border-t border-slate-300 mt-4 text-[10px] text-slate-600 flex justify-between items-center">
             <span>نموذج تحضير صفي معتمد ومطابق لمعايير جودة التعليم والتقييم الأصيل (الدرجة ٤)</span>
+            <span className="font-semibold text-slate-700">إعداد وتصميم: الأستاذ عبد الرحمن دويكات (الحقوق محفوظة برخصة المشاع الإبداعي CC BY-NC-SA 4.0)</span>
             <span>الصفحة ٤ من ٤</span>
           </div>
         </div>
