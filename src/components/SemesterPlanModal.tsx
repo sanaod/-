@@ -117,8 +117,6 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
   const [aiCustomTopics, setAiCustomTopics] = useState('');
   const [aiStartDate, setAiStartDate] = useState('2026-09-01');
 
-  if (!isOpen) return null;
-
   // Extract unique units for filter
   const unitList = useMemo(() => {
     const set = new Set<string>();
@@ -161,6 +159,8 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
       return matchUnit && matchQuery;
     });
   }, [currentPlan, filterUnit, searchQuery]);
+
+  if (!isOpen) return null;
 
   // Switch preset
   const handleSelectSubjectPreset = (subjectKey: string) => {
