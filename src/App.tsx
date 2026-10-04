@@ -350,12 +350,12 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Action Buttons Grid on Mobile, Flex on Desktop */}
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
+              {/* Action Buttons Grid: Fully Responsive on Mobile (2 cols), Tablet (4 cols), and Desktop (flex/wrap) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:flex xl:flex-wrap items-center gap-2 w-full md:w-auto">
                 <button
                   onClick={handleClearCurrentPlan}
                   title="مسح وتفريغ الحقول الحالية للبدء من الصفر"
-                  className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-400/50 shadow-xs"
+                  className="min-h-[42px] px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-400/50 shadow-xs cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4 text-amber-200 shrink-0" />
                   <span className="truncate">تفريغ الحقول</span>
@@ -363,44 +363,52 @@ export default function App() {
                 <button
                   onClick={handleCreateNewBlankPlan}
                   title="بدء نموذج تحضير مفرغ جديد"
-                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-400/50 shadow-xs"
+                  className="min-h-[42px] px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-400/50 shadow-xs cursor-pointer"
                 >
                   <FileEdit className="w-4 h-4 text-emerald-200 shrink-0" />
                   <span className="truncate">تحضير جديد</span>
                 </button>
                 <button
                   onClick={() => setIsWorksheetModalOpen(true)}
-                  title="توليد أوراق عمل تفاعلية ذكية متوافقة مع المادة"
-                  className="px-3 py-2 bg-linear-to-r from-teal-700 via-teal-800 to-emerald-800 hover:from-teal-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs border border-teal-500/50"
+                  title="توليد أوراق عمل تفاعلية ذكية متوافقة مع المادة بالذكاء الاصطناعي"
+                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-teal-700 via-teal-800 to-emerald-800 hover:from-teal-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs border border-teal-500/50 cursor-pointer"
                 >
                   <FileCheck className="w-4 h-4 text-teal-200 shrink-0" />
-                  <span className="truncate">أوراق عمل تفاعلية AI</span>
+                  <span className="truncate">أوراق عمل AI</span>
+                </button>
+                <button
+                  onClick={() => setIsAbacusModalOpen(true)}
+                  title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس"
+                  className="min-h-[42px] px-3 py-2 bg-emerald-900/90 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/40 shadow-xs cursor-pointer"
+                >
+                  <Calculator className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span className="truncate">المحاكي</span>
                 </button>
                 <button
                   onClick={() => setIsResourcesModalOpen(true)}
                   title="إدارة ورفع المصادر والمناهج والمراجع التعليمية"
-                  className="px-3 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/60 shadow-xs"
+                  className="min-h-[42px] px-3 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/60 shadow-xs cursor-pointer"
                 >
                   <Layers className="w-4 h-4 text-emerald-300 shrink-0" />
                   <span className="truncate">المصادر ({toArabicDigits(resources.length)})</span>
                 </button>
                 <button
                   onClick={() => setIsAiModalOpen(true)}
-                  className="px-3 py-2 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
                   <span className="truncate">توليد بالـ AI</span>
                 </button>
                 <button
                   onClick={() => setIsExportModalOpen(true)}
-                  className="px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md"
+                  className="min-h-[42px] px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
                   <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
                   <span className="truncate">تصدير الخطة</span>
                 </button>
                 <button
                   onClick={() => setViewMode('official-print')}
-                  className="px-3 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md"
+                  className="min-h-[42px] px-3 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
                   <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
                   <span className="truncate">معاينة PDF</span>
@@ -408,7 +416,7 @@ export default function App() {
                 <button
                   onClick={() => handleRequestDeletePlan(currentPlan)}
                   title="حذف هذه الخطة نهائياً من المنظومة عند وجود أخطاء أو الرغبة بالتراجع"
-                  className="px-3 py-2 bg-rose-700/90 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-rose-500/50 shadow-xs col-span-2 sm:col-span-1 cursor-pointer"
+                  className="min-h-[42px] px-3 py-2 bg-rose-700/90 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-rose-500/50 shadow-xs col-span-2 sm:col-span-1 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 text-rose-200 shrink-0" />
                   <span className="truncate">حذف الخطة</span>

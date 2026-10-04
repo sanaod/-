@@ -209,7 +209,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       {/* 2. Dedicated Main Toolbar Below Title (شريط الأدوات المنظّم أسفل العنوان) */}
       <div className="bg-slate-50/95 border-t border-slate-200/90 py-2">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-2 py-1">
+          {/* Desktop & Laptop Toolbar */}
+          <div className="hidden lg:flex flex-wrap items-center justify-between gap-2 py-1">
             
             {/* Group 1: Navigation & Workspace Modes (أنماط العمل والتنقل) */}
             <div className="flex flex-wrap items-center gap-1.5 shrink-0">
@@ -377,110 +378,276 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>الطباعة الرسمية</span>
               </button>
             </div>
-
           </div>
-        </div>
-      </div>
 
-        {/* Mobile Plan selector bar & view switch (Below main bar) */}
-        <div className="md:hidden pb-2.5 pt-1 border-t border-slate-100 flex flex-col gap-2">
-          {onChangeView && (
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                onClick={() => {
-                  if (onSelectBlankPlan) onSelectBlankPlan();
-                  else if (onNewBlankPlan) onNewBlankPlan();
-                  if (onChangeView) onChangeView('editor');
-                }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
-                  currentView === 'editor' && isCurrentPlanBlank
-                    ? 'bg-amber-500 text-white shadow-xs'
-                    : 'text-amber-800'
-                }`}
-              >
-                <FileEdit className="w-3.5 h-3.5" />
-                <span>المفرغة 📌</span>
-              </button>
-              <button
-                onClick={() => onChangeView('editor')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  currentView === 'editor' && !isCurrentPlanBlank
-                    ? 'bg-white text-emerald-800 shadow-xs'
-                    : 'text-slate-600'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>المحرر</span>
-              </button>
-              <button
-                onClick={() => onChangeView('dashboard')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  currentView === 'dashboard'
-                    ? 'bg-white text-emerald-800 shadow-xs'
-                    : 'text-slate-600'
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
-                <span>الإنتاجية ({toArabicDigits(plans.length)})</span>
-              </button>
-              <button
-                onClick={onOpenResourcesModal}
-                className="flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 text-slate-700 hover:text-emerald-900 transition-all"
-                title="المصادر التعليمية"
-              >
-                <Layers className="w-3.5 h-3.5 text-emerald-700" />
-                <span>المصادر ({toArabicDigits(resourcesCount)})</span>
-              </button>
-            </div>
-          )}
+          {/* Tablet & Medium Screen Layout (md to lg / 768px - 1023px): Two-Row Grid Structure */}
+          <div className="hidden md:flex lg:hidden flex-col gap-2 py-1">
+            {/* Tablet Row 1: Workspace Views & Plan Management */}
+            <div className="flex items-center justify-between gap-2">
+              {onChangeView && (
+                <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
+                  <button
+                    onClick={() => onChangeView('editor')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'editor' && !isCurrentPlanBlank
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>محرر الخطة</span>
+                  </button>
+                  <button
+                    onClick={() => onChangeView('dashboard')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'dashboard'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>لوحة الإنتاجية ({toArabicDigits(plans.length)})</span>
+                  </button>
+                  <button
+                    onClick={onSelectBlankPlan || onNewBlankPlan}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      currentView === 'editor' && isCurrentPlanBlank
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'text-amber-800 hover:bg-amber-50'
+                    }`}
+                  >
+                    <FileEdit className="w-3.5 h-3.5" />
+                    <span>المفرغة 📌</span>
+                  </button>
+                </div>
+              )}
 
-          {currentView === 'editor' && (
-            <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-slate-600 shrink-0">الخطة:</span>
-                <select
-                  value={activePlanId}
-                  onChange={(e) => onSelectPlan(e.target.value)}
-                  className="text-xs bg-white font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 w-full focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-                >
-                  {plans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.header.lessonTitle
-                        ? `${p.header.subject || 'مبحث'} - ${p.header.grade || 'الصف'}: ${p.header.lessonTitle}`
-                        : p.title || 'استمارة تحضير مفرغة'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Mobile View Plans & Delete Plan Button Row */}
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={onOpenPlansViewer}
-                  className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
-                  title="عرض كافة الخطط المحفوظة"
+                  className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
                 >
                   <FolderKanban className="w-3.5 h-3.5 text-emerald-700" />
                   <span>عرض الخطط ({toArabicDigits(plans.length)})</span>
                 </button>
                 <button
                   onClick={() => {
-                    if (onRequestDeletePlan) {
-                      onRequestDeletePlan();
-                    } else if (onDeletePlan) {
-                      onDeletePlan(activePlanId);
-                    }
+                    if (onRequestDeletePlan) onRequestDeletePlan();
+                    else if (onDeletePlan) onDeletePlan(activePlanId);
                   }}
-                  className="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
-                  title="حذف الخطة المعروضة عند وجود أخطاء"
+                  className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                  <span>حذف الخطة (أخطاء)</span>
+                  <span>حذف الخطة</span>
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Tablet Row 2: Smart Tools & Outputs */}
+            <div className="flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={onOpenAiGenerator}
+                  className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>تحضير بالـ AI</span>
+                </button>
+                {onOpenWorksheetModal && (
+                  <button
+                    onClick={onOpenWorksheetModal}
+                    className="px-2.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                  >
+                    <FileCheck2 className="w-3.5 h-3.5 text-teal-200" />
+                    <span>ورقة عمل AI</span>
+                  </button>
+                )}
+                <button
+                  onClick={onOpenAbacusModal}
+                  className="px-2.5 py-1.5 bg-white text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                >
+                  <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>المحاكي</span>
+                </button>
+                <button
+                  onClick={onOpenResourcesModal}
+                  className="px-2.5 py-1.5 bg-white text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                >
+                  <Layers className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+                </button>
+                {onOpenBlankTemplateModal && (
+                  <button
+                    onClick={onOpenBlankTemplateModal}
+                    className="px-2.5 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <FileEdit className="w-3.5 h-3.5 text-amber-700" />
+                    <span>استمارة مفرغة</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={onOpenExportModal}
+                  className="px-2.5 py-1.5 bg-blue-50 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                >
+                  <FileDown className="w-3.5 h-3.5 text-blue-700" />
+                  <span>تصدير</span>
+                </button>
+                <button
+                  onClick={onOpenPrintView}
+                  className="px-2.5 py-1.5 bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-200" />
+                  <span>طباعة A4</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
+      </div>
+
+      {/* 3. Mobile Dedicated Quick-Action Strip & Navigation (الهواتف الذكية والأجهزة الصغيرة) */}
+      <div className="md:hidden bg-slate-50 border-t border-slate-200/90 px-3 py-2 space-y-2">
+        {/* Mobile Workspace Modes Tabs */}
+        {onChangeView && (
+          <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+            <button
+              onClick={() => {
+                if (onSelectBlankPlan) onSelectBlankPlan();
+                else if (onNewBlankPlan) onNewBlankPlan();
+                if (onChangeView) onChangeView('editor');
+              }}
+              className={`flex-1 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                currentView === 'editor' && isCurrentPlanBlank
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-amber-800'
+              }`}
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>المفرغة 📌</span>
+            </button>
+            <button
+              onClick={() => onChangeView('editor')}
+              className={`flex-1 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                currentView === 'editor' && !isCurrentPlanBlank
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>المحرر</span>
+            </button>
+            <button
+              onClick={() => onChangeView('dashboard')}
+              className={`flex-1 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                currentView === 'dashboard'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>الإنتاجية ({toArabicDigits(plans.length)})</span>
+            </button>
+            <button
+              onClick={onOpenResourcesModal}
+              className="flex-1 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 text-slate-700 hover:text-emerald-900 transition-all"
+              title="المصادر التعليمية"
+            >
+              <Layers className="w-3.5 h-3.5 text-emerald-700" />
+              <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+            </button>
+          </div>
+        )}
+
+        {/* Mobile Horizontal Quick-Action Strip */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 touch-pan-x">
+          <button
+            onClick={onOpenAiGenerator}
+            className="px-2.5 py-1.5 bg-linear-to-r from-emerald-700 to-teal-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+            <span>تحضير AI</span>
+          </button>
+
+          {onOpenWorksheetModal && (
+            <button
+              onClick={onOpenWorksheetModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 to-emerald-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+            >
+              <FileCheck2 className="w-3.5 h-3.5 text-teal-200 shrink-0" />
+              <span>ورقة عمل AI</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenAbacusModal}
+            className="px-2.5 py-1.5 bg-white text-emerald-900 border border-emerald-300 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>المحاكي</span>
+          </button>
+
+          <button
+            onClick={onOpenPlansViewer}
+            className="px-2.5 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <FolderKanban className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+            <span>الخطط ({toArabicDigits(plans.length)})</span>
+          </button>
+
+          <button
+            onClick={onOpenExportModal}
+            className="px-2.5 py-1.5 bg-blue-50 text-blue-900 border border-blue-300 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <FileDown className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+            <span>تصدير</span>
+          </button>
+
+          <button
+            onClick={onOpenPrintView}
+            className="px-2.5 py-1.5 bg-slate-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-200 shrink-0" />
+            <span>طباعة A4</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (onRequestDeletePlan) onRequestDeletePlan();
+              else if (onDeletePlan) onDeletePlan(activePlanId);
+            }}
+            className="px-2.5 py-1.5 bg-rose-50 text-rose-800 border border-rose-300 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span>حذف الخطة</span>
+          </button>
+        </div>
+
+        {/* Mobile Plan Selector in Editor mode */}
+        {currentView === 'editor' && (
+          <div className="flex flex-col gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-600 shrink-0">الخطة:</span>
+              <select
+                value={activePlanId}
+                onChange={(e) => onSelectPlan(e.target.value)}
+                className="text-xs bg-slate-50 font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 w-full focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+              >
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.header.lessonTitle
+                      ? `${p.header.subject || 'مبحث'} - ${p.header.grade || 'الصف'}: ${p.header.lessonTitle}`
+                      : p.title || 'استمارة تحضير مفرغة'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
 
         {/* Mobile Dropdown Drawer when open */}
         {isMobileMenuOpen && (
