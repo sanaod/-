@@ -160,6 +160,8 @@ export function exportSemesterPlanToWord(plan: SemesterPlanDocument) {
     <strong>الحصص الأسبوعية:</strong> ${toArabicDigits(plan.weeklyPeriodsCount)} حصص &nbsp;|&nbsp;
     <strong>إجمالي الأسابيع:</strong> ${toArabicDigits(plan.totalSemesterWeeks)} أسبوعاً &nbsp;|&nbsp;
     <strong>إجمالي حصص الفصل:</strong> ${toArabicDigits(plan.totalSemesterPeriods)} حصة موزعة
+    <br>
+    <small style="color: #047857; font-weight: bold;">ملاحظة التقويم: تم اعتماد عطلة نهاية الأسبوع (الجمعة والسبت) والإجازات الرسمية المعتمدة من وزارة التربية والتعليم الفلسطينية في احتساب المدى الزمني للدروس.</small>
   </div>
 
   <table class="data-table" border="1" cellpadding="5" cellspacing="0">
