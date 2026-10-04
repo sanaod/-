@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { LessonHeader, STANDARD_GRADES } from '../types/lessonPlan';
-import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check } from 'lucide-react';
+import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface LessonHeaderCardProps {
   header: LessonHeader;
   onChange: (header: LessonHeader) => void;
+  onOpenUnitPlanModal?: () => void;
+  onOpenSemesterPlanModal?: () => void;
+  onOpenResourcesModal?: () => void;
+  resourcesCount?: number;
 }
 
-export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onChange }) => {
+export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
+  header,
+  onChange,
+  onOpenUnitPlanModal,
+  onOpenSemesterPlanModal,
+  onOpenResourcesModal,
+  resourcesCount,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleChange = (field: keyof LessonHeader, val: any) => {
@@ -39,22 +50,53 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
           </p>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors border border-white/20 backdrop-blur-xs"
-        >
-          {isEditing ? (
-            <>
-              <Check className="w-4 h-4 text-emerald-300" />
-              حفظ البيانات
-            </>
-          ) : (
-            <>
-              <Edit3 className="w-4 h-4" />
-              تعديل بيانات الرأس
-            </>
+        <div className="flex items-center gap-2">
+          {onOpenResourcesModal && (
+            <button
+              type="button"
+              onClick={onOpenResourcesModal}
+              title="إدارة ورفع المناهج والكتب والمصادر التعليمية بسهولة"
+              className="px-3.5 py-1.5 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl text-xs font-black text-white flex items-center gap-1.5 transition-all shadow-xs border border-emerald-300/40 cursor-pointer group"
+            >
+              <div className="relative p-0.5 bg-emerald-800/80 rounded-md shrink-0">
+                <Layers className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                  +
+                </span>
+              </div>
+              <span>إضافة المصادر {resourcesCount !== undefined ? `(${toArabicDigits(resourcesCount)})` : ''}</span>
+            </button>
           )}
-        </button>
+
+          {onOpenUnitPlanModal && (
+            <button
+              type="button"
+              onClick={onOpenUnitPlanModal}
+              title="توليد تحضير وحدة دراسية كاملة مكونة من مجموعة دروس بالذكاء الاصطناعي"
+              className="px-3.5 py-1.5 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs border border-white/20 backdrop-blur-xs cursor-pointer group"
+            >
+              <Boxes className="w-4 h-4 text-blue-200 group-hover:scale-110 transition-transform" />
+              <span>تحضير وحدة كاملة (AI)</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors border border-white/20 backdrop-blur-xs cursor-pointer"
+          >
+            {isEditing ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                حفظ البيانات
+              </>
+            ) : (
+              <>
+                <Edit3 className="w-4 h-4" />
+                تعديل بيانات الرأس
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Grid of Lesson Details */}
@@ -240,7 +282,7 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
         )}
 
         {/* Lesson Title Banner */}
-        <div className="mt-4 p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between">
+        <div className="mt-4 p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-xs">
               عنوان الدرس
@@ -253,9 +295,33 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({ header, onCh
               )}
             </h3>
           </div>
-          <span className="text-xs text-emerald-800 font-medium hidden md:inline">
-            {header.directorate || header.ministry || 'النموذج الوزاري المعتمد'}
-          </span>
+          <div className="flex items-center gap-2">
+            {onOpenSemesterPlanModal && (
+              <button
+                type="button"
+                onClick={onOpenSemesterPlanModal}
+                className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs hover:shadow-xs cursor-pointer group"
+                title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
+              >
+                <CalendarRange className="w-3.5 h-3.5 text-teal-700 group-hover:scale-110 transition-transform" />
+                <span>الخطة الفصلية وتوزيع الحصص</span>
+              </button>
+            )}
+            {onOpenUnitPlanModal && (
+              <button
+                type="button"
+                onClick={onOpenUnitPlanModal}
+                className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs hover:shadow-xs cursor-pointer group"
+                title="توليد تحضير وحدة تعليمية كاملة بمجموع دروسها"
+              >
+                <Boxes className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
+                <span>تحضير وحدة كاملة (AI)</span>
+              </button>
+            )}
+            <span className="text-xs text-emerald-800 font-medium hidden md:inline">
+              {header.directorate || header.ministry || 'النموذج الوزاري المعتمد'}
+            </span>
+          </div>
         </div>
       </div>
     </div>

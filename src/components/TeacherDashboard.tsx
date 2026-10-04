@@ -44,6 +44,8 @@ import {
   LayoutGrid,
   Tag,
   FileCheck2,
+  Boxes,
+  CalendarRange,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
@@ -57,6 +59,8 @@ interface TeacherDashboardProps {
   onSelectPlan: (id: string) => void;
   onOpenEditor: () => void;
   onOpenAiGenerator: () => void;
+  onOpenUnitPlanModal?: () => void;
+  onOpenSemesterPlanModal?: () => void;
   onOpenWorksheetModal?: (planId?: string) => void;
   onOpenPrintView: (planId?: string) => void;
   onOpenBlankTemplateModal?: () => void;
@@ -214,6 +218,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onSelectPlan,
   onOpenEditor,
   onOpenAiGenerator,
+  onOpenUnitPlanModal,
+  onOpenSemesterPlanModal,
   onOpenWorksheetModal,
   onOpenPrintView,
   onOpenBlankTemplateModal,
@@ -832,6 +838,28 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <span>تحضير درس جديد بالـ AI</span>
             </button>
 
+            {onOpenUnitPlanModal && (
+              <button
+                onClick={onOpenUnitPlanModal}
+                className="px-4 py-2 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs hover:shadow-sm active:scale-97 cursor-pointer"
+                title="توليد تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
+              >
+                <Boxes className="w-4 h-4 text-blue-200 shrink-0" />
+                <span>تحضير وحدة كاملة (AI)</span>
+              </button>
+            )}
+
+            {onOpenSemesterPlanModal && (
+              <button
+                onClick={onOpenSemesterPlanModal}
+                className="px-4 py-2 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs hover:shadow-sm active:scale-97 cursor-pointer group"
+                title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
+              >
+                <CalendarRange className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform shrink-0" />
+                <span>الخطة الفصلية وتوزيع الحصص</span>
+              </button>
+            )}
+
             {onOpenBlankTemplateModal && (
               <button
                 onClick={onOpenBlankTemplateModal}
@@ -852,12 +880,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             {onOpenResourcesModal && (
               <button
                 onClick={onOpenResourcesModal}
-                className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border border-emerald-300 hover:border-emerald-400 shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer"
-                title="بنك المصادر والمناهج والمراجع التعليمية"
+                className="px-4 py-2 bg-linear-to-r from-emerald-100 via-teal-50 to-emerald-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all border-2 border-emerald-400 hover:border-emerald-500 shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-97 cursor-pointer ring-1 ring-emerald-500/20 group"
+                title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
               >
-                <Layers className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span>المصادر والمناهج</span>
-                <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold tabular-nums">
+                <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0 group-hover:bg-emerald-800 transition-colors">
+                  <Layers className="w-4 h-4 text-emerald-100" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                    +
+                  </span>
+                </div>
+                <span>إضافة المصادر والمناهج</span>
+                <span className="px-2 py-0.5 bg-emerald-800 group-hover:bg-emerald-900 text-white rounded-full text-[11px] font-black tabular-nums shadow-2xs">
                   {toArabicDigits(resourcesCount)}
                 </span>
               </button>

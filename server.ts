@@ -90,6 +90,7 @@ function createFallbackLessonPlan(params: {
   school?: string;
   directorate?: string;
   teacherName?: string;
+  unitTitle?: string;
   customNotes?: string;
   resources?: any[];
 }) {
@@ -105,6 +106,7 @@ function createFallbackLessonPlan(params: {
     school = 'مدرسة التميز النموذجية',
     directorate = 'مديرية التربية والتعليم',
     teacherName = 'معلم المبحث المتميز',
+    unitTitle,
     customNotes = '',
   } = params;
 
@@ -147,6 +149,7 @@ function createFallbackLessonPlan(params: {
         grade,
         section: 'أ',
         lessonTitle,
+        unitTitle: unitTitle || undefined,
         totalPeriods: Number(totalPeriods) || 2,
         currentPeriod: Number(currentPeriod) || 1,
         periodDurationMinutes: Number(periodDurationMinutes) || 40,
@@ -362,6 +365,8 @@ function createFallbackLessonPlan(params: {
       },
     },
   };
+
+  return plan;
 }
 
 // Endpoint: Generate Full Pedagogical Lesson Plan
@@ -1242,6 +1247,953 @@ app.post('/api/generate-worksheet', async (req, res) => {
         error: 'فشل في توليد ورقة العمل التفاعلية: ' + (err.message || 'خطأ غير متوقع'),
       });
     }
+  }
+});
+
+/**
+ * Generates tailored lesson suggestions for a unit when external AI is unavailable.
+ */
+function createFallbackUnitLessons(params: {
+  subject: string;
+  grade: string;
+  unitTitle: string;
+  numberOfLessons?: number;
+}) {
+  const { subject, grade, unitTitle, numberOfLessons = 4 } = params;
+  const count = Math.max(2, Math.min(8, Number(numberOfLessons) || 4));
+
+  const isMath = /رياضيات|حساب|أعداد|هندسة|كسور|ضرب|قسمة/i.test(subject) || /أعداد|كسور|هندسة|جمع|طرح|ضرب|قسمة|قياس/i.test(unitTitle);
+  const isScience = /علوم|أحياء|كيمياء|فيزياء|بيئة|طاقة/i.test(subject) || /مادة|كائنات|طاقة|جسم|خلية|حواس|بيئة|فضاء/i.test(unitTitle);
+  const isArabic = /عربي|لغة|قراءة|نصوص|إملاء/i.test(subject) || /قراءة|لغة|قصة|شعر|بلاغة|نحو/i.test(unitTitle);
+  const isSocial = /اجتماعيات|تاريخ|جغرافيا|وطنية/i.test(subject) || /فلسطين|تاريخ|جغرافيا|وطن|تراث/i.test(unitTitle);
+
+  let templates: Array<{ title: string; periods: number; summary: string }> = [];
+
+  if (isMath) {
+    templates = [
+      {
+        title: `الاستكشاف والتهيئة لمفاهيم ${unitTitle}`,
+        periods: 2,
+        summary: `مراجعة المعارف السابقة وبناء التصور البصري والمكاني لمفاهيم الوحدة باستخدام المحسوسات والمعداد الرقمي.`,
+      },
+      {
+        title: `القيمة والتمثيل والأنماط في ${unitTitle}`,
+        periods: 2,
+        summary: `تحليل العلاقات الرياضية وكتابة وتفكيك الأعداد والمفاهيم بالصورة الموسعة وجداول المنازل.`,
+      },
+      {
+        title: `العمليات التطبيقية والحل الاستراتيجي للمسائل`,
+        periods: 2,
+        summary: `توظيف خوارزميات التفكير الرياضي والحل المنطقي للمسائل الحياتية المتدرجة الصعوبة.`,
+      },
+      {
+        title: `المقارنة والترتيب والربط بالواقع المعاش`,
+        periods: 2,
+        summary: `إجراء المقارنات واستنتاج العلاقات الرياضية وربط معطيات الدرس بمعالم وطبيعة فلسطين.`,
+      },
+      {
+        title: `التقويم التكاملي ومهمة الأداء الختامية للوحدة`,
+        periods: 2,
+        summary: `تنفيذ مهمة تقويم أصيل GRASPS وسلالم التقدير اللفظي الشاملة لجميع نتاجات الوحدة.`,
+      },
+      {
+        title: `الأنشطة الإثرائية والتحديات العلاجية التمايزية`,
+        periods: 1,
+        summary: `جلسات داعمة لتثبيت المفاهيم وتحديات رياضية للموهوبين لتعزيز التفكير الناقد.`,
+      },
+    ];
+  } else if (isScience) {
+    templates = [
+      {
+        title: `الملاحظة والاستقصاء الأولي لظواهر ${unitTitle}`,
+        periods: 2,
+        summary: `إثارة الفضول العلمي وجمع الملاحظات الأولية وتصنيف العناصر من البيئة المحيطة.`,
+      },
+      {
+        title: `التجارب العملية والتحولات في ${unitTitle}`,
+        periods: 2,
+        summary: `تنفيذ تجارب مخبرية وحسية آمنة واستنتاج القوانين والمبادئ العلمية المفسرة للظاهرة.`,
+      },
+      {
+        title: `العلاقات البيئية والتطبيقات التكنولوجية الحديثة`,
+        periods: 2,
+        summary: `ربط المفهوم العلمي بالتطبيقات الحياتية المعاصرة وكيفية حماية البيئة واستدامتها.`,
+      },
+      {
+        title: `مشروع استقصائي تطبيقي (مهمة GRASPS للوحدة)`,
+        periods: 2,
+        summary: `تصميم منتج علمي أو نموذج تجريبي يعالج مشكلة بيئية وصحية في المجتمع المحلي.`,
+      },
+      {
+        title: `مراجعة المفاهيم والتقويم الختامي الشامل للوحدة`,
+        periods: 1,
+        summary: `حل التمارين السابرة وتأكيد السلامة المفاهيمية وقياس تحقق معايير المنهاج.`,
+      },
+    ];
+  } else if (isArabic) {
+    templates = [
+      {
+        title: `الاستماع والمحادثة: مدخل إلى ${unitTitle}`,
+        periods: 2,
+        summary: `تنمية مهارات الإصغاء النشط والتعبير الشفوي السليم وبناء جسور الحوار مع الزملاء.`,
+      },
+      {
+        title: `القراءة الجهرية والفهم القرائي للنص الرئيس`,
+        periods: 2,
+        summary: `القراءة السليمة الممثلة للمعنى واستنتاج الأفكار الرئيسة والفرعية وتذوق الجماليات اللغوية.`,
+      },
+      {
+        title: `التراكيب اللغوية والأنماط الصرفية والنحوية`,
+        periods: 2,
+        summary: `استكشاف القواعد النحوية وتطبيق الأنماط اللغوية في سياقات تعبيرية وظيفية.`,
+      },
+      {
+        title: `الإملاء والخط العربي والتعبير الكتابي الإبداعي`,
+        periods: 2,
+        summary: `كتابة نصوص مترابطة بلغة فصيحة ومراعاة القواعد الإملائية وجماليات الخط والرسم.`,
+      },
+      {
+        title: `المسرحة والإنشاد والمهمة الأدائية الختامية`,
+        periods: 1,
+        summary: `تمثيل الأدوار وإلقاء النصوص الأدبية ومحاكاة مواقف تواصلية واقعية.`,
+      },
+    ];
+  } else if (isSocial) {
+    templates = [
+      {
+        title: `المدخل الجغرافي والمكاني لوحدة ${unitTitle}`,
+        periods: 2,
+        summary: `قراءة الخرائط وتحديد المواقع الجغرافية ومعالم فلسطين وطبيعتها الخلابة.`,
+      },
+      {
+        title: `الأبعاد التاريخية والحضارية والتراثية`,
+        periods: 2,
+        summary: `استكشاف الشواهد التاريخية والرواية الوطنية وتعزيز الوعي بالهوية والتراث الأصيل.`,
+      },
+      {
+        title: `الواقع الاقتصادي والمجتمعي والتحديات المعاصرة`,
+        periods: 2,
+        summary: `تحليل الأنشطة السكانية والاقتصادية ودور المواطن الفاعل في خدمة وطنه ومجتمعه.`,
+      },
+      {
+        title: `مبادرة مجتمعية ومهمة أدائية وطنية (GRASPS)`,
+        periods: 2,
+        summary: `إعداد مجلة حائطية أو كتيب توعوي أو تقرير استقصائي ميداني عن معالم الوحدة.`,
+      },
+    ];
+  } else {
+    templates = [
+      {
+        title: `التمهيد وبناء المفاهيم التأسيسية لوحدة ${unitTitle}`,
+        periods: 2,
+        summary: `استثارة دافعية الطلبة واستكشاف المعارف القبلية وربطها بنتاجات الوحدة الجديدة.`,
+      },
+      {
+        title: `التوسع والتعمق المهاري في موضوعات ${unitTitle}`,
+        periods: 2,
+        summary: `تطبيق استراتيجيات التعلم التفاعلي والعمل الجماعي لإتقان مهارات التعلم الأساسية.`,
+      },
+      {
+        title: `التطبيقات العملية وحل المشكلات المتصلة بالواقع`,
+        periods: 2,
+        summary: `توظيف المهارات في حل تحديات حياتية ونمذجة المواقف التعليمية بأسلوب إبداعي.`,
+      },
+      {
+        title: `المهمة الأدائية الختامية والتقويم التراكمي للوحدة`,
+        periods: 2,
+        summary: `قياس الكفايات التكاملية الأربعة وتنفيذ مهمة أدائية وفق سلم تقدير لفظي موحد.`,
+      },
+    ];
+  }
+
+  // Slice or generate to exact count
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    const tmpl = templates[i % templates.length];
+    result.push({
+      lessonNumber: i + 1,
+      title: i < templates.length ? tmpl.title : `${tmpl.title} (الجزء ${i + 1})`,
+      periods: tmpl.periods,
+      summary: tmpl.summary,
+    });
+  }
+
+  return result;
+}
+
+// Endpoint: Suggest lessons for a unit
+app.post('/api/suggest-unit-lessons', async (req, res) => {
+  try {
+    const { subject, grade, unitTitle, numberOfLessons = 4 } = req.body;
+
+    if (!unitTitle) {
+      return res.status(400).json({ error: 'يرجى تحديد عنوان الوحدة الدراسية' });
+    }
+
+    try {
+      const prompt = `أنت خبير تربوي ومصمم مناهج دراسية معتمد لوزارة التربية والتعليم في فلسطين والدول العربية.
+قم باقتراح خطة توزيع دروس منطقية وبيداغوجية متسلسلة لوحدة تعليمية كاملة:
+المبحث: ${subject || 'عام'}
+الصف: ${grade || 'الأساسي'}
+عنوان الوحدة: ${unitTitle}
+عدد الدروس المطلوب: ${numberOfLessons}
+
+أخرج النتيجة بدقة بتنسيق JSON حصراً كالتالي:
+[
+  {
+    "lessonNumber": 1,
+    "title": "عنوان الدرس الأول الدقيق والتربوي",
+    "periods": 2,
+    "summary": "نتاجات التعلم والهدف العام للدرس باختصار"
+  }, ...
+]`;
+
+      const response = await generateWithModelFallback({
+        contents: prompt,
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              lessonNumber: { type: Type.INTEGER },
+              title: { type: Type.STRING },
+              periods: { type: Type.INTEGER },
+              summary: { type: Type.STRING },
+            },
+            required: ['lessonNumber', 'title', 'periods', 'summary'],
+          },
+        },
+      });
+
+      const text = response?.text;
+      if (text) {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return res.json({ success: true, lessons: parsed });
+        }
+      }
+    } catch (aiErr: any) {
+      console.warn('[AI Unit Planner] Suggestion model error, using curriculum template:', aiErr?.message);
+    }
+
+    // Fallback if AI fails or rate limited
+    const fallbackLessons = createFallbackUnitLessons({
+      subject: subject || 'الرياضيات',
+      grade: grade || 'الثالث الأساسي',
+      unitTitle,
+      numberOfLessons,
+    });
+
+    return res.json({ success: true, lessons: fallbackLessons });
+  } catch (err: any) {
+    console.error('Error suggesting unit lessons:', err);
+    const fallbackLessons = createFallbackUnitLessons({
+      subject: req.body?.subject || 'الرياضيات',
+      grade: req.body?.grade || 'الثالث الأساسي',
+      unitTitle: req.body?.unitTitle || 'الوحدة التعليمية',
+      numberOfLessons: req.body?.numberOfLessons || 4,
+    });
+    return res.json({ success: true, lessons: fallbackLessons });
+  }
+});
+
+// Endpoint: Generate complete unit preparation with multiple lesson plans
+app.post('/api/generate-unit-plan', async (req, res) => {
+  try {
+    const {
+      unitTitle,
+      subject = 'الرياضيات',
+      grade = 'الثالث الأساسي',
+      lessons,
+      numberOfLessons = 4,
+      country = 'دولة فلسطين',
+      ministry = 'وزارة التربية والتعليم',
+      school = 'مدرسة التميز النموذجية',
+      directorate = 'مديرية التربية والتعليم',
+      teacherName = 'معلم المبحث المتميز',
+      periodDurationMinutes = 40,
+      customNotes = '',
+    } = req.body;
+
+    if (!unitTitle) {
+      return res.status(400).json({ error: 'يرجى إدخال عنوان الوحدة التعليمية' });
+    }
+
+    // Resolve lesson list
+    let targetLessons: Array<{ title: string; periods?: number; summary?: string }> = [];
+    if (Array.isArray(lessons) && lessons.length > 0) {
+      targetLessons = lessons;
+    } else {
+      targetLessons = createFallbackUnitLessons({
+        subject,
+        grade,
+        unitTitle,
+        numberOfLessons: Number(numberOfLessons) || 4,
+      });
+    }
+
+    console.log(`[AI Unit Planner] Generating ${targetLessons.length} lesson plans for unit "${unitTitle}"...`);
+
+    const generatedPlans = [];
+
+    for (let i = 0; i < targetLessons.length; i++) {
+      const lessonItem = targetLessons[i];
+      const lessonTitle = lessonItem.title || `الدرس ${i + 1}`;
+      const totalPeriods = lessonItem.periods || 2;
+      const lessonNotes = `${customNotes ? customNotes + ' | ' : ''}هذا الدرس هو الدرس رقم (${i + 1}) من وحدة: "${unitTitle}". الهدف الخاص بالدرس: ${lessonItem.summary || ''}. يرجى مراعاة التسلسل البيداغوجي لدروس الوحدة والتكامل المعرفي بينها.`;
+
+      // Generate lesson plan using fallback builder with unit title metadata
+      const plan = createFallbackLessonPlan({
+        subject,
+        grade,
+        lessonTitle,
+        totalPeriods,
+        currentPeriod: 1,
+        periodDurationMinutes: Number(periodDurationMinutes) || 40,
+        country,
+        ministry,
+        school,
+        directorate,
+        teacherName,
+        customNotes: lessonNotes,
+      });
+
+      // Augment plan with unit title
+      plan.id = `unit-${Date.now()}-${i + 1}`;
+      plan.title = `[${unitTitle}] ${lessonTitle}`;
+      plan.header.unitTitle = unitTitle;
+
+      // Ensure slight date progression
+      const dayOffset = (i * 2) + 1;
+      const d = new Date();
+      d.setDate(d.getDate() + dayOffset);
+      plan.header.date = d.toISOString().split('T')[0];
+
+      generatedPlans.push(plan);
+    }
+
+    return res.json({
+      success: true,
+      unitTitle,
+      count: generatedPlans.length,
+      plans: generatedPlans,
+    });
+  } catch (err: any) {
+    console.error('Error generating unit plan:', err);
+    return res.status(500).json({
+      error: 'فشل في توليد تحضير الوحدة: ' + (err.message || 'خطأ غير متوقع'),
+    });
+  }
+});
+
+// Helper: Build curriculum fallback semester plan
+function createFallbackSemesterPlan(params: {
+  subject: string;
+  grade: string;
+  semester?: string;
+  totalSemesterWeeks?: number;
+  weeklyPeriodsCount?: number;
+  teacherName?: string;
+  school?: string;
+  directorate?: string;
+  ministry?: string;
+  country?: string;
+  unitTopics?: string[];
+  startDate?: string;
+}) {
+  const {
+    subject,
+    grade,
+    semester = 'الفصل الدراسي الأول',
+    totalSemesterWeeks = 16,
+    weeklyPeriodsCount = 5,
+    teacherName = 'معلم المبحث المتميز',
+    school = 'مدرسة التميز النموذجية',
+    directorate = 'مديرية التربية والتعليم',
+    ministry = 'وزارة التربية والتعليم',
+    country = 'دولة فلسطين',
+    unitTopics = [],
+    startDate = '2026-09-01',
+  } = params;
+
+  interface UnitSpec {
+    title: string;
+    goals: string[];
+    lessons: string[];
+    resources: string[];
+    strategies: string[];
+    assessments: string[];
+  }
+
+  let units: UnitSpec[] = [];
+
+  if (subject.includes('رياضيات')) {
+    units = [
+      {
+        title: 'الوحدة الأولى: الأعداد والقيمة المنزلية والعمليات الحسابية',
+        goals: [
+          'توظيف الحس العددي والمكاني في قراءة وتمثيل ومقارنة الأعداد وترتيبها',
+          'إتقان خوارزميات العمليات الحسابية الأساسية بدقة وحل المسائل الحياتية',
+          'بناء روابط بين الأنماط العددية ومواقف واقعية',
+        ],
+        lessons: [
+          'قراءة الأعداد وكتابتها وتمثيلها بالمحسوسات',
+          'القيمة المكانية والمنزلية والصورة الموسعة للأعداد',
+          'المقارنة والترتيب والتقريب لأقرب منزلة',
+          'الجمع مع الحمل والطرح مع الاستلاف ومسائل واقعية',
+        ],
+        resources: ['الكتاب المدرسي المعتمد', 'المعداد الحسابي الرقمي OER', 'بطاقات المنازل ولوحة المئة', 'منصة روافد التعليمية'],
+        strategies: ['التعلم بالمحسوسات', 'حل المشكلات الواقعية', 'فكر - زاوج - شارك', 'النمذجة الرياضية'],
+        assessments: ['تقويم تشخيصي قبلي', 'ملاحظة الأداء الفردي', 'سؤال قصير سابر', 'بطاقة خروج Exit Ticket'],
+      },
+      {
+        title: 'الوحدة الثانية: الهندسة والقياس والأشكال المكانية',
+        goals: [
+          'التعرف على خصائص الأشكال الهندسية الثنائية والثلاثية الأبعاد وتصنيفها',
+          'حساب المحيط والمساحة وتقدير القياسات باستخدام وحدات معيارية',
+          'استكشاف التناظر والتماثل في الطبيعة والبيئة المعاشة',
+        ],
+        lessons: [
+          'المفاهيم الهندسية الأساسية (النقطة، المستقيم، القطعة المستقيمة، والزاوية)',
+          'خصائص المضلعات والمثلثات والأشكال الرباعية',
+          'المحيط والمساحة ووحدات القياس المعيارية',
+          'المجسمات الهندسية وخواصها وتطبيقاتها المعمارية',
+        ],
+        resources: ['الكتاب المدرسي', 'أشكال هندسية مجسمة ومسطرة قياس', 'برمجية جيوجبرا التفاعلية OER', 'أوراق شبكة المربعات'],
+        strategies: ['الاستقصاء الموجه', 'التعلم بالعمل اليدوي والمجسمات', 'المقارنة البصرية والتحليل'],
+        assessments: ['مهمة قياس عملية', 'رسم وتصنيف الأشكال', 'سلم تقدير لفظي للمهارة الهندسية'],
+      },
+      {
+        title: 'الوحدة الثالثة: الكسور والعمليات المترابطة',
+        goals: [
+          'فهم مفهوم الكسر كجزء من كل وجزء من مجموعة',
+          'المقارنة بين الكسور والكسور المتكافئة وجمعها وطرحها',
+          'ربط الكسور بالحياة اليومية والتقسيم العادل',
+        ],
+        lessons: [
+          'مفهوم الكسر وتسميته وتمثيله بالأشكال والشرائط',
+          'الكسور المتكافئة والتبسيط لأبسط صورة',
+          'مقارنة الكسور ذات المقامات المتشابهة والمختلفة',
+          'جمع وطرح الكسور وحل مسائل لفظية حياتية',
+        ],
+        resources: ['الكتاب المدرسي', 'شرائط ودوائر الكسور الملونة', 'منصات تفاعلية رقمية OER', 'أوراق عمل تدريبية'],
+        strategies: ['التمثيل البصري والحسي', 'التعلم التعاوني الموجه', 'العصف الذهني'],
+        assessments: ['تطبيق عملي على شرائط الكسور', 'مهمة حل مسألة تقاسم عادل', 'اختبار تشخيصي قصير'],
+      },
+      {
+        title: 'الوحدة الرابعة: تنظيم البيانات والإحصاء ومهمة الأداء الأصيل',
+        goals: [
+          'جمع البيانات الإحصائية وتصنيفها وتمثيلها بيانياً وتفسيرها',
+          'قراءة الجداول التكرارية والمدرجات والأعمدة البيانية واستخلاص النتائج',
+          'تنفيذ مهمة تقويم أصيل GRASPS متكاملة مع البيئة المدرسية',
+        ],
+        lessons: [
+          'جمع البيانات وتنظيمها في جداول الإشارات التكرارية',
+          'تمثيل البيانات بالأعمدة البيانية والصور التوضيحية',
+          'قراءة الرسوم البيانية وتفسير المؤشرات والنتائج',
+          'مهمة الأداء الأصيل GRASPS وسلالم التقدير والتقويم الختامي',
+        ],
+        resources: ['الكتاب المدرسي', 'بيانات إحصائية مدرسية حقيقية', 'برمجية إكسل للمخططات البيانية', 'دليل مهمة GRASPS'],
+        strategies: ['التعلم القائم على المشاريع', 'الاستقصاء الميداني', 'العرض والمناقشة الجماعية'],
+        assessments: ['مهمة GRASPS الإحصائية الأصيلة', 'سلم Rubric لتقييم العرض والتحليل', 'اختبار نهاية الفصل'],
+      },
+    ];
+  } else if (subject.includes('علوم')) {
+    units = [
+      {
+        title: 'الوحدة الأولى: الكائنات الحية والبيئات الطبيعية',
+        goals: [
+          'استكشاف خصائص الكائنات الحية وتكيفاتها المورفولوجية والسلوكية',
+          'تحليل السلاسل والشبكات الغذائية والعلاقات الحيوية في النظام البيئي',
+          'تنمية اتجاهات حماية البيئة والتنوع الحيوي المحلي',
+        ],
+        lessons: [
+          'خصائص الكائنات الحية وحاجاتها الأساسية للبقاء',
+          'تكيف النباتات والحيوانات مع البيئة الفلسطينية',
+          'السلاسل والشبكات الغذائية وتدفق الطاقة في النظام البيئي',
+          'حماية البيئة والمحميات الطبيعية ومكافحة التلوث',
+        ],
+        resources: ['الكتاب المدرسي', 'عينات حية ونماذج بيئية', 'فيديوهات وثائقية OER من منصة روافد', 'مجهر وعدسات مكبرة'],
+        strategies: ['الاستقصاء العلمي القائم على الملاحظة', 'التجريب المخبري', 'الخرائط المفاهيمية', 'المناقشة العلمية'],
+        assessments: ['تقويم تشخيصي استكشافي', 'تقرير ملاحظة علمية', 'رسم شبكة غذائية بيئية', 'بطاقة خروج علمية'],
+      },
+      {
+        title: 'الوحدة الثانية: المادة وخصائصها وتحولاتها الفيزيائية',
+        goals: [
+          'التمييز بين حالات المادة الثلاث وخصائص كل حالة وتفسيرها جزيئياً',
+          'استقصاء أثر الحرارة في تغير حالات المادة (الانصهار، التجمد، التبخر، التكاثف)',
+          'تطبيق مهارات السلامة المخبرية في التجارب والاستكشافات',
+        ],
+        lessons: [
+          'حالات المادة (صلبة، سائلة، غازية) وخصائص الجسيمات',
+          'أثر الحرارة والتسخين والتبريد على تحولات المادة',
+          'المخاليط وطرق فصلها (الترشيح، التبخير، المغناطيس)',
+          'تطبيقات المادة في الحياة والصناعة والمحافظة على الموارد',
+        ],
+        resources: ['الكتاب المدرسي', 'أدوات مخبرية وموازين وكؤوس زجاجية', 'محاكيات PhET العلمية التفاعلية OER', 'أوراق عمل استقصائية'],
+        strategies: ['دورة التعلم الخماسية (5Es)', 'التجريب العملي المخبري', 'العصف الذهني والنمذجة'],
+        assessments: ['ملاحظة أداء التجربة المخبرية', 'إعداد جدول مقارنة بين الحالات', 'اختبار تحريري قصير'],
+      },
+      {
+        title: 'الوحدة الثالثة: القوى والحركة والطاقة وتطبيقاتها',
+        goals: [
+          'استكشاف مفهوم القوة وأنواعها (الجاذبية، الاحتكاك، المغناطيسية) وأثرها في الحركة',
+          'التعرف على أشكال الطاقة وتحولاتها وأهمية ترشيد استهلاكها',
+          'تصميم نماذج وآلات بسيطة تسهل إنجاز الأعمال',
+        ],
+        lessons: [
+          'مفهوم الحركة وتحديد الموقع والمسافة والسرعة',
+          'القوى المؤثرة وأثر قوة الجاذبية وقوة الاحتكاك',
+          'أشكال الطاقة (حركية، وضع، كهربائية، شمسية) وتحولاتها',
+          'الآلات البسيطة (الرافعة، السطح المائل، البكرة) وكيف تخدمنا',
+        ],
+        resources: ['الكتاب المدرسي', 'عربات صغيرة ونوابض ومغانط', 'محاكاة فيزيائية تفاعلية OER', 'أدوات من خامات البيئة'],
+        strategies: ['التعلم بالمشروعات والابتكار (STEM)', 'الاستكشاف الموجه', 'حل المشكلات التصميمية'],
+        assessments: ['تصميم نموذج آلة بسيطة واختبارها', 'سؤال تفسير علمي لظاهرة حركة', 'سلم تقدير للمشروع العلمي'],
+      },
+      {
+        title: 'الوحدة الرابعة: كوكب الأرض وموارده والتقويم الختامي الأصيل',
+        goals: [
+          'دراسة طبقات الأرض ومكونات القشرة الأرضية والصخور والمعادن',
+          'فهم دورة المياه في الطبيعة وتأثيرها على المناخ والطقس',
+          'تنفيذ مهمة تقويم أصيل GRASPS لحل مشكلة بيئية مجتمعية',
+        ],
+        lessons: [
+          'مكونات كوكب الأرض والصخور والتربة وأنواعها',
+          'دورة المياه في الطبيعة وحالات الطقس والمناخ',
+          'الموارد المتجددة وغير المتجددة وأهمية الاستدامة',
+          'مهمة GRASPS العلمية والتقويم الختامي الموحد',
+        ],
+        resources: ['الكتاب المدرسي', 'عينات صخور وتربة', 'مجسم الكرة الأرضية ودورة الماء', 'دليل مهمة الأداء GRASPS'],
+        strategies: ['التعلم الخدمي والمجتمعي', 'الاستقصاء الميداني لتربة المدرسة', 'الحوار والمناظرة البيئية'],
+        assessments: ['مهمة GRASPS لمعالجة هدر المياه أو تلوث التربة', 'سلم Rubric للأصالة العلمية', 'اختبار نهاية الفصل'],
+      },
+    ];
+  } else if (subject.includes('عرب')) {
+    units = [
+      {
+        title: 'الوحدة الأولى: آفاق القراءة الواعية والنصوص الأدبية الأصيلة',
+        goals: [
+          'قراءة النصوص قراءة جهرية معبرة مراعية مخارج الحروف والوصل والوقف',
+          'استيعاب الفكرة الرئيسة والأفكار الفرعية وتحليل معاني المفردات السياقية',
+          'تذوق الجماليات اللغوية والتشبيهات وإبداء الرأي في النص',
+        ],
+        lessons: [
+          'درس القراءة الأول: الاستماع والمحادثة وفهم المسموع',
+          'القراءة الجهرية التفسيرية واستخراج الأفكار والمفردات اللغوية',
+          'التراكيب اللغوية والأساليب النحوية المستهدفة',
+          'الأنشطة الإملائية والخط العربي والتعبير الشفوي',
+        ],
+        resources: ['الكتاب المدرسي', 'تسجيلات صوتية نموذجية للنصوص OER', 'معاجم لغوية مدرسية', 'منصة روافد'],
+        strategies: ['القراءة التفاعلية الموجهة', 'التعلم التعاوني السقراطي', 'استراتيجية مسرحة المناهج'],
+        assessments: ['تقويم تشخيصي للطلاقة القرائية', 'أسئلة الفهم والاستيعاب والتحليل', 'سلم تقدير لفظي للأداء القرائي'],
+      },
+      {
+        title: 'الوحدة الثانية: القواعد النحوية وبنية الجملة العربية',
+        goals: [
+          'التمييز بين أقسام الكلام (اسم، فعل، حرف) والجملة الاسمية والفعلية',
+          'إتقان الضبط الإعرابي السليم للكلمات وفق موقعها في الجملة',
+          'توظيف القواعد النحوية في التحدث والكتابة بلغة فصيحة سليمة',
+        ],
+        lessons: [
+          'أقسام الكلام وميزات كل قسم',
+          'الجملة الاسمية: المبتدأ والخبر وعلامات رفعهما',
+          'الجملة الفعلية: الفعل والفاعل والمفعول به',
+          'تطبيقات نحوية سياقية واستخراج الشواهد من النصوص',
+        ],
+        resources: ['الكتاب المدرسي', 'لوحات الإعراب التفاعلية', 'بطاقات نحوية ملونة OER', 'تمارين إلكترونية ذاتية التصحيح'],
+        strategies: ['الاستقراء النحوي والقياس', 'التعلم بالاكتشاف', 'التدريب العملي والتحويل النحوي'],
+        assessments: ['اختبار إعرابي قصير', 'تحويل الجمل وتصويب الأخطاء النحوية', 'ملاحظة الضبط السليم أثناء التحدث'],
+      },
+      {
+        title: 'الوحدة الثالثة: المهارات الإملائية ورسم الحروف والخط العربي',
+        goals: [
+          'إتقان رسم الهمزات (الوصل والقطع، المتوسطة، المتطرفة) وعلامات الترقيم',
+          'الكتابة بخط النسخ الجميل مع مراعاة قواعد الحروف المستقرة والهابطة',
+          'تطبيق القواعد الإملائية في الإملاء المنظور وغير المنظور',
+        ],
+        lessons: [
+          'همزتا الوصل والقطع في الأسماء والأفعال والحروف',
+          'الهمزة المتوسطة وقاعدة أقوى الحركات',
+          'علامات الترقيم ومواضع استخدامها الصحيحة في الفقرة',
+          'قواعد خط النسخ وتطبيقات الإملاء الاختباري',
+        ],
+        resources: ['الكتاب المدرسي', 'كراسة الخط العربي', 'بطاقات إملائية ومطويات إرشادية OER', 'سبورات بيضاء فردية'],
+        strategies: ['النمذجة الكتابية الحية', 'التحليل البصري لحركة الحروف', 'التصحيح الذاتي وتصحيح الأقران'],
+        assessments: ['نص إملائي اختباري مقنن', 'تقييم كراسة الخط وفق المعايير', 'بطاقة تدقيق الأخطاء الشائعة'],
+      },
+      {
+        title: 'الوحدة الرابعة: التعبير الكتابي الإبداعي ومهمة GRASPS الأصيلة',
+        goals: [
+          'بناء فقرة متماسكة ومترابطة الأفكار باستخدام أدوات الربط وعلامات الترقيم',
+          'كتابة نصوص وظيفية وإبداعية (رسالة، قصة، تقرير، مقال قصير)',
+          'تنفيذ مهمة GRASPS التعبيرية الأصيلة وتقييمها بسلم Rubric شامل',
+        ],
+        lessons: [
+          'عناصر كتابة الفقرة وتوظيف أدوات الربط وحسن الاستهلال',
+          'كتابة الرسائل الإخوانية والرسمية وبطاقات التهنئة',
+          'كتابة القصة القصيرة: الشخصيات، المكان، الزمان، العقدة، والحل',
+          'مهمة GRASPS الكتابية الأصيلة والتقويم الختامي الشامل',
+        ],
+        resources: ['الكتاب المدرسي', 'نماذج ونصوص إبداعية ملهمة', 'دليل مهمة الأداء GRASPS', 'سلم التقدير اللفظي للتعبير'],
+        strategies: ['ورشة الكتابة الإبداعية', 'العصف الذهني التوليدي', 'المراجعة والتحرير في مجموعات'],
+        assessments: ['مهمة GRASPS لإنتاج نص أصيل', 'سلم Rubric لجماليات التعبير واللغة', 'اختبار نهاية الفصل'],
+      },
+    ];
+  } else {
+    // General subject syllabus fallback
+    units = [
+      {
+        title: `الوحدة الأولى: مدخل ومفاهيم أساسية في ${subject}`,
+        goals: [
+          `استكشاف المفاهيم التأسيسية لمنهاج ${subject} وربطها بالمعارف السابقة`,
+          'تنمية مهارات التفكير النقدي والاستدلال العلمي والتطبيقي',
+          'توظيف المصادر التعليمية المفتوحة OER في تعزيز التعلم الذاتي',
+        ],
+        lessons: [
+          `مقدمة واستكشاف موضوعات ${subject}`,
+          'المفاهيم المحورية والمهارات الرئيسة للوحدة',
+          'التطبيقات العملية والأمثلة التوضيحية السياقية',
+          'أنشطة المراجعة والتثبيت والتكامل المعرفي',
+        ],
+        resources: ['الكتاب المدرسي المعتمد', 'منصة روافد التعليمية OER', 'أوراق عمل تفاعلية', 'وسائط تعليمية مرئية'],
+        strategies: ['التعلم النشط والتعاوني', 'الحوار والمناقشة', 'العصف الذهني', 'حل المشكلات'],
+        assessments: ['تقويم تشخيصي قبلي', 'ملاحظة الأداء الفردي والجماعي', 'بطاقة خروج'],
+      },
+      {
+        title: `الوحدة الثانية: المهارات التخصصية والتعمق التطبيقي في ${subject}`,
+        goals: [
+          'التوسع والتعمق في التطبيقات العملية والمهارات المستهدفة',
+          'تحليل البيانات والمواقف واستخلاص التعميمات الصحيحة',
+          'تعزيز مهارات البحث والاستقصاء والتعلم التشاركي',
+        ],
+        lessons: [
+          'التعمق المهاري والمفاهيمي في موضوعات المنهاج',
+          'الأنشطة الاستقصائية والتطبيق العملي في الغرفة الصفية',
+          'حل التحديات والمشكلات المتصلة بالبيئة الواقعية',
+          'تقييم الأداء المرحلي والتغذية الراجعة الفورية',
+        ],
+        resources: ['الكتاب المدرسي', 'أدوات ونماذج تخصصية', 'منصات ومواقع تعليمية موثوقة OER', 'دليل المعلم للمادة'],
+        strategies: ['الاستقصاء الموجه', 'فكر - زاوج - شارك', 'الخرائط المفاهيمية', 'التدريب العملي'],
+        assessments: ['مهمة أدائية مرحلية', 'أسئلة سابرة موجهة', 'تقييم الأقران'],
+      },
+      {
+        title: `الوحدة الثالثة: التكامل المعرفي والتطبيقات المعاصرة في ${subject}`,
+        goals: [
+          'ربط موضوعات المبحث بالقضايا المعاصرة والتكنولوجيا والبيئة',
+          'تطوير التفكير الإبداعي والابتكاري لدى الطلبة',
+          'توظيف أدوات الرقمنة والاتصال في إنتاج أعمال تعليمية نوعية',
+        ],
+        lessons: [
+          'التطبيقات المعاصرة والتكنولوجيا المرتبطة بالمبحث',
+          'المشروعات الصغيرة والعمل الجماعي التشاركي',
+          'عرض النتاجات ومناقشة الحلول والمقترحات الإبداعية',
+          'مراجعة شمولية ومحطات تقويم بنائي مستمر',
+        ],
+        resources: ['الكتاب المدرسي', 'أجهزة لوحية ومصادر رقمية', 'برمجيات تعليمية مجانية OER', 'نماذج أعمال سابقة'],
+        strategies: ['التعلم القائم على المشروعات', 'لعب الأدوار', 'المناظرة والحوار البناء'],
+        assessments: ['عرض مشروع طلابي', 'سلم تقدير لفظي للمهارات التشاركية', 'اختبار تحريري قصير'],
+      },
+      {
+        title: `الوحدة الرابعة: مهمة الأداء الأصيل GRASPS والمراجعة والتقويم الختامي`,
+        goals: [
+          'تنفيذ مهمة تقويم أصيل واقعية شاملة ترتكز على نموذج GRASPS',
+          'قياس الكفايات التكاملية (المعرفية، المهارية، الوجدانية، الرقمية)',
+          'تثبيت المفاهيم والاستعداد للتقويم الشامل لنهاية الفصل الدراسي',
+        ],
+        lessons: [
+          'تخطيط وإطلاق مهمة الأداء الأصيل GRASPS وسلالم التقدير',
+          'تنفيذ خطوات المهمة وتطبيق المعارف المكتسبة في سياق واقعي',
+          'تحكيم ومناقشة أعمال الطلبة ومنح التغذية الراجعة الختامية',
+          'المراجعة الشاملة لنتاجات الفصل الدراسي والتقويم النهائي الموحد',
+        ],
+        resources: ['دليل مهمة GRASPS الأصيلة', 'سلم التقدير اللفظي Rubric المعتمد', 'أوراق المراجعة الشاملة', 'الكتاب المدرسي'],
+        strategies: ['التقويم الأصيل والواقعي', 'المراجعة التفاعلية الشاملة', 'التأمل الذاتي وتطوير الأداء'],
+        assessments: ['مهمة GRASPS الختامية المعتمدة', 'سلم Rubric للأداء الأصيل', 'الاختبار النهائي الموحد'],
+      },
+    ];
+  }
+
+  // If user provided custom unitTopics, override titles or create units accordingly
+  if (unitTopics && unitTopics.length > 0) {
+    units = unitTopics.map((topic, uIdx) => {
+      const base = units[uIdx % units.length];
+      return {
+        title: topic.startsWith('الوحدة') ? topic : `الوحدة ${uIdx + 1}: ${topic}`,
+        goals: base.goals,
+        lessons: [
+          `الدرس 1: مدخل ومفاهيم أساسية في ${topic}`,
+          `الدرس 2: التوسع والتعمق المهاري في ${topic}`,
+          `الدرس 3: التطبيقات العملية وحل المسائل`,
+          `الدرس 4: المهمة الأدائية والتقويم الختامي للوحدة`,
+        ],
+        resources: base.resources,
+        strategies: base.strategies,
+        assessments: base.assessments,
+      };
+    });
+  }
+
+  // Calculate weeks and build rows
+  const rows: any[] = [];
+  let globalLessonIdx = 0;
+  let currentWeek = 1;
+  const startD = new Date(startDate);
+
+  units.forEach((unit, uIdx) => {
+    const unitNumber = uIdx + 1;
+    const unitTotalPeriods = unit.lessons.length * weeklyPeriodsCount;
+
+    unit.lessons.forEach((lessonTitle, lIdx) => {
+      globalLessonIdx++;
+      const weekNum = Math.min(totalSemesterWeeks, currentWeek);
+
+      // Date calculations
+      const dStart = new Date(startD);
+      dStart.setDate(dStart.getDate() + ((weekNum - 1) * 7));
+      const dEnd = new Date(dStart);
+      dEnd.setDate(dEnd.getDate() + 4);
+
+      const dStartStr = `${dStart.getDate()}/${dStart.getMonth() + 1}`;
+      const dEndStr = `${dEnd.getDate()}/${dEnd.getMonth() + 1}`;
+
+      const timeframe = `الأسبوع (${weekNum}): ${dStartStr} - ${dEndStr}`;
+
+      rows.push({
+        id: `row-${unitNumber}-${lIdx + 1}-${Date.now()}`,
+        unitNumber,
+        unitTitle: unit.title,
+        unitCompetencyGoals: unit.goals,
+        lessonNumber: globalLessonIdx,
+        lessonTitle,
+        lessonPeriods: weeklyPeriodsCount,
+        unitTotalPeriods,
+        timeframe,
+        timeframeWeekNumber: weekNum,
+        startDate: dStart.toISOString().split('T')[0],
+        endDate: dEnd.toISOString().split('T')[0],
+        learningResourcesOer: unit.resources,
+        teachingStrategies: unit.strategies,
+        assessmentMethods: unit.assessments,
+        notes: `مراعاة الفروق الفردية واستخدام مصادر OER المعتمدة في هذا الدرس.`,
+      });
+
+      currentWeek++;
+    });
+  });
+
+  const totalPeriods = rows.reduce((sum, r) => sum + r.lessonPeriods, 0);
+
+  return {
+    id: `sem-plan-ai-${Date.now()}`,
+    title: `الخطة الفصلية الموحدة ودليل توزيع الحصص الدراسية لمبحث ${subject}`,
+    academicYear: '٢٠٢٦ / ٢٠٢٧م',
+    semester,
+    country,
+    ministry,
+    directorate,
+    school,
+    subject,
+    grade,
+    section: 'الشعبة الأولى',
+    teacherName,
+    supervisorName: 'المشرف التربوي المعتمد للمبحث',
+    principalName: 'مدير المدرسة',
+    weeklyPeriodsCount,
+    totalSemesterWeeks,
+    totalSemesterPeriods: totalPeriods,
+    generalCompetencies: [
+      `تمكين الطلبة من الكفايات التأسيسية والتكاملية لمبحث ${subject} وفق المنهاج المعتمد.`,
+      'تطبيق استراتيجيات التعلم النشط وتفعيل مصادر التعلم المفتوحة OER والرقمنة.',
+      'تنفيذ مهمات التقويم الأصيل GRASPS وسلالم التقدير اللفظية لضمان جودة المخرجات.',
+    ],
+    rows,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+// Endpoint: Generate Unified Semester Plan and Lesson Distribution Guide
+app.post('/api/generate-semester-plan', async (req, res) => {
+  try {
+    const {
+      subject = 'الرياضيات',
+      grade = 'الصف الثالث الأساسي',
+      semester = 'الفصل الدراسي الأول',
+      totalSemesterWeeks = 16,
+      weeklyPeriodsCount = 5,
+      teacherName = 'معلم المبحث المتميز',
+      school = 'مدرسة التميز النموذجية',
+      directorate = 'مديرية التربية والتعليم',
+      ministry = 'وزارة التربية والتعليم',
+      country = 'دولة فلسطين',
+      unitTopics = [],
+      startDate = '2026-09-01',
+      customNotes = '',
+    } = req.body;
+
+    console.log(`[AI Semester Planner] Generating unified semester plan for ${subject} (${grade})...`);
+
+    let plan = null;
+    let isFallback = false;
+
+    if (ai) {
+      try {
+        const prompt = `أنت خبير تربوي ومستشار أول لتخطيط المناهج التعليمية وتوزيع الحصص المدرسية في وزارة التربية والتعليم.
+المطلوب منك توليد "الخطة الفصلية الموحدة ودليل توزيع الحصص الدراسية" لمبحث: "${subject}"، الصف: "${grade}"، للفصل: "${semester}".
+عدد أسابيع الفصل الدراسي: ${totalSemesterWeeks} أسبوعاً، عدد الحصص الأسبوعية: ${weeklyPeriodsCount} حصص.
+المعلم: ${teacherName}، المدرسة: ${school}، المديرية: ${directorate}، الوزارة: ${ministry}، الدولة: ${country}.
+${unitTopics && unitTopics.length > 0 ? `الوحدات والموضوعات المقترحة: ${unitTopics.join('، ')}.` : ''}
+${customNotes ? `توجيهات إضافية: ${customNotes}.` : ''}
+
+يجب أن تتضمن الخطة على شكل جدول منظم الحقول التسعة التالية بدقة تامة:
+1. الوحدة التعليمية (unitTitle)
+2. أهداف الوحدة الكفائية (unitCompetencyGoals: مصفوفة نصوص)
+3. اسم الدرس والموضوع (lessonTitle)
+4. عدد حصص الدرس (lessonPeriods)
+5. إجمالي حصص الوحدة (unitTotalPeriods)
+6. المدة الزمنية باليوم والتاريخ أو بالأسابيع (timeframe)
+7. مصادر التعلم ومصادر التعلم المفتوحة (learningResourcesOer: مصفوفة نصوص OER)
+8. استراتيجيات التدريس الحديثة والنشطة (teachingStrategies: مصفوفة نصوص)
+9. التقويم وأدواته التشخيصية والتكوينية والأصيلة GRASPS (assessmentMethods: مصفوفة نصوص)
+
+قم بتغطية الفصل الدراسي كاملاً (حوالي 12 إلى 16 درساً مقسمة على 4 وحدات رئيسية مع مهمة تقويم أصيل GRASPS).`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                academicYear: { type: Type.STRING },
+                semester: { type: Type.STRING },
+                weeklyPeriodsCount: { type: Type.INTEGER },
+                totalSemesterWeeks: { type: Type.INTEGER },
+                totalSemesterPeriods: { type: Type.INTEGER },
+                generalCompetencies: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                },
+                rows: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      unitNumber: { type: Type.INTEGER },
+                      unitTitle: { type: Type.STRING },
+                      unitCompetencyGoals: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      lessonNumber: { type: Type.INTEGER },
+                      lessonTitle: { type: Type.STRING },
+                      lessonPeriods: { type: Type.INTEGER },
+                      unitTotalPeriods: { type: Type.INTEGER },
+                      timeframe: { type: Type.STRING },
+                      timeframeWeekNumber: { type: Type.INTEGER },
+                      learningResourcesOer: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      teachingStrategies: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      assessmentMethods: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      notes: { type: Type.STRING },
+                    },
+                    required: [
+                      'id',
+                      'unitNumber',
+                      'unitTitle',
+                      'unitCompetencyGoals',
+                      'lessonNumber',
+                      'lessonTitle',
+                      'lessonPeriods',
+                      'unitTotalPeriods',
+                      'timeframe',
+                      'learningResourcesOer',
+                      'teachingStrategies',
+                      'assessmentMethods',
+                    ],
+                  },
+                },
+              },
+              required: [
+                'title',
+                'academicYear',
+                'semester',
+                'weeklyPeriodsCount',
+                'totalSemesterWeeks',
+                'totalSemesterPeriods',
+                'generalCompetencies',
+                'rows',
+              ],
+            },
+          },
+        });
+
+        const text = response?.text;
+        if (text) {
+          const parsed = JSON.parse(text);
+          plan = {
+            id: `sem-plan-ai-${Date.now()}`,
+            ...parsed,
+            country,
+            ministry,
+            directorate,
+            school,
+            subject,
+            grade,
+            section: 'الشعبة الأولى',
+            teacherName,
+            supervisorName: 'المشرف التربوي للمبحث',
+            principalName: 'مدير المدرسة',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+      } catch (geminiErr: any) {
+        console.warn('[AI Semester Planner] Gemini API fallback activated:', geminiErr?.message);
+        plan = null;
+      }
+    }
+
+    if (!plan) {
+      plan = createFallbackSemesterPlan({
+        subject,
+        grade,
+        semester,
+        totalSemesterWeeks: Number(totalSemesterWeeks) || 16,
+        weeklyPeriodsCount: Number(weeklyPeriodsCount) || 5,
+        teacherName,
+        school,
+        directorate,
+        ministry,
+        country,
+        unitTopics,
+        startDate,
+      });
+      isFallback = true;
+    }
+
+    return res.json({
+      success: true,
+      isFallback,
+      plan,
+    });
+  } catch (err: any) {
+    console.error('Error generating semester plan:', err);
+    return res.status(500).json({
+      error: 'فشل في توليد الخطة الفصلية وتوزيع الحصص: ' + (err.message || 'خطأ غير متوقع'),
+    });
   }
 });
 

@@ -16,6 +16,8 @@ import {
   Calendar,
   Layers,
   LayoutDashboard,
+  Boxes,
+  CalendarRange,
 } from 'lucide-react';
 
 interface PlansViewerModalProps {
@@ -29,6 +31,8 @@ interface PlansViewerModalProps {
   onOpenPrintView: (planId: string) => void;
   onOpenNewBlank?: () => void;
   onOpenAiGenerator?: () => void;
+  onOpenUnitPlanModal?: () => void;
+  onOpenSemesterPlanModal?: () => void;
   onGoToDashboard?: () => void;
 }
 
@@ -43,6 +47,8 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
   onOpenPrintView,
   onOpenNewBlank,
   onOpenAiGenerator,
+  onOpenUnitPlanModal,
+  onOpenSemesterPlanModal,
   onGoToDashboard,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,13 +272,39 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
         {/* Modal Footer Quick Shortcuts */}
         <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0 text-xs">
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenUnitPlanModal && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenUnitPlanModal();
+                }}
+                className="px-3 py-1.5 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer group"
+                title="توليد تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
+              >
+                <Boxes className="w-3.5 h-3.5 text-blue-200 group-hover:scale-110 transition-transform" />
+                <span>تحضير وحدة كاملة (AI)</span>
+              </button>
+            )}
+            {onOpenSemesterPlanModal && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenSemesterPlanModal();
+                }}
+                className="px-3 py-1.5 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer group"
+                title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص"
+              >
+                <CalendarRange className="w-3.5 h-3.5 text-cyan-200 group-hover:scale-110 transition-transform" />
+                <span>الخطة الفصلية وتوزيع الحصص</span>
+              </button>
+            )}
             {onGoToDashboard && (
               <button
                 onClick={() => {
                   onClose();
                   onGoToDashboard();
                 }}
-                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl font-bold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
                 <span>لوحة الإنتاجية والمجلدات المفهرسة</span>

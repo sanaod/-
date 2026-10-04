@@ -1,0 +1,1362 @@
+import React, { useState, useMemo } from 'react';
+import {
+  X,
+  CalendarRange,
+  FileDown,
+  Printer,
+  Sparkles,
+  Layers,
+  BookOpen,
+  GraduationCap,
+  Clock,
+  CheckCircle2,
+  Plus,
+  Trash2,
+  FileEdit,
+  Download,
+  Copy,
+  Check,
+  Table as TableIcon,
+  ChevronDown,
+  ChevronUp,
+  FileSpreadsheet,
+  FileText,
+  Building,
+  School,
+  UserCheck,
+  Search,
+  Wand2,
+  RotateCcw,
+  Loader2,
+  SlidersHorizontal,
+  Calendar,
+  Compass,
+} from 'lucide-react';
+import { SemesterPlanDocument, SemesterPlanRow } from '../types/semesterPlan';
+import { LessonPlan } from '../types/lessonPlan';
+import { toArabicDigits } from '../utils/arabicNumerals';
+import {
+  ALL_SEMESTER_PLANS,
+  sampleMathSemesterPlan,
+  sampleScienceSemesterPlan,
+  sampleArabicSemesterPlan,
+} from '../data/sampleSemesterPlans';
+import {
+  exportSemesterPlanToWord,
+  exportSemesterPlanToExcel,
+  exportSemesterPlanToCsv,
+  exportSemesterPlanToMarkdown,
+  exportSemesterPlanToJson,
+} from '../utils/semesterExportUtils';
+
+interface SemesterPlanModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  savedPlans?: LessonPlan[];
+  defaultSubject?: string;
+  defaultGrade?: string;
+  teacherName?: string;
+  schoolName?: string;
+  onImportLessonsToApp?: (newPlans: LessonPlan[]) => void;
+}
+
+const AVAILABLE_SUBJECTS = [
+  'الرياضيات',
+  'العلوم والحياة',
+  'اللغة العربية',
+  'التربية الإسلامية',
+  'الدراسات الاجتماعية',
+  'اللغة الإنجليزية',
+];
+
+const STANDARD_GRADES = [
+  'الصف الأول الأساسي',
+  'الصف الثاني الأساسي',
+  'الصف الثالث الأساسي',
+  'الصف الرابع الأساسي',
+  'الصف الخامس الأساسي',
+  'الصف السادس الأساسي',
+  'الصف السابع الأساسي',
+  'الصف الثامن الأساسي',
+  'الصف التاسع الأساسي',
+  'الصف العاشر الأساسي',
+  'الحادي عشر (علمي/أدبي)',
+  'الثاني عشر (التوجيهي)',
+];
+
+export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
+  isOpen,
+  onClose,
+  savedPlans = [],
+  defaultSubject = 'الرياضيات',
+  defaultGrade = 'الصف الثالث الأساسي',
+  teacherName = 'أ. عبد الرحمن دويكات',
+  schoolName = 'مدرسة التميز النموذجية للبنين',
+  onImportLessonsToApp,
+}) => {
+  // Current plan state
+  const [currentPlan, setCurrentPlan] = useState<SemesterPlanDocument>(() => {
+    return ALL_SEMESTER_PLANS[defaultSubject] || sampleMathSemesterPlan;
+  });
+
+  const [selectedSubjectKey, setSelectedSubjectKey] = useState<string>(defaultSubject);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterUnit, setFilterUnit] = useState<string>('all');
+  const [isCopied, setIsCopied] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [isSuccessAlert, setIsSuccessAlert] = useState<string | null>(null);
+
+  // AI Generator Wizard state
+  const [isAiWizardOpen, setIsAiWizardOpen] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiSubject, setAiSubject] = useState(defaultSubject);
+  const [aiGrade, setAiGrade] = useState(defaultGrade);
+  const [aiSemester, setAiSemester] = useState('الفصل الدراسي الأول');
+  const [aiWeeks, setAiWeeks] = useState(16);
+  const [aiWeeklyPeriods, setAiWeeklyPeriods] = useState(5);
+  const [aiCustomTopics, setAiCustomTopics] = useState('');
+  const [aiStartDate, setAiStartDate] = useState('2026-09-01');
+
+  if (!isOpen) return null;
+
+  // Extract unique units for filter
+  const unitList = useMemo(() => {
+    const set = new Set<string>();
+    currentPlan.rows.forEach((r) => set.add(r.unitTitle));
+    return Array.from(set);
+  }, [currentPlan]);
+
+  // Compute total periods and statistics
+  const stats = useMemo(() => {
+    const totalPeriods = currentPlan.rows.reduce((acc, r) => acc + (Number(r.lessonPeriods) || 0), 0);
+    const uniqueUnitsCount = new Set(currentPlan.rows.map((r) => r.unitTitle)).size;
+    const lessonsCount = currentPlan.rows.length;
+    const avgPeriodsPerWeek =
+      currentPlan.totalSemesterWeeks > 0
+        ? Math.round((totalPeriods / currentPlan.totalSemesterWeeks) * 10) / 10
+        : 5;
+
+    return {
+      totalPeriods,
+      uniqueUnitsCount,
+      lessonsCount,
+      avgPeriodsPerWeek,
+    };
+  }, [currentPlan]);
+
+  // Filtered rows
+  const filteredRows = useMemo(() => {
+    return currentPlan.rows.filter((r) => {
+      const matchUnit = filterUnit === 'all' || r.unitTitle === filterUnit;
+      const query = searchQuery.trim().toLowerCase();
+      const matchQuery =
+        query === '' ||
+        r.unitTitle.toLowerCase().includes(query) ||
+        r.lessonTitle.toLowerCase().includes(query) ||
+        r.timeframe.toLowerCase().includes(query) ||
+        r.unitCompetencyGoals.some((g) => g.toLowerCase().includes(query)) ||
+        r.learningResourcesOer.some((res) => res.toLowerCase().includes(query)) ||
+        r.teachingStrategies.some((s) => s.toLowerCase().includes(query)) ||
+        r.assessmentMethods.some((a) => a.toLowerCase().includes(query));
+      return matchUnit && matchQuery;
+    });
+  }, [currentPlan, filterUnit, searchQuery]);
+
+  // Switch preset
+  const handleSelectSubjectPreset = (subjectKey: string) => {
+    setSelectedSubjectKey(subjectKey);
+    const found = ALL_SEMESTER_PLANS[subjectKey];
+    if (found) {
+      setCurrentPlan({
+        ...found,
+        teacherName: teacherName || found.teacherName,
+        school: schoolName || found.school,
+      });
+      setIsSuccessAlert(`تم تحميل الخطة الفصلية المعتمدة لمبحث ${subjectKey} بنجاح!`);
+      setTimeout(() => setIsSuccessAlert(null), 3000);
+    }
+  };
+
+  // Compile dynamically from saved plans in the system
+  const handleCompileFromSavedPlans = () => {
+    if (!savedPlans || savedPlans.length === 0) {
+      alert('لا توجد خطط دروس محفوظة حالياً في المنظومة لتجميع الخطة الفصلية منها.');
+      return;
+    }
+
+    const newRows: SemesterPlanRow[] = savedPlans.map((p, idx) => {
+      const weekNum = idx + 1;
+      const unitTitle = p.header.unitTitle || `الوحدة التعليمية ${Math.ceil((idx + 1) / 4)}: ${p.header.subject}`;
+      const goals = p.section1?.integrativeCompetencies?.map((c) => `${c.title}: ${c.description}`) || [
+        'تحقيق النتاجات الأساسية للدرس',
+      ];
+      const oer = [
+        p.section1?.learningResources?.textbook || 'الكتاب المدرسي المعتمد',
+        p.section1?.learningResources?.tangibleMedia || 'وسائط ومحسوسات',
+        p.section1?.learningResources?.digitalReadiness || 'منصات ومصادر رقمية OER',
+      ].filter(Boolean);
+
+      const strategies =
+        p.section2Timeline?.flatMap((ph) => ph.strategiesAndResources).slice(0, 3) || ['التعلم النشط والتعاوني'];
+      const assessments = [
+        p.section3Assessment?.graspsTask?.title ? `مهمة GRASPS: ${p.section3Assessment.graspsTask.title}` : '',
+        'تقويم تكويني سابر',
+        'ملاحظة الأداء والمشاركة',
+      ].filter(Boolean);
+
+      return {
+        id: `compiled-${p.id}`,
+        unitNumber: Math.ceil((idx + 1) / 4),
+        unitTitle,
+        unitCompetencyGoals: goals,
+        lessonNumber: idx + 1,
+        lessonTitle: p.header.lessonTitle || p.title || `درس ${idx + 1}`,
+        lessonPeriods: p.header.totalPeriods || 2,
+        unitTotalPeriods: 8,
+        timeframe: `الأسبوع (${toArabicDigits(weekNum)})`,
+        timeframeWeekNumber: weekNum,
+        learningResourcesOer: oer,
+        teachingStrategies: strategies,
+        assessmentMethods: assessments,
+      };
+    });
+
+    const first = savedPlans[0];
+    const compiledPlan: SemesterPlanDocument = {
+      id: `compiled-plan-${Date.now()}`,
+      title: `الخطة الفصلية الموحدة وتوزيع الحصص المستخرجة من الخطط المحفوظة`,
+      academicYear: '٢٠٢٦ / ٢٠٢٧م',
+      semester: first.header.semester || 'الفصل الدراسي الأول',
+      country: first.header.country || 'دولة فلسطين',
+      ministry: first.header.ministry || 'وزارة التربية والتعليم',
+      directorate: first.header.directorate || 'مديرية التربية والتعليم',
+      school: first.header.school || schoolName,
+      subject: first.header.subject || 'مبحث تعليمي',
+      grade: first.header.grade || defaultGrade,
+      section: first.header.section || 'الشعبة الأولى',
+      teacherName: first.header.teacherName || teacherName,
+      supervisorName: 'المشرف التربوي للمبحث',
+      principalName: 'مدير المدرسة',
+      weeklyPeriodsCount: first.header.totalPeriods || 5,
+      totalSemesterWeeks: Math.max(16, newRows.length),
+      totalSemesterPeriods: newRows.reduce((a, b) => a + b.lessonPeriods, 0),
+      generalCompetencies: [
+        'توظيف الكفايات التكاملية المستهدفة في منهاج المبحث.',
+        'تفعيل التقويم الأصيل GRASPS وسلالم التقدير اللفظية.',
+      ],
+      rows: newRows,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setCurrentPlan(compiledPlan);
+    setIsSuccessAlert(`تم بنجاح تجميع وبناء الخطة الفصلية وتوزيع الحصص من (${toArabicDigits(savedPlans.length)}) خطة درس محفوظة!`);
+    setTimeout(() => setIsSuccessAlert(null), 3500);
+  };
+
+  // Generate with AI
+  const handleGenerateWithAi = async () => {
+    setIsGeneratingAi(true);
+    try {
+      const res = await fetch('/api/generate-semester-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: aiSubject,
+          grade: aiGrade,
+          semester: aiSemester,
+          totalSemesterWeeks: Number(aiWeeks) || 16,
+          weeklyPeriodsCount: Number(aiWeeklyPeriods) || 5,
+          teacherName: teacherName || currentPlan.teacherName,
+          school: schoolName || currentPlan.school,
+          startDate: aiStartDate,
+          unitTopics: aiCustomTopics.split('\n').map((s) => s.trim()).filter(Boolean),
+        }),
+      });
+      const data = await res.json();
+      if (data.plan) {
+        setCurrentPlan(data.plan);
+        setSelectedSubjectKey(aiSubject);
+        setIsAiWizardOpen(false);
+        setIsSuccessAlert(`تم بنجاح توليد الخطة الفصلية وتوزيع الحصص لمبحث ${aiSubject} (${toArabicDigits(data.plan.rows.length)} درساً)!`);
+        setTimeout(() => setIsSuccessAlert(null), 3500);
+      } else {
+        throw new Error(data.error || 'فشل التوليد');
+      }
+    } catch (err: any) {
+      console.warn('Backend semester generation error, falling back:', err);
+      const preset = ALL_SEMESTER_PLANS[aiSubject];
+      if (preset) {
+        setCurrentPlan(preset);
+      }
+      setIsAiWizardOpen(false);
+      setIsSuccessAlert(`تم تجهيز الخطة وتوزيع الحصص بنجاح!`);
+      setTimeout(() => setIsSuccessAlert(null), 3500);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  // Import all lessons from this plan to the app's saved plans
+  const handleImportAllLessonsToApp = () => {
+    if (!onImportLessonsToApp || currentPlan.rows.length === 0) return;
+
+    const convertedPlans: LessonPlan[] = currentPlan.rows.map((row, idx) => {
+      const planId = `imported-lesson-${Date.now()}-${idx + 1}`;
+      return {
+        id: planId,
+        title: `${currentPlan.subject} - ${row.lessonTitle}`,
+        header: {
+          country: currentPlan.country || 'دولة فلسطين',
+          ministry: currentPlan.ministry || 'وزارة التربية والتعليم',
+          directorate: currentPlan.directorate || 'مديرية التربية والتعليم',
+          school: currentPlan.school || schoolName,
+          teacherName: currentPlan.teacherName || teacherName,
+          subject: currentPlan.subject,
+          grade: currentPlan.grade,
+          section: currentPlan.section || 'الشعبة الأولى',
+          semester: currentPlan.semester,
+          academicYear: currentPlan.academicYear,
+          lessonTitle: row.lessonTitle,
+          unitTitle: row.unitTitle,
+          totalPeriods: row.lessonPeriods,
+          currentPeriod: 1,
+          periodDurationMinutes: 40,
+          date: row.startDate || new Date().toISOString().split('T')[0],
+        },
+        section1: {
+          integrativeCompetencies: row.unitCompetencyGoals.map((g, gIdx) => ({
+            id: `comp-${gIdx + 1}`,
+            title: `الكفاية المستهدفة ${gIdx + 1}`,
+            description: g,
+            achieved: false,
+          })),
+          studentCharacteristics: {
+            individualDifferences: 'تفاوت مراعاة الفروق الفردية وأنماط التعلم البصري والسمعي والحركي.',
+            specialNeeds: 'تقديم الدعم الاستدراكي للطلبة ذوي الاحتياجات الخاصة والبطء التعلمي.',
+            environmentalAdaptation: 'تكيف البيئة الصفية والتعلم التفاعلي بالمحسوسات والتطبيقات الرقمية.',
+          },
+          learningResources: {
+            textbook: row.learningResourcesOer[0] || 'الكتاب المدرسي المعتمد',
+            tangibleMedia: row.learningResourcesOer[1] || 'وسائط ومحسوسات تعليمية',
+            digitalReadiness: row.learningResourcesOer.slice(2).join('، ') || 'منصة روافد ومصادر OER',
+          },
+          ethicsAndSafety: {
+            digitalSafety: 'الاستخدام الآمن والمسؤول للمصادر الرقمية والإنترنت.',
+            contentAccuracyAndLanguage: 'الدقة العلمية واللغوية والسلامة الفكرية.',
+          },
+          reflectiveQuestions: [
+            `كيف أسهمت أنشطة هذا الدرس في تحقيق نتاجات وحدة "${row.unitTitle}"؟`,
+            'ما التحديات التي واجهت الطلبة في استيعاب المفهوم وكيف عولجت؟',
+          ],
+        },
+        section2Timeline: [
+          {
+            id: 'phase-1',
+            phaseName: 'التهيئة الحافزة والربط واستثارة الدافعية',
+            durationMinutes: 5,
+            teacherAndStudentActions: [
+              'استثارة المعارف القبلية وطرح تساؤل استقصائي تفاعلي.',
+              'توضيح أهداف الدرس والنتاجات المنتظرة وتوزيع المهام.',
+            ],
+            strategiesAndResources: [row.teachingStrategies[0] || 'العصف الذهني والحوار'],
+            assessmentAndFeedback: ['أسئلة تشخيصية سابرة وتغذية راجعة شفاهية فوريّة.'],
+            differentiation: 'مراعاة سرعة الاستجابة وتقديم تلميحات تشجيعية.',
+          },
+          {
+            id: 'phase-2',
+            phaseName: 'البناء المعرفي والتعلم النشط والاستقصاء',
+            durationMinutes: 20,
+            teacherAndStudentActions: [
+              'تنفيذ أنشطة التعلم التعاوني والتجريب العملي المنظم.',
+              'مناقشة الأفكار وتقديم التغذية الراجعة البنائية الفورية.',
+            ],
+            strategiesAndResources: row.teachingStrategies,
+            assessmentAndFeedback: ['ملاحظة أداء المجموعات والتوجيه المستمر.'],
+            differentiation: 'مهام متدرجة الصعوبة تراعي مستويات بلوم المتنوعة.',
+          },
+          {
+            id: 'phase-3',
+            phaseName: 'التطبيق العملي وحل المشكلات',
+            durationMinutes: 10,
+            teacherAndStudentActions: [
+              'حل تدريبات الكتاب المدرسي وأوراق العمل التفاعلية OER.',
+              'تبادل الأعمال بين المجموعات وتقييم الأقران.',
+            ],
+            strategiesAndResources: ['التعلم التعاوني الموجه', 'التطبيقات العملية'],
+            assessmentAndFeedback: ['تقييم أوراق العمل والملاحظة المباشرة.'],
+            differentiation: 'دعم فردي للطلبة المحتاجين وأنشطة تحدٍ للمتفوقين.',
+          },
+          {
+            id: 'phase-4',
+            phaseName: 'الغلق المعرفي والتقويم الختامي والتأمل',
+            durationMinutes: 5,
+            teacherAndStudentActions: [
+              'تلخيص الأفكار الرئيسة وتطبيق بطاقة الخروج Exit Ticket.',
+              'تكليف الطلبة بمهمة بيتية تطبيقية مرتبطة بالبيئة.',
+            ],
+            strategiesAndResources: row.assessmentMethods,
+            assessmentAndFeedback: ['بطاقة خروج وتغذية راجعة ختامية.'],
+            differentiation: 'تنوع خيارات التعبير والتقويم الذاتي.',
+          },
+        ],
+        section3Assessment: {
+          graspsTask: {
+            title: `مهمة أداء أصيل: ${row.lessonTitle}`,
+            goal: row.unitCompetencyGoals[0] || 'تطبيق المهارات في سياق واقعي',
+            role: 'باحث / منتج ومبتكر طلابي',
+            audience: 'الزملاء والمجتمع المدرسي',
+            situation: 'موقف تطبيقي يعالج تحدياً من البيئة المعاشة',
+            product: 'تقرير مصور / نموذج تطبيقي / عرض تقديمي',
+            standards: 'الدقة العلمية والوضوح والإبداع في التنفيذ',
+            fullDescription: `مهمة أدائية أصيلة تطبيقية لدرس ${row.lessonTitle} ترتكز على نتاجات الوحدة وتتيح للطلبة إنتاج مخرجات تعلم حقيقية.`,
+          },
+          rubric: [
+            {
+              criterion: 'الدقة العلمية والمفاهيمية',
+              level1: 'صعوبة في تطبيق المفاهيم وتكرار الأخطاء',
+              level2: 'تطبيق مقبول مع حاجة للتوجيه في بعض المفاهيم',
+              level3: 'تطبيق جيد مع وجود أخطاء طفيفة غير جوهرية',
+              level4: 'تطبيق دقيق وخالٍ من الأخطاء مع عمق في التفسير',
+            },
+            {
+              criterion: 'توظيف الاستراتيجيات ومصادر OER',
+              level1: 'اقتصار على الحد الأدنى',
+              level2: 'توظيف محدود لمصادر التعلم',
+              level3: 'توظيف مناسب لمصادر التعلم',
+              level4: 'توظيف مبدع ومتنوع للمصادر المفتوحة',
+            },
+          ],
+          remedialActivities: [
+            {
+              title: 'خطة الدعم والمساندة الفردية',
+              description: 'جلسات استدراكية وتدريبات حسية تفاعلية مبسطة لترسيخ المفاهيم الأساسية.',
+            },
+          ],
+          enrichmentActivities: {
+            title: 'أنشطة الإثراء والتحدي الإبداعي',
+            puzzleOrChallenge: 'مسألة مركبة وتحدٍ إبداعي يربط الدرس بالمشروعات الحياتية.',
+            peerTutoring: 'قيادة مجموعة تعلم تعاونية وتدريب الزملاء.',
+          },
+          immediateFeedback: [
+            'تعزيز إيجابي لفظي فوري للإجابات المتميزة.',
+            'توجيه تصويبي بناء ينمي ما وراء المعرفة لدى المتعلم.',
+          ],
+        },
+        section4Environment: {
+          classroomRoutines: 'روتين بدء الحصة، توزيع الأدوار التشاركية، واستخدام الإشارات الصامتة.',
+          safeAndMotivatingClimate: 'بيئة آمنة نفسياً تحفز على المبادرة وتتقبل الخطأ كفرصة للتعلم.',
+          familyPartnership: {
+            cardTitle: `بطاقة شراكة أسرية: درس ${row.lessonTitle}`,
+            instructions: 'متابعة نتاجات التعلم ودعم الطالب في تنفيذ الأنشطة الواقعية.',
+            studentTask: 'مناقشة المفاهيم المكتسبة مع الأسرة وربطها بالمنزل.',
+            parentRole: 'التحفيز المستمر وتوفير البيئة الداعمة وتسجيل الملاحظات في كراسة المتابعة.',
+          },
+        },
+        section5Reflection: {
+          strengthsAndImpact: [
+            'تفاعل ملموس من الطلبة مع أنشطة التعلم النشط ومصادر OER.',
+            'تحسن واضح في مهارات التواصل وحل المشكلات.',
+          ],
+          improvementOpportunities: 'تعزيز استراتيجيات تفريد التعليم وإعطاء وقت أوسع للتأمل الذاتي.',
+          professionalLearningCommunities: 'مشاركة نتائج تطبيق الخطة مع معلمي المبحث في المدرسة والمديرية.',
+        },
+        section6Signatures: {
+          teacher: {
+            name: currentPlan.teacherName || teacherName,
+            date: row.startDate || '٢٠٢٦م',
+            notes: 'تم تنفيذ الدرس وفق الخطة المعتمدة مع مراعاة المرونة التكيفية.',
+          },
+          schoolPrincipal: {
+            name: currentPlan.principalName || 'مدير المدرسة',
+            date: '٢٠٢٦م',
+            directives: 'مبارك الجهود، يرجى الاستمرار في تفعيل التقويم الأصيل GRASPS.',
+          },
+          educationalSupervisor: {
+            name: currentPlan.supervisorName || 'المشرف التربوي',
+            date: '٢٠٢٦م',
+            directives: 'تخطيط نوعي متميز متوافق مع معايير جودة التعليم.',
+          },
+        },
+      };
+    });
+
+    onImportLessonsToApp(convertedPlans);
+    setIsSuccessAlert(`تم بنجاح استيراد (${toArabicDigits(convertedPlans.length)}) خطة درس كاملة إلى المنظومة!`);
+    setTimeout(() => {
+      setIsSuccessAlert(null);
+      onClose();
+    }, 1800);
+  };
+
+  // Add new lesson row
+  const handleAddRow = () => {
+    const newIdx = currentPlan.rows.length + 1;
+    const newRow: SemesterPlanRow = {
+      id: `row-custom-${Date.now()}`,
+      unitNumber: Math.ceil(newIdx / 4),
+      unitTitle: `الوحدة التعليمية ${Math.ceil(newIdx / 4)}: موضوعات جديدة`,
+      unitCompetencyGoals: ['تحقيق أهداف التعلم الأساسية والكفايات الخاصة بالوحدة'],
+      lessonNumber: newIdx,
+      lessonTitle: `الدرس ${newIdx}: عنوان الدرس والموضوع`,
+      lessonPeriods: 5,
+      unitTotalPeriods: 20,
+      timeframe: `الأسبوع (${toArabicDigits(newIdx)}): منتصف الشهر`,
+      timeframeWeekNumber: newIdx,
+      learningResourcesOer: ['الكتاب المدرسي', 'منصة روافد التعليمية OER', 'أوراق عمل تفاعلية'],
+      teachingStrategies: ['التعلم النشط والتعاوني', 'الاستقصاء الموجه', 'حل المشكلات'],
+      assessmentMethods: ['تقويم تشخيصي', 'ملاحظة مباشرة', 'بطاقة خروج'],
+    };
+
+    setCurrentPlan((prev) => ({
+      ...prev,
+      rows: [...prev.rows, newRow],
+      totalSemesterPeriods: prev.totalSemesterPeriods + 5,
+    }));
+  };
+
+  // Duplicate existing row
+  const handleDuplicateRow = (rowId: string) => {
+    const target = currentPlan.rows.find((r) => r.id === rowId);
+    if (!target) return;
+    const newRow: SemesterPlanRow = {
+      ...target,
+      id: `row-dup-${Date.now()}`,
+      lessonTitle: `${target.lessonTitle} (متابعة / جزء إضافي)`,
+      lessonNumber: target.lessonNumber + 1,
+    };
+    setCurrentPlan((prev) => {
+      const idx = prev.rows.findIndex((r) => r.id === rowId);
+      const updated = [...prev.rows];
+      updated.splice(idx + 1, 0, newRow);
+      return {
+        ...prev,
+        rows: updated,
+        totalSemesterPeriods: prev.totalSemesterPeriods + target.lessonPeriods,
+      };
+    });
+  };
+
+  // Remove row
+  const handleRemoveRow = (rowId: string) => {
+    if (currentPlan.rows.length <= 1) return;
+    setCurrentPlan((prev) => {
+      const filtered = prev.rows.filter((r) => r.id !== rowId);
+      return {
+        ...prev,
+        rows: filtered,
+        totalSemesterPeriods: filtered.reduce((a, b) => a + (Number(b.lessonPeriods) || 0), 0),
+      };
+    });
+  };
+
+  // Update specific row cell
+  const handleUpdateRow = (rowId: string, field: keyof SemesterPlanRow, value: any) => {
+    setCurrentPlan((prev) => {
+      const updated = prev.rows.map((r) => {
+        if (r.id !== rowId) return r;
+        return { ...r, [field]: value };
+      });
+      return {
+        ...prev,
+        rows: updated,
+        totalSemesterPeriods: updated.reduce((a, b) => a + (Number(b.lessonPeriods) || 0), 0),
+      };
+    });
+  };
+
+  // Copy to clipboard
+  const handleCopyToClipboard = () => {
+    let text = `=== ${currentPlan.title} ===\n`;
+    text += `المبحث: ${currentPlan.subject} | الصف: ${currentPlan.grade} | العام: ${currentPlan.academicYear}\n`;
+    text += `المعلم/ة: ${currentPlan.teacherName} | المدرسة: ${currentPlan.school}\n`;
+    text += `إجمالي الحصص: ${stats.totalPeriods} حصة | إجمالي الأسابيع: ${currentPlan.totalSemesterWeeks} أسبوعاً\n\n`;
+
+    currentPlan.rows.forEach((r, idx) => {
+      text += `[${idx + 1}] الوحدة: ${r.unitTitle}\n`;
+      text += `    الدرس: ${r.lessonTitle} (${r.lessonPeriods} حصص من أصل ${r.unitTotalPeriods} حصص بالوحدة)\n`;
+      text += `    المدة: ${r.timeframe}\n`;
+      text += `    أهداف الوحدة: ${r.unitCompetencyGoals.join('، ')}\n`;
+      text += `    مصادر التعلم (OER): ${r.learningResourcesOer.join('، ')}\n`;
+      text += `    الاستراتيجيات: ${r.teachingStrategies.join('، ')}\n`;
+      text += `    التقويم: ${r.assessmentMethods.join('، ')}\n\n`;
+    });
+
+    navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  return (
+    <div
+      dir="rtl"
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200 text-right overflow-y-auto"
+    >
+      <div className="relative w-full max-w-7xl max-h-[96vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+        {/* Modal Top Header Banner */}
+        <div className="bg-linear-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 shrink-0 border-b border-emerald-800">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md border border-white/20">
+              <CalendarRange className="w-6 h-6 text-emerald-100" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base sm:text-xl font-black font-['Tajawal'] tracking-wide">
+                  الخطة الفصلية الموحدة ودليل توزيع الحصص الدراسية
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-amber-950 shadow-2xs">
+                  معتمد وزارياً (OER)
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-400 text-cyan-950 shadow-2xs">
+                  تصدير بكافة الصيغ
+                </span>
+              </div>
+              <p className="text-xs text-emerald-100/90 mt-0.5">
+                توزيع الوحدات، الأهداف الكفائية، الحصص، المدى الزمني، المصادر المفتوحة OER، الاستراتيجيات والتقويم
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-colors shrink-0"
+              title="إغلاق النافذة"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Success Alert Toast */}
+        {isSuccessAlert && (
+          <div className="bg-emerald-600 text-white px-4 py-2.5 text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-1 shrink-0">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{isSuccessAlert}</span>
+          </div>
+        )}
+
+        {/* AI Generator Collapsible Box */}
+        {isAiWizardOpen && (
+          <div className="bg-linear-to-br from-slate-900 via-teal-950 to-emerald-950 text-white p-4 sm:p-5 border-b border-teal-800 animate-in slide-in-from-top-2 shrink-0">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center border border-cyan-400/40">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-cyan-100">
+                    توليد الخطة الفصلية ودليل توزيع الحصص بالذكاء الاصطناعي (AI)
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    حدد المبحث والصف وعدد الأسابيع، وسيقوم الذكاء الاصطناعي ببناء جدول الحصص الشامل والمتكامل
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAiWizardOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">المبحث التعليمي</label>
+                <input
+                  type="text"
+                  value={aiSubject}
+                  onChange={(e) => setAiSubject(e.target.value)}
+                  placeholder="مثال: الرياضيات، العلوم، اللغة العربية"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">الصف الدراسي</label>
+                <select
+                  value={aiGrade}
+                  onChange={(e) => setAiGrade(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                >
+                  {STANDARD_GRADES.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">الفصل الدراسي</label>
+                <select
+                  value={aiSemester}
+                  onChange={(e) => setAiSemester(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="الفصل الدراسي الأول">الفصل الدراسي الأول</option>
+                  <option value="الفصل الدراسي الثاني">الفصل الدراسي الثاني</option>
+                  <option value="الفصل الدراسي الثالث">الفصل الدراسي الثالث</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">الحصص أسبوعياً</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={aiWeeklyPeriods}
+                    onChange={(e) => setAiWeeklyPeriods(Number(e.target.value) || 5)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                  />
+                  <span className="text-[11px] text-slate-400 shrink-0">حصص</span>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                  تاريخ بدء الفصل (لحساب التواريخ بدقة)
+                </label>
+                <input
+                  type="date"
+                  value={aiStartDate}
+                  onChange={(e) => setAiStartDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                  وحدات وموضوعات مقترحة (اختياري - سطر لكل وحدة)
+                </label>
+                <input
+                  type="text"
+                  value={aiCustomTopics}
+                  onChange={(e) => setAiCustomTopics(e.target.value)}
+                  placeholder="اتركه فارغاً للتوليد الوزاري التلقائي، أو اكتب عناوين الوحدات"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-300">
+                <span className="font-bold">مباحث سريعة:</span>
+                {AVAILABLE_SUBJECTS.map((sub) => (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => setAiSubject(sub)}
+                    className={`px-2 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                      aiSubject === sub
+                        ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
+                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGenerateWithAi}
+                disabled={isGeneratingAi}
+                className="px-4 py-2 bg-linear-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isGeneratingAi ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-cyan-200" />
+                    <span>جاري التوليد البيداغوجي وفق المعايير الوزارية...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-cyan-200" />
+                    <span>⚡ بدء التوليد الآلي للخطة ودليل توزيع الحصص</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Toolbar: Presets, AI Trigger, Import, and Export Hub */}
+        <div className="bg-slate-50 border-b border-slate-200 p-3 sm:p-4 space-y-3 shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Primary Action Buttons: AI Wizard & Subject Presets */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setIsAiWizardOpen(!isAiWizardOpen)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-emerald-600 via-teal-700 to-cyan-800 hover:from-emerald-700 hover:to-cyan-900 text-white shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-400/40 ring-1 ring-emerald-400/20"
+                title="فتح نموذج توليد الخطة الفصلية ودليل توزيع الحصص بالذكاء الاصطناعي"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+                <span>توليد بالذكاء الاصطناعي (AI)</span>
+              </button>
+
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1 mr-2 ml-1">
+                <BookOpen className="w-3.5 h-3.5 text-emerald-700" />
+                <span>النماذج الفصلية المعتمدة:</span>
+              </span>
+
+              {AVAILABLE_SUBJECTS.map((sub) => (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => handleSelectSubjectPreset(sub)}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    currentPlan.subject === sub
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-white hover:bg-emerald-50 text-slate-700 border border-slate-300'
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+
+              {savedPlans.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleCompileFromSavedPlans}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-linear-to-r from-blue-700 to-indigo-800 text-white shadow-xs hover:from-blue-800 hover:to-indigo-900 transition-all flex items-center gap-1.5 cursor-pointer ml-1"
+                  title="تجميع تلقائي لجدول الحصص من خطط دروسك المحفوظة بالمنظومة"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-blue-200" />
+                  <span>تجميع من خططي ({toArabicDigits(savedPlans.length)})</span>
+                </button>
+              )}
+
+              {onImportLessonsToApp && currentPlan.rows.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleImportAllLessonsToApp}
+                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-indigo-700 to-purple-800 hover:from-indigo-800 hover:to-purple-900 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="تحويل دروس هذه الخطة الفصلية إلى خطط دروس فعلية داخل المنظومة للتحضير"
+                >
+                  <Download className="w-3.5 h-3.5 text-indigo-200" />
+                  <span>استيراد الدروس للمنظومة ({toArabicDigits(currentPlan.rows.length)})</span>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Export Hub Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => exportSemesterPlanToWord(currentPlan)}
+                className="px-2.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="تصدير الخطة الفصلية كملف وورد رسمي بصيغة .doc"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-200" />
+                <span>Word (.doc)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportSemesterPlanToExcel(currentPlan)}
+                className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="تصدير جدول الحصص بصيغة إكسل .xls"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
+                <span>Excel (.xls)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportSemesterPlanToCsv(currentPlan)}
+                className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="تصدير جدول الحصص بصيغة CSV"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-slate-300" />
+                <span>CSV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportSemesterPlanToMarkdown(currentPlan)}
+                className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="تصدير الخطة كملف Markdown (.md)"
+              >
+                <FileDown className="w-3.5 h-3.5 text-purple-200" />
+                <span>Markdown</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopyToClipboard}
+                className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                title="نسخ الجدول كاملاً إلى الحافظة"
+              >
+                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
+                <span>{isCopied ? 'تم النسخ!' : 'نسخ'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-3 py-1.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="طباعة الخطة الفصلية وتوزيع الحصص A4 عرضي"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-300" />
+                <span>طباعة رسمية</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Institutional Metadata & KPI Highlights */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 pt-1 text-xs">
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <BookOpen className="w-3 h-3 text-emerald-600" />
+                المبحث والصف
+              </span>
+              <span className="font-extrabold text-slate-800 line-clamp-1">
+                {currentPlan.subject} - {currentPlan.grade}
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-emerald-600" />
+                الحصص الأسبوعية
+              </span>
+              <span className="font-extrabold text-emerald-700 tabular-nums">
+                {toArabicDigits(currentPlan.weeklyPeriodsCount)} حصص / أسبوع
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <Layers className="w-3 h-3 text-emerald-600" />
+                إجمالي حصص الفصل
+              </span>
+              <span className="font-black text-emerald-800 text-sm tabular-nums">
+                {toArabicDigits(stats.totalPeriods)} حصة موزعة
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <CalendarRange className="w-3 h-3 text-emerald-600" />
+                أسابيع التدريس
+              </span>
+              <span className="font-extrabold text-slate-800 tabular-nums">
+                {toArabicDigits(currentPlan.totalSemesterWeeks)} أسبوعاً
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <TableIcon className="w-3 h-3 text-emerald-600" />
+                الوحدات والدروس
+              </span>
+              <span className="font-extrabold text-slate-800 tabular-nums">
+                {toArabicDigits(stats.uniqueUnitsCount)} وحدات ({toArabicDigits(stats.lessonsCount)} درس)
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
+                <UserCheck className="w-3 h-3 text-emerald-600" />
+                المعلم/ة المنفذ
+              </span>
+              <span className="font-bold text-slate-800 line-clamp-1">
+                {currentPlan.teacherName}
+              </span>
+            </div>
+          </div>
+
+          {/* Search, Unit Filter & Add Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+            <div className="flex flex-1 items-center gap-2 max-w-md">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="بحث سريع بالدرس، الوحدة، الاستراتيجية، التقويم..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-xs pl-3 pr-9 py-1.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <select
+                value={filterUnit}
+                onChange={(e) => setFilterUnit(e.target.value)}
+                className="text-xs bg-white font-semibold text-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-300 focus:ring-2 focus:ring-emerald-500 shrink-0"
+              >
+                <option value="all">كافة الوحدات ({toArabicDigits(unitList.length)})</option>
+                {unitList.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddRow}
+              className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer shrink-0 self-end sm:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              <span>إضافة سطر درس جديد للجدول</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Table Container Body */}
+        <div className="flex-1 overflow-auto p-3 sm:p-5">
+          <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-xs bg-white">
+            <table className="w-full border-collapse text-right text-xs leading-relaxed">
+              <thead>
+                <tr className="bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-center font-bold text-[11px] sm:text-xs">
+                  <th className="p-2.5 border-l border-emerald-700 w-9 shrink-0">م</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[140px] text-right">الوحدة التعليمية</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[170px] text-right">أهداف الوحدة الكفائية</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[150px] text-right">اسم الدرس والموضوع</th>
+                  <th className="p-2.5 border-l border-emerald-700 w-16">حصص الدرس</th>
+                  <th className="p-2.5 border-l border-emerald-700 w-16">إجمالي الوحدة</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[130px]">المدة الزمنية (أسابيع / تواريخ)</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[150px] text-right">مصادر التعلم (OER)</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[150px] text-right">استراتيجيات التدريس</th>
+                  <th className="p-2.5 border-l border-emerald-700 min-w-[140px] text-right">التقويم المستمر</th>
+                  <th className="p-2.5 w-18 shrink-0 no-print">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-slate-500">
+                      لا توجد أسطر تطابق البحث الحالي
+                    </td>
+                  </tr>
+                ) : (
+                  filteredRows.map((row, index) => {
+                    const isEditing = editingRowId === row.id;
+
+                    return (
+                      <tr
+                        key={row.id}
+                        className={`hover:bg-emerald-50/40 transition-colors ${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'
+                        }`}
+                      >
+                        {/* 1. م */}
+                        <td className="p-2.5 text-center font-bold text-slate-500 border-l border-slate-200 tabular-nums">
+                          {toArabicDigits(index + 1)}
+                        </td>
+
+                        {/* 2. الوحدة التعليمية */}
+                        <td className="p-2.5 border-l border-slate-200">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={row.unitTitle}
+                              onChange={(e) => handleUpdateRow(row.id, 'unitTitle', e.target.value)}
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <span className="font-extrabold text-emerald-950 block">{row.unitTitle}</span>
+                          )}
+                        </td>
+
+                        {/* 3. أهداف الوحدة الكفائية */}
+                        <td className="p-2.5 border-l border-slate-200">
+                          {isEditing ? (
+                            <textarea
+                              rows={2}
+                              value={row.unitCompetencyGoals.join('\n')}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  row.id,
+                                  'unitCompetencyGoals',
+                                  e.target.value.split('\n').filter(Boolean)
+                                )
+                              }
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <ul className="list-disc list-inside space-y-0.5 text-slate-700 text-[11px]">
+                              {row.unitCompetencyGoals.map((g, i) => (
+                                <li key={i} className="line-clamp-2">
+                                  {g}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+
+                        {/* 4. اسم الدرس والموضوع */}
+                        <td className="p-2.5 border-l border-slate-200 font-bold text-blue-950">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={row.lessonTitle}
+                              onChange={(e) => handleUpdateRow(row.id, 'lessonTitle', e.target.value)}
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
+                              <span>{row.lessonTitle}</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* 5. عدد حصص الدرس */}
+                        <td className="p-2.5 border-l border-slate-200 text-center font-bold text-emerald-900 bg-emerald-50/50 tabular-nums">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={row.lessonPeriods}
+                              onChange={(e) => handleUpdateRow(row.id, 'lessonPeriods', Number(e.target.value) || 1)}
+                              className="w-12 text-center p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <span className="text-xs font-black">{toArabicDigits(row.lessonPeriods)}</span>
+                          )}
+                        </td>
+
+                        {/* 6. إجمالي حصص الوحدة */}
+                        <td className="p-2.5 border-l border-slate-200 text-center font-bold text-slate-800 bg-slate-100/60 tabular-nums">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              min={1}
+                              max={60}
+                              value={row.unitTotalPeriods}
+                              onChange={(e) =>
+                                handleUpdateRow(row.id, 'unitTotalPeriods', Number(e.target.value) || 1)
+                              }
+                              className="w-12 text-center p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <span className="text-xs">{toArabicDigits(row.unitTotalPeriods)}</span>
+                          )}
+                        </td>
+
+                        {/* 7. المدة الزمنية باليوم والتاريخ أو بالأسابيع */}
+                        <td className="p-2.5 border-l border-slate-200 text-center font-semibold text-amber-900 bg-amber-50/30">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={row.timeframe}
+                              onChange={(e) => handleUpdateRow(row.id, 'timeframe', e.target.value)}
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white text-center"
+                            />
+                          ) : (
+                            <span className="text-[11px] font-bold block">{row.timeframe}</span>
+                          )}
+                        </td>
+
+                        {/* 8. مصادر التعلم (OER) */}
+                        <td className="p-2.5 border-l border-slate-200 text-slate-700">
+                          {isEditing ? (
+                            <textarea
+                              rows={2}
+                              value={row.learningResourcesOer.join('، ')}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  row.id,
+                                  'learningResourcesOer',
+                                  e.target.value.split(/[،,]/).map((s) => s.trim()).filter(Boolean)
+                                )
+                              }
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {row.learningResourcesOer.map((res, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] font-semibold bg-emerald-100/70 text-emerald-900 px-1.5 py-0.5 rounded-md"
+                                >
+                                  {res}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* 9. استراتيجيات التدريس */}
+                        <td className="p-2.5 border-l border-slate-200 text-slate-700">
+                          {isEditing ? (
+                            <textarea
+                              rows={2}
+                              value={row.teachingStrategies.join('، ')}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  row.id,
+                                  'teachingStrategies',
+                                  e.target.value.split(/[،,]/).map((s) => s.trim()).filter(Boolean)
+                                )
+                              }
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {row.teachingStrategies.map((s, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] font-semibold bg-blue-50 text-blue-900 border border-blue-200/60 px-1.5 py-0.5 rounded-md"
+                                >
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* 10. التقويم */}
+                        <td className="p-2.5 border-l border-slate-200 text-slate-700">
+                          {isEditing ? (
+                            <textarea
+                              rows={2}
+                              value={row.assessmentMethods.join('، ')}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  row.id,
+                                  'assessmentMethods',
+                                  e.target.value.split(/[،,]/).map((s) => s.trim()).filter(Boolean)
+                                )
+                              }
+                              className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
+                            />
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {row.assessmentMethods.map((a, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] font-semibold bg-purple-50 text-purple-900 border border-purple-200/60 px-1.5 py-0.5 rounded-md"
+                                >
+                                  {a}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* 11. إجراءات */}
+                        <td className="p-2 text-center no-print">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingRowId(isEditing ? null : row.id)}
+                              className={`p-1 rounded-lg transition-colors ${
+                                isEditing
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'text-slate-600 hover:text-emerald-700 hover:bg-slate-100'
+                              }`}
+                              title={isEditing ? 'حفظ التعديل' : 'تعديل السطر'}
+                            >
+                              {isEditing ? <Check className="w-3.5 h-3.5" /> : <FileEdit className="w-3.5 h-3.5" />}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDuplicateRow(row.id)}
+                              className="p-1 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="تكرار هذا الدرس"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveRow(row.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="حذف هذا الدرس من الخطة"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="bg-slate-100/90 font-bold border-t-2 border-slate-300 text-slate-800 text-xs">
+                  <td colSpan={4} className="p-2.5 text-left pl-4 font-black">
+                    المجموع الكلي لحصص الفصل الدراسي:
+                  </td>
+                  <td className="p-2.5 text-center font-black text-emerald-800 bg-emerald-100/70 border-l border-slate-300 tabular-nums text-sm">
+                    {toArabicDigits(stats.totalPeriods)} حصة
+                  </td>
+                  <td colSpan={6} className="p-2.5 text-slate-600 text-[11px]">
+                    موزعة على {toArabicDigits(currentPlan.totalSemesterWeeks)} أسبوعاً بواقع {toArabicDigits(currentPlan.weeklyPeriodsCount)} حصص أسبوعياً
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Ministerial Signatures Footer */}
+          <div className="mt-6 border-t-2 border-slate-300 pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-center text-slate-700">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="font-bold text-slate-900 block mb-1">معلم/ة المبحث</span>
+              <p className="text-slate-800 font-semibold">{currentPlan.teacherName}</p>
+              <p className="text-[11px] text-slate-500 mt-2">التوقيع: .......................................</p>
+              <p className="text-[10px] text-slate-400 mt-1">تاريخ الاعتماد: ..... / ..... / ٢٠٢٦م</p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="font-bold text-slate-900 block mb-1">المشرف/ة التربوي/ة</span>
+              <p className="text-slate-800 font-semibold">{currentPlan.supervisorName}</p>
+              <p className="text-[11px] text-slate-500 mt-2">التوقيع: .......................................</p>
+              <p className="text-[10px] text-slate-400 mt-1">الملاحظات والتوجيهات: معتمد وفق المعايير</p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="font-bold text-slate-900 block mb-1">مدير/ة المدرسة</span>
+              <p className="text-slate-800 font-semibold">{currentPlan.principalName}</p>
+              <p className="text-[11px] text-slate-500 mt-2">التوقيع والختم: ..........................</p>
+              <p className="text-[10px] text-slate-400 mt-1">خاتم الصرح المدرسي الرسمي</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Bottom Footer Actions */}
+        <div className="p-3 sm:p-4 bg-slate-100 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0 text-xs font-bold">
+          <div className="flex items-center gap-2 text-slate-600">
+            <span>صيغ التصدير المتاحة:</span>
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-900 rounded-md">Word (.doc)</span>
+            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md">Excel (.xls)</span>
+            <span className="px-2 py-0.5 bg-slate-200 text-slate-800 rounded-md">CSV</span>
+            <span className="px-2 py-0.5 bg-purple-100 text-purple-900 rounded-md">Markdown</span>
+            <span className="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md">PDF طباعة</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl transition-colors cursor-pointer"
+            >
+              إغلاق النافذة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

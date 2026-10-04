@@ -31,6 +31,7 @@ import { InteractiveWorksheetModal } from './components/InteractiveWorksheetModa
 import { AssessmentHubModal } from './components/AssessmentHubModal';
 import { AuthenticTaskGeneratorModal } from './components/AuthenticTaskGeneratorModal';
 import { RubricGeneratorModal } from './components/RubricGeneratorModal';
+import { UnitPlanGeneratorModal } from './components/UnitPlanGeneratorModal';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
 import { toArabicDigits } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
@@ -54,7 +55,10 @@ import {
   RotateCcw,
   Trash2,
   FolderKanban,
+  Boxes,
+  CalendarRange,
 } from 'lucide-react';
+import { SemesterPlanModal } from './components/SemesterPlanModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -94,6 +98,8 @@ export default function App() {
 
   // Modals
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isUnitPlanModalOpen, setIsUnitPlanModalOpen] = useState(false);
+  const [isSemesterPlanModalOpen, setIsSemesterPlanModalOpen] = useState(false);
   const [isWorksheetModalOpen, setIsWorksheetModalOpen] = useState(false);
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
   const [isAuthenticTaskModalOpen, setIsAuthenticTaskModalOpen] = useState(false);
@@ -107,6 +113,13 @@ export default function App() {
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
+
+  const handleUnitPlansGenerated = (newPlans: LessonPlan[]) => {
+    if (!newPlans || newPlans.length === 0) return;
+    setPlans((prev) => [...newPlans, ...prev]);
+    setActivePlanId(newPlans[0].id);
+    setViewMode('editor');
+  };
 
   const handleRequestDeletePlan = (targetPlan?: LessonPlan) => {
     setPlanToDelete(targetPlan || currentPlan);
@@ -286,6 +299,8 @@ export default function App() {
         activePlanId={currentPlan.id}
         onSelectPlan={(id) => setActivePlanId(id)}
         onOpenAiGenerator={() => setIsAiModalOpen(true)}
+        onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+        onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
         onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
         onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
         onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
@@ -320,6 +335,8 @@ export default function App() {
             }}
             onOpenEditor={() => setViewMode('editor')}
             onOpenAiGenerator={() => setIsAiModalOpen(true)}
+            onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+            onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
             onOpenWorksheetModal={(planId) => {
               if (planId) setActivePlanId(planId);
               setIsWorksheetModalOpen(true);
@@ -395,11 +412,16 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setIsResourcesModalOpen(true)}
-                  title="إدارة ورفع المصادر والمناهج والمراجع التعليمية"
-                  className="min-h-[42px] px-3 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/60 shadow-xs cursor-pointer"
+                  title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
+                  className="min-h-[44px] px-4 py-2 bg-linear-to-r from-emerald-600 via-teal-700 to-emerald-800 hover:from-emerald-500 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-97 border-2 border-emerald-400/80 ring-2 ring-emerald-400/30 cursor-pointer group"
                 >
-                  <Layers className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span className="truncate">المصادر ({toArabicDigits(resources.length)})</span>
+                  <div className="relative p-1 bg-white/20 rounded-lg shrink-0 group-hover:bg-white/30 transition-colors">
+                    <Layers className="w-5 h-5 text-emerald-200" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[9px] font-black shadow-xs">
+                      +
+                    </span>
+                  </div>
+                  <span className="truncate font-bold">إضافة المصادر ({toArabicDigits(resources.length)})</span>
                 </button>
                 <button
                   onClick={() => setIsAiModalOpen(true)}
@@ -407,6 +429,22 @@ export default function App() {
                 >
                   <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
                   <span className="truncate">توليد بالـ AI</span>
+                </button>
+                <button
+                  onClick={() => setIsUnitPlanModalOpen(true)}
+                  title="توليد وتصميم تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
+                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer group"
+                >
+                  <Boxes className="w-4 h-4 text-blue-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">تحضير وحدة كاملة (AI)</span>
+                </button>
+                <button
+                  onClick={() => setIsSemesterPlanModalOpen(true)}
+                  title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
+                  className="min-h-[42px] px-3.5 py-2 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer group border border-cyan-400/40"
+                >
+                  <CalendarRange className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">الخطة الفصلية وتوزيع الحصص</span>
                 </button>
                 <button
                   onClick={() => setIsExportModalOpen(true)}
@@ -459,14 +497,19 @@ export default function App() {
                   })}
                 </div>
 
-                {/* Quick Link to Resources in Subnav */}
+                {/* Quick Link to Resources in Subnav - Distinctive & Large */}
                 <button
                   onClick={() => setIsResourcesModalOpen(true)}
-                  className="px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 border border-emerald-300/80 shrink-0 transition-colors shadow-2xs"
-                  title="فتح بنك المصادر والمراجع التعليمية والمناهج"
+                  className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 rounded-xl text-xs font-black flex items-center gap-2 border-2 border-emerald-500/80 shrink-0 transition-all shadow-xs hover:shadow-sm hover:scale-[1.02] cursor-pointer ring-1 ring-emerald-500/20"
+                  title="فتح وإضافة بنك المصادر والمراجع التعليمية والمناهج"
                 >
-                  <Layers className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                  <span>بنك المصادر ({toArabicDigits(resources.length)})</span>
+                  <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
+                    <Layers className="w-4 h-4 text-emerald-100" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                      +
+                    </span>
+                  </div>
+                  <span>إضافة المصادر ({toArabicDigits(resources.length)})</span>
                 </button>
               </div>
             </div>
@@ -478,6 +521,10 @@ export default function App() {
             <LessonHeaderCard
               header={currentPlan.header}
               onChange={(header) => updateCurrentPlan({ ...currentPlan, header })}
+              onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+              onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+              onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+              resourcesCount={resources.length}
             />
 
             {/* Section 1: Adaptive Planning */}
@@ -561,6 +608,17 @@ export default function App() {
         resources={resources}
         onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
         selectedResourceForPlanning={selectedResourceForPlanning}
+      />
+
+      <UnitPlanGeneratorModal
+        isOpen={isUnitPlanModalOpen}
+        onClose={() => setIsUnitPlanModalOpen(false)}
+        onPlansGenerated={handleUnitPlansGenerated}
+        defaultTeacherName={currentPlan.header.teacherName}
+        defaultSchool={currentPlan.header.school}
+        defaultDirectorate={currentPlan.header.directorate}
+        defaultSubject={currentPlan.header.subject}
+        defaultGrade={currentPlan.header.grade}
       />
 
       <ResourcesManagerModal
@@ -682,6 +740,7 @@ export default function App() {
           handlePlanGenerated(newPlan);
           setViewMode('editor');
         }}
+        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
       />
 
       <PlansViewerModal
@@ -714,10 +773,29 @@ export default function App() {
           setIsPlansViewerModalOpen(false);
           setIsAiModalOpen(true);
         }}
+        onOpenUnitPlanModal={() => {
+          setIsPlansViewerModalOpen(false);
+          setIsUnitPlanModalOpen(true);
+        }}
+        onOpenSemesterPlanModal={() => {
+          setIsPlansViewerModalOpen(false);
+          setIsSemesterPlanModalOpen(true);
+        }}
         onGoToDashboard={() => {
           setIsPlansViewerModalOpen(false);
           setViewMode('dashboard');
         }}
+      />
+
+      <SemesterPlanModal
+        isOpen={isSemesterPlanModalOpen}
+        onClose={() => setIsSemesterPlanModalOpen(false)}
+        savedPlans={plans}
+        defaultSubject={currentPlan.header.subject}
+        defaultGrade={currentPlan.header.grade}
+        teacherName={currentPlan.header.teacherName}
+        schoolName={currentPlan.header.school}
+        onImportLessonsToApp={handleUnitPlansGenerated}
       />
 
       <DeletePlanConfirmModal

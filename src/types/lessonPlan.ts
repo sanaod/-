@@ -8,6 +8,7 @@ export interface LessonHeader {
   grade: string;
   section: string;
   lessonTitle: string;
+  unitTitle?: string;
   totalPeriods: number;
   currentPeriod: number;
   periodDurationMinutes: number;

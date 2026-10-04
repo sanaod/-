@@ -22,12 +22,14 @@ interface BlankTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreatePlan: (newPlan: LessonPlan) => void;
+  onOpenResourcesModal?: () => void;
 }
 
 export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   isOpen,
   onClose,
   onCreatePlan,
+  onOpenResourcesModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'sheet' | 'create' | 'guide'>('sheet');
 
@@ -510,6 +512,32 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                   أدخل البيانات الأساسية للدرس وسيقوم النظام بفتح نموذج تحضير فارغ مهيأ بالكامل بجميع الأقسام الستة والترويسة المعتمدة لتقوم بتعبئته وحفظه.
                 </p>
               </div>
+
+              {onOpenResourcesModal && (
+                <div
+                  onClick={() => {
+                    onClose();
+                    onOpenResourcesModal();
+                  }}
+                  className="p-3.5 bg-linear-to-r from-emerald-50 via-teal-50 to-emerald-100/60 border-2 border-dashed border-emerald-400 hover:border-emerald-600 rounded-2xl flex items-center justify-between gap-3 cursor-pointer group transition-all shadow-2xs hover:shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs relative">
+                      <Layers className="w-5 h-5 text-emerald-100" />
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 text-amber-950 font-black rounded-full flex items-center justify-center text-[9px]">
+                        +
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-emerald-950">إضافة مصادر ومناهج تعليمية لدعم التحضير</h4>
+                      <p className="text-[11px] text-emerald-800">ارفع نصوص المنهاج أو أوراق العمل لاستعراضها أثناء كتابة الخطة</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-emerald-800 bg-white px-3 py-1.5 rounded-lg border border-emerald-300 shrink-0 group-hover:bg-emerald-50">
+                    ＋ إضافة الآن
+                  </span>
+                </div>
+              )}
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
                 <div>

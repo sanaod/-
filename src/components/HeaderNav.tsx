@@ -28,6 +28,9 @@ import {
   Activity,
   Award,
   ListTree,
+  Boxes,
+  Plus,
+  CalendarRange,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -38,6 +41,8 @@ interface HeaderNavProps {
   activePlanId: string;
   onSelectPlan: (id: string) => void;
   onOpenAiGenerator: () => void;
+  onOpenUnitPlanModal?: () => void;
+  onOpenSemesterPlanModal?: () => void;
   onOpenAbacusModal: () => void;
   onOpenWorksheetModal?: () => void;
   onOpenAssessmentModal?: () => void;
@@ -66,6 +71,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   activePlanId,
   onSelectPlan,
   onOpenAiGenerator,
+  onOpenUnitPlanModal,
+  onOpenSemesterPlanModal,
   onOpenAbacusModal,
   onOpenWorksheetModal,
   onOpenAssessmentModal,
@@ -317,6 +324,30 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>تحضير بالـ AI</span>
               </button>
 
+              {/* Unit Plan Generator CTA */}
+              {onOpenUnitPlanModal && (
+                <button
+                  onClick={onOpenUnitPlanModal}
+                  title="توليد تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer group"
+                >
+                  <Boxes className="w-3.5 h-3.5 text-blue-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>تحضير وحدة كاملة (AI)</span>
+                </button>
+              )}
+
+              {/* Semester Plan & Periods Distribution Guide CTA */}
+              {onOpenSemesterPlanModal && (
+                <button
+                  onClick={onOpenSemesterPlanModal}
+                  title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer group"
+                >
+                  <CalendarRange className="w-3.5 h-3.5 text-cyan-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>الخطة الفصلية وتوزيع الحصص</span>
+                </button>
+              )}
+
               {/* Interactive Worksheet CTA */}
               {onOpenWorksheetModal && (
                 <button
@@ -375,15 +406,20 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>المحاكي التفاعلي</span>
               </button>
 
-              {/* Resources Manager CTA */}
+              {/* Resources Manager CTA - Distinctive & Large */}
               <button
                 onClick={onOpenResourcesModal}
-                title="إدارة ورفع المصادر والمناهج والمراجع التعليمية"
-                className="px-2.5 py-1.5 bg-white hover:bg-emerald-50/80 text-emerald-900 border border-emerald-300/80 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+                title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
+                className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 via-teal-50 to-emerald-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 border-2 border-emerald-500/80 hover:border-emerald-600 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-97 cursor-pointer ring-2 ring-emerald-500/20 group"
               >
-                <Layers className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>المصادر</span>
-                <span className="px-1.5 py-0.2 bg-emerald-700 text-white rounded-full text-[10px] font-extrabold tabular-nums">
+                <div className="relative p-1 bg-emerald-700 group-hover:bg-emerald-800 text-white rounded-lg shadow-xs transition-colors shrink-0">
+                  <Layers className="w-4 h-4 text-emerald-100" />
+                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[10px] font-black border border-white">
+                    +
+                  </span>
+                </div>
+                <span className="font-extrabold text-[12px] text-emerald-950">إضافة المصادر</span>
+                <span className="px-2 py-0.5 bg-emerald-800 group-hover:bg-emerald-900 text-white rounded-full text-[11px] font-black tabular-nums shadow-2xs">
                   {toArabicDigits(resourcesCount)}
                 </span>
               </button>
@@ -498,6 +534,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
                   <span>تحضير بالـ AI</span>
                 </button>
+                {onOpenUnitPlanModal && (
+                  <button
+                    onClick={onOpenUnitPlanModal}
+                    className="px-2.5 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                    title="توليد تحضير وحدة دراسية كاملة"
+                  >
+                    <Boxes className="w-3.5 h-3.5 text-blue-200" />
+                    <span>وحدة كاملة</span>
+                  </button>
+                )}
+                {onOpenSemesterPlanModal && (
+                  <button
+                    onClick={onOpenSemesterPlanModal}
+                    className="px-2.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                    title="الخطة الفصلية الموحدة وتوزيع الحصص"
+                  >
+                    <CalendarRange className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>الخطة الفصلية</span>
+                  </button>
+                )}
                 {onOpenWorksheetModal && (
                   <button
                     onClick={onOpenWorksheetModal}
@@ -543,10 +599,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </button>
                 <button
                   onClick={onOpenResourcesModal}
-                  className="px-2.5 py-1.5 bg-white text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                  className="px-3 py-1.5 bg-linear-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 border-2 border-emerald-400 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 shadow-2xs hover:shadow-xs cursor-pointer ring-1 ring-emerald-500/20"
+                  title="إدارة ورفع المصادر والمناهج والمراجع التعليمية"
                 >
-                  <Layers className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+                  <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
+                    <Layers className="w-3.5 h-3.5" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                      +
+                    </span>
+                  </div>
+                  <span>إضافة المصادر ({toArabicDigits(resourcesCount)})</span>
                 </button>
                 {onOpenBlankTemplateModal && (
                   <button
@@ -625,11 +687,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
             <button
               onClick={onOpenResourcesModal}
-              className="flex-1 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 text-slate-700 hover:text-emerald-900 transition-all"
-              title="المصادر التعليمية"
+              className="flex-1 py-2 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 bg-emerald-100 text-emerald-950 border border-emerald-400 shadow-2xs transition-all hover:bg-emerald-200"
+              title="إضافة وإدارة المصادر التعليمية والمناهج"
             >
-              <Layers className="w-3.5 h-3.5 text-emerald-700" />
-              <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+              <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
+                <Layers className="w-3.5 h-3.5" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                  +
+                </span>
+              </div>
+              <span>إضافة المصادر ({toArabicDigits(resourcesCount)})</span>
             </button>
           </div>
         )}
@@ -643,6 +710,28 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
             <span>تحضير AI</span>
           </button>
+
+          {onOpenUnitPlanModal && (
+            <button
+              onClick={onOpenUnitPlanModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-blue-700 to-indigo-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+              title="تحضير وحدة كاملة بالذكاء الاصطناعي"
+            >
+              <Boxes className="w-3.5 h-3.5 text-blue-200 shrink-0" />
+              <span>وحدة كاملة</span>
+            </button>
+          )}
+
+          {onOpenSemesterPlanModal && (
+            <button
+              onClick={onOpenSemesterPlanModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 to-cyan-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+              title="الخطة الفصلية وتوزيع الحصص"
+            >
+              <CalendarRange className="w-3.5 h-3.5 text-cyan-200 shrink-0" />
+              <span>الخطة الفصلية</span>
+            </button>
+          )}
 
           {onOpenWorksheetModal && (
             <button
@@ -767,6 +856,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>اتصل بنا عبر الواتساب</span>
               </a>
 
+              {onOpenUnitPlanModal && (
+                <button
+                  onClick={() => {
+                    onOpenUnitPlanModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs font-bold"
+                >
+                  <Boxes className="w-4 h-4 text-blue-200" />
+                  <span>توليد تحضير وحدة دراسية كاملة (AI)</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   if (onOpenPlansViewer) onOpenPlansViewer();
@@ -813,15 +915,33 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>الأداة التفاعلية المتوافقة</span>
               </button>
 
+              {onOpenSemesterPlanModal && (
+                <button
+                  onClick={() => {
+                    onOpenSemesterPlanModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-3 bg-linear-to-r from-teal-800 to-cyan-900 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer border border-cyan-500/40"
+                >
+                  <CalendarRange className="w-4 h-4 text-cyan-200 shrink-0" />
+                  <span>الخطة الفصلية ودليل توزيع الحصص (OER)</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   onOpenResourcesModal();
                   setIsMobileMenuOpen(false);
                 }}
-                className="p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl flex items-center justify-center gap-2"
+                className="p-3 bg-linear-to-r from-emerald-100 to-teal-50 border-2 border-emerald-400 text-emerald-950 font-black rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
-                <Layers className="w-4 h-4 text-emerald-700" />
-                <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+                <div className="relative p-1 bg-emerald-700 text-white rounded-md shrink-0">
+                  <Layers className="w-4 h-4" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                    +
+                  </span>
+                </div>
+                <span>إضافة وإدارة المصادر ({toArabicDigits(resourcesCount)})</span>
               </button>
 
               {onOpenBlankTemplateModal && (
