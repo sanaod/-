@@ -31,6 +31,10 @@ import {
   SlidersHorizontal,
   Calendar,
   Compass,
+  FolderPlus,
+  BookmarkPlus,
+  Link2,
+  Globe,
 } from 'lucide-react';
 import { SemesterPlanDocument, SemesterPlanRow } from '../types/semesterPlan';
 import { LessonPlan } from '../types/lessonPlan';
@@ -84,6 +88,26 @@ const STANDARD_GRADES = [
   'الثاني عشر (التوجيهي)',
 ];
 
+const OER_RESOURCE_PRESETS = [
+  { label: '🌐 منصة روافد التعليمية (OER)', type: 'منصة OER رقمية', url: 'https://rawafed.edu.ps' },
+  { label: '📹 قناة فلسطين التعليمية', type: 'فيديو تعليمي OER', url: 'https://youtube.com/@PalestineEduChannel' },
+  { label: '🧪 محاكاة الفتيات والعلوم (PhET)', type: 'برمجية محاكاة تفاعلية', url: 'https://phet.colorado.edu' },
+  { label: '🧩 برمجية جيوجبرا (GeoGebra)', type: 'برمجية رياضيات تفاعلية', url: 'https://geogebra.org' },
+  { label: '📝 بطاقات التعلم الاستدراكي (OER)', type: 'بطاقات وعلاج استدراكي', url: 'https://rawafed.edu.ps/cards' },
+  { label: '📚 المكتبة الإلكترونية الموحدة', type: 'كتاب ومصادر إلكترونية', url: 'https://moe.edu.ps/library' },
+  { label: '📱 أنشطة Wordwall & Kahoot', type: 'تطبيقات التعلم باللعب', url: 'https://wordwall.net' },
+  { label: '📐 مجسمات ومحسوسات صفية', type: 'وسائط ومحسوسات ملموسة', url: '' },
+];
+
+const BOOK_RESOURCE_PRESETS = [
+  { label: '📚 الكتاب المدرسي المقرر (الجزء الأول)', type: 'كتاب مدرسي معتمد' },
+  { label: '📘 الكتاب المدرسي المقرر (الجزء الثاني)', type: 'كتاب مدرسي معتمد' },
+  { label: '📗 دليل المعلم والأنشطة الإثرائية', type: 'دليل المعلم والأنشطة' },
+  { label: '📙 كراسة التمارين والأنشطة التطبيقية', type: 'كراسة تمارين' },
+  { label: '📓 قصص ومراجع إثرائية مساندة', type: 'قصص ومراجع إثرائية' },
+  { label: '📱 الكتاب الإلكتروني التفاعلي OER', type: 'كتاب إلكتروني تفاعلي' },
+];
+
 export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
   isOpen,
   onClose,
@@ -116,6 +140,21 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
   const [aiWeeklyPeriods, setAiWeeklyPeriods] = useState(5);
   const [aiCustomTopics, setAiCustomTopics] = useState('');
   const [aiStartDate, setAiStartDate] = useState('2026-09-01');
+
+  // Add Resource Modal state
+  const [isAddResourceModalOpen, setIsAddResourceModalOpen] = useState(false);
+  const [newResourceTitle, setNewResourceTitle] = useState('');
+  const [newResourceType, setNewResourceType] = useState('منصة OER رقمية');
+  const [newResourceTargetScope, setNewResourceTargetScope] = useState<'all' | 'specific_row' | 'specific_unit'>('all');
+  const [selectedTargetRowId, setSelectedTargetRowId] = useState<string>('');
+  const [selectedTargetUnit, setSelectedTargetUnit] = useState<string>('');
+  const [newResourceUrl, setNewResourceUrl] = useState('');
+
+  // Add Book Modal state
+  const [isAddBookModalOpen, setIsAddBookModalOpen] = useState(false);
+  const [bookTitle, setBookTitle] = useState('');
+  const [bookPart, setBookPart] = useState('الكتاب المدرسي المقرر - الجزء الأول');
+  const [bookTargetScope, setBookTargetScope] = useState<'all' | 'specific_row' | 'specific_unit'>('all');
 
   // Extract unique units for filter
   const unitList = useMemo(() => {
@@ -565,6 +604,124 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
     });
   };
 
+  // Add learning resource to plan rows
+  const handleAddResourceToPlan = (
+    titleToAdd?: string,
+    scopeOverride?: 'all' | 'specific_row' | 'specific_unit',
+    targetRowIdOverride?: string
+  ) => {
+    const resourceText = titleToAdd || newResourceTitle.trim();
+    if (!resourceText) {
+      alert('يرجى كتابة عنوان المصدر التعليمي أو اختيار أحد المصادر الجاهزة.');
+      return;
+    }
+
+    const scope = scopeOverride || newResourceTargetScope;
+    const targetRowId = targetRowIdOverride || selectedTargetRowId;
+    const targetUnit = selectedTargetUnit;
+
+    setCurrentPlan((prev) => {
+      const updatedRows = prev.rows.map((row) => {
+        let shouldAdd = false;
+        if (scope === 'all') {
+          shouldAdd = true;
+        } else if (scope === 'specific_row' && row.id === targetRowId) {
+          shouldAdd = true;
+        } else if (scope === 'specific_unit' && row.unitTitle === targetUnit) {
+          shouldAdd = true;
+        }
+
+        if (shouldAdd) {
+          if (!row.learningResourcesOer.includes(resourceText)) {
+            return {
+              ...row,
+              learningResourcesOer: [...row.learningResourcesOer, resourceText],
+            };
+          }
+        }
+        return row;
+      });
+
+      return {
+        ...prev,
+        rows: updatedRows,
+      };
+    });
+
+    setIsSuccessAlert(`تمت إضافة المصدر التعليمي "${resourceText}" بنجاح إلى الخطة الفصلية!`);
+    setTimeout(() => setIsSuccessAlert(null), 3000);
+
+    setNewResourceTitle('');
+    setNewResourceUrl('');
+    setIsAddResourceModalOpen(false);
+  };
+
+  // Remove single resource item from row
+  const handleRemoveResourceFromRow = (rowId: string, resourceIndex: number) => {
+    setCurrentPlan((prev) => ({
+      ...prev,
+      rows: prev.rows.map((row) => {
+        if (row.id !== rowId) return row;
+        const newResources = [...row.learningResourcesOer];
+        newResources.splice(resourceIndex, 1);
+        return {
+          ...row,
+          learningResourcesOer: newResources,
+        };
+      }),
+    }));
+  };
+
+  // Add book to plan rows
+  const handleAddBookToPlan = (
+    titleToAdd?: string,
+    scopeOverride?: 'all' | 'specific_row' | 'specific_unit',
+    targetRowIdOverride?: string
+  ) => {
+    const rawTitle = titleToAdd || bookTitle.trim() || bookPart;
+    const finalBookText = rawTitle.startsWith('📖') || rawTitle.startsWith('📚') || rawTitle.startsWith('📘') || rawTitle.startsWith('📗') || rawTitle.startsWith('📙') || rawTitle.startsWith('📓')
+      ? rawTitle
+      : `📖 ${rawTitle}`;
+
+    const scope = scopeOverride || bookTargetScope;
+    const targetRowId = targetRowIdOverride || selectedTargetRowId;
+    const targetUnit = selectedTargetUnit;
+
+    setCurrentPlan((prev) => {
+      const updatedRows = prev.rows.map((row) => {
+        let shouldAdd = false;
+        if (scope === 'all') {
+          shouldAdd = true;
+        } else if (scope === 'specific_row' && row.id === targetRowId) {
+          shouldAdd = true;
+        } else if (scope === 'specific_unit' && row.unitTitle === targetUnit) {
+          shouldAdd = true;
+        }
+
+        if (shouldAdd) {
+          if (!row.learningResourcesOer.includes(finalBookText)) {
+            return {
+              ...row,
+              learningResourcesOer: [finalBookText, ...row.learningResourcesOer],
+            };
+          }
+        }
+        return row;
+      });
+
+      return {
+        ...prev,
+        rows: updatedRows,
+      };
+    });
+
+    setIsSuccessAlert(`تمت إضافة الكتاب "${finalBookText}" بنجاح إلى مصادر الخطة الفصلية!`);
+    setTimeout(() => setIsSuccessAlert(null), 3000);
+
+    setBookTitle('');
+    setIsAddBookModalOpen(false);
+  };
+
   // Copy to clipboard
   const handleCopyToClipboard = () => {
     let text = `=== ${currentPlan.title} ===\n`;
@@ -789,7 +946,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
         {/* Toolbar: Presets, AI Trigger, Import, and Export Hub */}
         <div className="bg-slate-50 border-b border-slate-200 p-3 sm:p-4 space-y-3 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Primary Action Buttons: AI Wizard & Subject Presets */}
+            {/* Primary Action Buttons: AI Wizard, Add Resource, & Subject Presets */}
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
@@ -799,6 +956,42 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
               >
                 <Sparkles className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
                 <span>توليد بالذكاء الاصطناعي (AI)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddResourceModalOpen(true);
+                  if (currentPlan.rows.length > 0 && !selectedTargetRowId) {
+                    setSelectedTargetRowId(currentPlan.rows[0].id);
+                  }
+                  if (unitList.length > 0 && !selectedTargetUnit) {
+                    setSelectedTargetUnit(unitList[0]);
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:to-orange-800 text-white shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer border border-amber-300/40 ring-1 ring-amber-400/20"
+                title="إضافة مصدر تعلم إضافي (OER) إلى الخطة الفصلية وتوزيع الحصص"
+              >
+                <FolderPlus className="w-3.5 h-3.5 text-amber-200" />
+                <span>إضافة مصدر (OER)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddBookModalOpen(true);
+                  if (currentPlan.rows.length > 0 && !selectedTargetRowId) {
+                    setSelectedTargetRowId(currentPlan.rows[0].id);
+                  }
+                  if (unitList.length > 0 && !selectedTargetUnit) {
+                    setSelectedTargetUnit(unitList[0]);
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-900 text-white shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer border border-blue-400/40 ring-1 ring-blue-400/20"
+                title="إضافة كتاب مدرسي مقرر أو مرجع تعليمي إلى مصادر الخطة الفصلية"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-200" />
+                <span>إضافة كتاب</span>
               </button>
 
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1 mr-2 ml-1">
@@ -1183,15 +1376,55 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                               className="w-full p-1 text-xs border border-emerald-400 rounded-md bg-white"
                             />
                           ) : (
-                            <div className="flex flex-wrap gap-1">
-                              {row.learningResourcesOer.map((res, i) => (
-                                <span
-                                  key={i}
-                                  className="text-[10px] font-semibold bg-emerald-100/70 text-emerald-900 px-1.5 py-0.5 rounded-md"
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex flex-wrap gap-1 items-center">
+                                {row.learningResourcesOer.map((res, i) => (
+                                  <span
+                                    key={i}
+                                    className="group relative inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-100/80 text-emerald-950 px-1.5 py-0.5 rounded-md border border-emerald-200/60"
+                                  >
+                                    <span>{res}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveResourceFromRow(row.id, i)}
+                                      className="text-emerald-700 hover:text-rose-700 hover:bg-rose-100 rounded-xs p-0.5 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                      title="حذف المصدر"
+                                    >
+                                      <X className="w-2.5 h-2.5" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTargetRowId(row.id);
+                                    setNewResourceTargetScope('specific_row');
+                                    setIsAddResourceModalOpen(true);
+                                  }}
+                                  className="text-[10px] font-extrabold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow-2xs no-print"
+                                  title="إضافة مصدر تعليمي خاص بهذا الدرس"
                                 >
-                                  {res}
-                                </span>
-                              ))}
+                                  <FolderPlus className="w-3 h-3 text-amber-700" />
+                                  <span>+ مصدر</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTargetRowId(row.id);
+                                    setBookTargetScope('specific_row');
+                                    setIsAddBookModalOpen(true);
+                                  }}
+                                  className="text-[10px] font-extrabold bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300/80 px-2 py-0.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow-2xs no-print"
+                                  title="إضافة كتاب مدرسي مقرر لهذا الدرس"
+                                >
+                                  <BookOpen className="w-3 h-3 text-blue-700" />
+                                  <span>+ كتاب</span>
+                                </button>
+                              </div>
                             </div>
                           )}
                         </td>
@@ -1356,6 +1589,319 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Add Resource Modal Overlay */}
+        {isAddResourceModalOpen && (
+          <div
+            className="fixed inset-0 z-60 flex items-center justify-center p-3 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-5 overflow-hidden text-right space-y-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-300 shrink-0">
+                    <FolderPlus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 font-['Tajawal']">
+                      إضافة مصدر تعلم إضافي (OER)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      ربط مصادر ومواد تعليمية مفتوحة بالخطة الفصلية وتوزيع الحصص
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddResourceModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  اختيار سريع لمصادر OER الجاهزة:
+                </label>
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-200">
+                  {OER_RESOURCE_PRESETS.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setNewResourceTitle(preset.label);
+                        setNewResourceType(preset.type);
+                        if (preset.url) setNewResourceUrl(preset.url);
+                      }}
+                      className="text-[11px] font-bold bg-white hover:bg-amber-50 hover:border-amber-300 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors text-right flex items-center gap-1 cursor-pointer"
+                    >
+                      <BookmarkPlus className="w-3 h-3 text-amber-600 shrink-0" />
+                      <span>{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manual Input Fields */}
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    اسم/عنوان المصدر التعليمي <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newResourceTitle}
+                    onChange={(e) => setNewResourceTitle(e.target.value)}
+                    placeholder="مثال: منصة روافد - فيديو تفاعلي - ورقة عمل رقمية..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">تصنيف المصدر</label>
+                    <select
+                      value={newResourceType}
+                      onChange={(e) => setNewResourceType(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                    >
+                      <option value="منصة OER رقمية">منصة OER رقمية</option>
+                      <option value="فيديو تعليمي OER">فيديو تعليمي OER</option>
+                      <option value="برمجية محاكاة تفاعلية">برمجية محاكاة تفاعلية</option>
+                      <option value="بطاقات وعلاج استدراكي">بطاقات وعلاج استدراكي</option>
+                      <option value="أوراق عمل تفاعلية">أوراق عمل تفاعلية</option>
+                      <option value="وسائط ومحسوسات ملموسة">وسائط ومحسوسات ملموسة</option>
+                      <option value="كتاب ومصادر إلكترونية">كتاب ومصادر إلكترونية</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">نطاق تطبيق المصدر</label>
+                    <select
+                      value={newResourceTargetScope}
+                      onChange={(e) => setNewResourceTargetScope(e.target.value as any)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                    >
+                      <option value="all">🌟 تطبيق على كافة دروس الخطة</option>
+                      <option value="specific_row">📌 تطبيق على درس محدد</option>
+                      <option value="specific_unit">📚 تطبيق على وحدة كاملة</option>
+                    </select>
+                  </div>
+                </div>
+
+                {newResourceTargetScope === 'specific_row' && (
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">اختر الدرس المستهدف:</label>
+                    <select
+                      value={selectedTargetRowId}
+                      onChange={(e) => setSelectedTargetRowId(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                    >
+                      {currentPlan.rows.map((row, idx) => (
+                        <option key={row.id} value={row.id}>
+                          درس {toArabicDigits(idx + 1)}: {row.lessonTitle} ({row.unitTitle})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {newResourceTargetScope === 'specific_unit' && (
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">اختر الوحدة المستهدفة:</label>
+                    <select
+                      value={selectedTargetUnit}
+                      onChange={(e) => setSelectedTargetUnit(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                    >
+                      {unitList.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    رابط المصدر أو المنصة (اختياري)
+                  </label>
+                  <div className="relative">
+                    <Link2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={newResourceUrl}
+                      onChange={(e) => setNewResourceUrl(e.target.value)}
+                      placeholder="https://rawafed.edu.ps/..."
+                      dir="ltr"
+                      className="w-full text-xs pl-3 pr-9 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddResourceModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddResourceToPlan()}
+                  className="px-5 py-2 bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl font-black shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>إضافة المصدر للخطة الفصلية</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Book Modal Overlay */}
+        {isAddBookModalOpen && (
+          <div
+            className="fixed inset-0 z-60 flex items-center justify-center p-3 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-5 overflow-hidden text-right space-y-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-700 flex items-center justify-center border border-blue-300 shrink-0">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 font-['Tajawal']">
+                      إضافة كتاب مدرسي / مرجع إلى الخطة الفصلية
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      ربط الكتب المدرسية المقررة وأدلة المعلم بمصادر التعلم
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddBookModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Preset Books */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  اختيار سريع للكتب والكتب المدرسية الجاهزة:
+                </label>
+                <div className="flex flex-wrap gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200">
+                  {BOOK_RESOURCE_PRESETS.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setBookTitle(preset.label);
+                        setBookPart(preset.label);
+                      }}
+                      className="text-[11px] font-bold bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors text-right flex items-center gap-1 cursor-pointer"
+                    >
+                      <BookmarkPlus className="w-3 h-3 text-blue-600 shrink-0" />
+                      <span>{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manual Book Input Fields */}
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    اسم/عنوان الكتاب أو المرجع المدرسي <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={bookTitle}
+                    onChange={(e) => setBookTitle(e.target.value)}
+                    placeholder={`الكتاب المدرسي المقرر لمبحث ${currentPlan.subject} - ${currentPlan.grade}`}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-900 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">نطاق إدراج الكتاب بالخطة</label>
+                  <select
+                    value={bookTargetScope}
+                    onChange={(e) => setBookTargetScope(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-900 font-medium"
+                  >
+                    <option value="all">🌟 إدراج بكافة دروس الخطة الفصلية</option>
+                    <option value="specific_row">📌 إدراج لدرس محدد فقط</option>
+                    <option value="specific_unit">📚 إدراج لوحدة تعليمية كاملة</option>
+                  </select>
+                </div>
+
+                {bookTargetScope === 'specific_row' && (
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">اختر الدرس المستهدف:</label>
+                    <select
+                      value={selectedTargetRowId}
+                      onChange={(e) => setSelectedTargetRowId(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-900"
+                    >
+                      {currentPlan.rows.map((row, idx) => (
+                        <option key={row.id} value={row.id}>
+                          درس {toArabicDigits(idx + 1)}: {row.lessonTitle} ({row.unitTitle})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {bookTargetScope === 'specific_unit' && (
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">اختر الوحدة المستهدفة:</label>
+                    <select
+                      value={selectedTargetUnit}
+                      onChange={(e) => setSelectedTargetUnit(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-900"
+                    >
+                      {unitList.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddBookModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddBookToPlan()}
+                  className="px-5 py-2 bg-linear-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white rounded-xl font-black shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>إضافة الكتاب للخطة</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
