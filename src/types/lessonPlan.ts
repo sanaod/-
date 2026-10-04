@@ -13,6 +13,9 @@ export interface LessonHeader {
   currentPeriod: number;
   periodDurationMinutes: number;
   date: string;
+  startDate?: string;
+  endDate?: string;
+  timeframe?: string;
   semester: string;
 }
 

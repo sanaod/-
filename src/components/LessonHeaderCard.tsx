@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { LessonHeader, STANDARD_GRADES } from '../types/lessonPlan';
-import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange } from 'lucide-react';
+import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import {
+  analyzeTeachingCalendar,
+  getNextTeachingDays,
+  PALESTINIAN_MINISTRY_HOLIDAYS,
+} from '../utils/palestinianCalendar';
 
 interface LessonHeaderCardProps {
   header: LessonHeader;
@@ -26,6 +31,26 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
     onChange({
       ...header,
       [field]: val,
+    });
+  };
+
+  // Palestinian Calendar Lesson Timeframe Auto-Calculator
+  const handleCalculateLessonTimeframe = () => {
+    const sDate = header.startDate || header.date || new Date().toISOString().split('T')[0];
+    const daysNeeded = Math.max(1, header.totalPeriods || 2);
+    const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
+    const analysis = analyzeTeachingCalendar(sDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
+
+    const holidayNotice = analysis.holidaysEncountered.length > 0
+      ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
+      : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
+
+    onChange({
+      ...header,
+      startDate: sDate,
+      endDate: result.endDate,
+      timeframe: `من ${sDate} إلى ${result.endDate}${holidayNotice}`,
+      date: sDate,
     });
   };
 
@@ -218,65 +243,146 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                 className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right"
               />
             </div>
+
+            {/* Lesson Timeframe Selection Box (من تاريخ - إلى تاريخ) */}
+            <div className="sm:col-span-2 lg:col-span-3 p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-teal-950 text-xs flex items-center gap-1.5 font-['Tajawal']">
+                  <CalendarRange className="w-4 h-4 text-emerald-700" />
+                  <span>الفترة الزمنية لتنفيذ الدرس (من تاريخ - إلى تاريخ):</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-700 text-white rounded-full font-bold">
+                    الجمعة والسبت والإجازات مستثناة 🇵🇸
+                  </span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleCalculateLessonTimeframe}
+                  className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>احتساب التلقائي للفترة بالتقويم الفلسطيني</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">من تاريخ (البداية):</label>
+                  <input
+                    type="date"
+                    value={header.startDate || ''}
+                    onChange={(e) => {
+                      const sDate = e.target.value;
+                      handleChange('startDate', sDate);
+                      handleChange('date', sDate);
+                    }}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-bold text-slate-900 bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">إلى تاريخ (النهاية):</label>
+                  <input
+                    type="date"
+                    value={header.endDate || ''}
+                    onChange={(e) => {
+                      const eDate = e.target.value;
+                      handleChange('endDate', eDate);
+                    }}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-bold text-slate-900 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <User className="w-3.5 h-3.5 text-emerald-600" />
-                المعلم/ة
-              </span>
-              <span className="text-xs font-bold text-slate-800 line-clamp-1">
-                {header.teacherName ? header.teacherName : <span className="text-slate-400 font-normal italic">[اسم المعلم/ة]</span>}
-              </span>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <User className="w-3.5 h-3.5 text-emerald-600" />
+                  المعلم/ة
+                </span>
+                <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                  {header.teacherName ? header.teacherName : <span className="text-slate-400 font-normal italic">[اسم المعلم/ة]</span>}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                  المادة والمبحث
+                </span>
+                <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                  {header.subject ? header.subject : <span className="text-slate-400 font-normal italic">[المادة / المبحث]</span>}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                  الصف والشعبة
+                </span>
+                <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                  {header.grade || 'الصف الدراسي'} ({header.section || 'الشعبة'})
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                  الحصص المستهدفة
+                </span>
+                <span className="text-xs font-bold text-slate-800">
+                  الحصة {toArabicDigits(header.currentPeriod || 1)} من {toArabicDigits(header.totalPeriods || 1)}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                  فترة الحصة
+                </span>
+                <span className="text-xs font-bold text-emerald-700">
+                  {toArabicDigits(header.periodDurationMinutes || 40)} دقيقة
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                  التاريخ
+                </span>
+                <span className="text-xs font-bold text-slate-800">{toArabicDigits(header.date || '٢٠٢٦م')}</span>
+              </div>
             </div>
 
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                المادة والمبحث
-              </span>
-              <span className="text-xs font-bold text-slate-800 line-clamp-1">
-                {header.subject ? header.subject : <span className="text-slate-400 font-normal italic">[المادة / المبحث]</span>}
-              </span>
-            </div>
+            {/* Lesson Timeframe Highlight Banner */}
+            <div className="p-3 bg-linear-to-r from-teal-50 via-emerald-50 to-cyan-50 border border-teal-200/90 rounded-xl flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-800 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <CalendarRange className="w-4 h-4 text-cyan-200" />
+                </div>
+                <div>
+                  <span className="font-bold text-teal-950 block text-xs">
+                    الفترة الزمنية لتنفيذ الدرس (من تاريخ - إلى تاريخ):
+                  </span>
+                  <span className="font-black text-emerald-900 text-xs sm:text-sm font-['Tajawal']">
+                    {header.startDate && header.endDate
+                      ? `من ${toArabicDigits(header.startDate)} إلى ${toArabicDigits(header.endDate)}`
+                      : header.date
+                      ? `التاريخ المعتمد: ${toArabicDigits(header.date)}`
+                      : 'فترة تنفيذ الدرس المحددة بالخطة'}
+                  </span>
+                </div>
+              </div>
 
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <Layers className="w-3.5 h-3.5 text-emerald-600" />
-                الصف والشعبة
-              </span>
-              <span className="text-xs font-bold text-slate-800 line-clamp-1">
-                {header.grade || 'الصف الدراسي'} ({header.section || 'الشعبة'})
-              </span>
-            </div>
-
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                الحصص المستهدفة
-              </span>
-              <span className="text-xs font-bold text-slate-800">
-                الحصة {toArabicDigits(header.currentPeriod || 1)} من {toArabicDigits(header.totalPeriods || 1)}
-              </span>
-            </div>
-
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                فترة الحصة
-              </span>
-              <span className="text-xs font-bold text-emerald-700">
-                {toArabicDigits(header.periodDurationMinutes || 40)} دقيقة
-              </span>
-            </div>
-
-            <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                التاريخ
-              </span>
-              <span className="text-xs font-bold text-slate-800">{toArabicDigits(header.date || '٢٠٢٦م')}</span>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="px-2.5 py-1 bg-white text-teal-900 border border-teal-300/80 rounded-lg font-bold shadow-2xs flex items-center gap-1">
+                  <Flag className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>🇵🇸 الجمعة والسبت عطلة أسبوعية + الإجازات الرسمية مستثناة</span>
+                </span>
+              </div>
             </div>
           </div>
         )}

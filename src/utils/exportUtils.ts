@@ -134,6 +134,13 @@ export function exportToWord(plan: LessonPlan) {
       <th>التوقيت والحصص:</th>
       <td>الحصة (${toArabicDigits(h.currentPeriod)}) من أصل (${toArabicDigits(h.totalPeriods)}) حصص • مدة الحصة: (${toArabicDigits(h.periodDurationMinutes)}) دقيقة</td>
     </tr>
+    <tr>
+      <th>الفترة الزمنية للدرس:</th>
+      <td colspan="3">
+        <strong>من ${toArabicDigits(h.startDate || h.date)} إلى ${toArabicDigits(h.endDate || h.date)}</strong>
+        <span style="font-size: 9.5pt; color: #047857; margin-right: 10px; font-weight: bold;">(مراعاة عطلة الجمعة والسبت والإجازات الرسمية المعتمدة لوزارة التربية والتعليم الفلسطينية)</span>
+      </td>
+    </tr>
   </table>
 
   <!-- SECTION 1 -->

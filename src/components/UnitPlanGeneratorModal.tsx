@@ -23,10 +23,29 @@ import {
   FileEdit,
   ArrowRight,
   ListOrdered,
-  Wand2
+  Wand2,
+  Upload,
+  Paperclip,
+  FileUp,
+  File,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  FileCheck,
+  ExternalLink,
+  FolderPlus,
+  BookmarkPlus,
+  Globe,
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
+
+export interface UnitUploadedResource {
+  id: string;
+  name: string;
+  type: 'pdf' | 'word' | 'image' | 'link' | 'file' | 'oer';
+  sizeFormatted?: string;
+  urlOrContent?: string;
+}
 
 interface UnitLessonItem {
   lessonNumber: number;
@@ -173,6 +192,84 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
     },
   ]);
 
+  // Uploaded Resources State for Unit
+  const [uploadedResources, setUploadedResources] = useState<UnitUploadedResource[]>([
+    {
+      id: 'res-default-book',
+      name: 'الكتاب المدرسي المقرر (PDF)',
+      type: 'pdf',
+      sizeFormatted: '4.2 MB',
+    },
+    {
+      id: 'res-default-rawafed',
+      name: 'منصة روافد التعليمية OER - بطاقات التعلم الاستدراكي',
+      type: 'link',
+      urlOrContent: 'https://rawafed.edu.ps',
+    },
+  ]);
+
+  const [newResourceName, setNewResourceName] = useState('');
+  const [newResourceUrl, setNewResourceUrl] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // File Upload Handler
+  const handleFileUpload = (files: FileList | File[]) => {
+    if (!files || files.length === 0) return;
+
+    const newItems: UnitUploadedResource[] = [];
+    Array.from(files).forEach((file) => {
+      let type: UnitUploadedResource['type'] = 'file';
+      const name = file.name;
+      const sizeFormatted = file.size > 1024 * 1024
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+        : `${Math.round(file.size / 1024)} KB`;
+
+      if (name.endsWith('.pdf')) type = 'pdf';
+      else if (name.endsWith('.doc') || name.endsWith('.docx')) type = 'word';
+      else if (/\.(png|jpe?g|webp|gif|svg)$/i.test(name)) type = 'image';
+
+      newItems.push({
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        name,
+        type,
+        sizeFormatted,
+      });
+    });
+
+    setUploadedResources((prev) => [...prev, ...newItems]);
+  };
+
+  // Add Link Resource Handler
+  const handleAddLinkResource = () => {
+    if (!newResourceName.trim() && !newResourceUrl.trim()) return;
+    const name = newResourceName.trim() || newResourceUrl.trim();
+    const newItem: UnitUploadedResource = {
+      id: `link-${Date.now()}`,
+      name: name.startsWith('http') ? name : `🌐 ${name}`,
+      type: name.includes('http') ? 'link' : 'oer',
+      urlOrContent: newResourceUrl.trim() || undefined,
+    };
+    setUploadedResources((prev) => [...prev, newItem]);
+    setNewResourceName('');
+    setNewResourceUrl('');
+  };
+
+  // Add Preset Resource Tag
+  const handleAddPresetResource = (label: string, type: UnitUploadedResource['type'], linkUrl = '') => {
+    const newItem: UnitUploadedResource = {
+      id: `preset-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: label,
+      type,
+      urlOrContent: linkUrl || undefined,
+    };
+    setUploadedResources((prev) => [...prev, newItem]);
+  };
+
+  // Remove Resource Handler
+  const handleRemoveResource = (id: string) => {
+    setUploadedResources((prev) => prev.filter((r) => r.id !== id));
+  };
+
   // Loading & Progress State
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
@@ -315,6 +412,12 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
           directorate,
           periodDurationMinutes,
           customNotes,
+          uploadedResources: uploadedResources.map((r) => ({
+            title: r.name,
+            type: r.type,
+            content: r.urlOrContent || `مصدر تعليمي مرفوع للوحدة: ${r.name}`,
+            sourceInfo: r.sizeFormatted ? `الحجم: ${r.sizeFormatted}` : undefined,
+          })),
         }),
       });
 
@@ -326,9 +429,31 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
         throw new Error(data.error || 'فشل في توليد تحضير الوحدة');
       }
 
+      // Attach uploaded resources to generated lesson plans
+      const resNamesList = uploadedResources.map((r) => r.name).join('، ');
+      const rawPlans: LessonPlan[] = data.plans || [];
+      const augmentedPlans = rawPlans.map((plan) => {
+        if (!resNamesList) return plan;
+        const existingResources = plan.section1?.learningResources?.digitalReadiness || '';
+        return {
+          ...plan,
+          section1: {
+            ...plan.section1,
+            learningResources: {
+              ...plan.section1?.learningResources,
+              textbook: plan.section1?.learningResources?.textbook || 'الكتاب المدرسي المقرر المعتمد',
+              tangibleMedia: plan.section1?.learningResources?.tangibleMedia || 'وسائط ومحسوسات تعليمية',
+              digitalReadiness: existingResources
+                ? `${existingResources} | المصادر المرفوعة للوحدة: ${resNamesList}`
+                : `المصادر المرفوعة للوحدة: ${resNamesList}`,
+            },
+          },
+        };
+      });
+
       setProgressPercent(100);
       setCurrentProgressText('اكتمل توليد تحضير الوحدة بنجاح!');
-      setGeneratedPlans(data.plans || []);
+      setGeneratedPlans(augmentedPlans);
       setTimeout(() => {
         setStep('results');
       }, 600);
@@ -613,6 +738,183 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
                     ))}
                   </div>
                 </div>
+              </div>
+
+              {/* Resource Upload Card */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2 font-['Tajawal']">
+                      <Upload className="w-4 h-4 text-emerald-600" />
+                      <span>رفع وتعيين المصادر والمرفقات للوحدة (PDF, Word, صور, أوراق عمل, روابط OER):</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      يمكنك رفع الملفات والكراسات أو إضافة روابط رقمية ليتم تضمينها بروابط ومحتوى دروس الوحدة تلقائياً
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    {toArabicDigits(uploadedResources.length)} مصادر مرفوعة
+                  </span>
+                </div>
+
+                {/* File Upload Dropzone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    handleFileUpload(e.dataTransfer.files);
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer ${
+                    isDragOver
+                      ? 'border-emerald-500 bg-emerald-50/80'
+                      : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    multiple
+                    id="unit-file-upload-input"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) handleFileUpload(e.target.files);
+                    }}
+                  />
+                  <label htmlFor="unit-file-upload-input" className="cursor-pointer space-y-2 block">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-2xs">
+                      <FileUp className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">
+                        اسحب وأفلت ملفات المصادر هنا، أو <span className="text-emerald-700 underline">اضغط للتصفح ورفع الملفات</span>
+                      </span>
+                      <span className="text-[11px] text-slate-500 block mt-0.5">
+                        يدعم ملفات الكتب والملخصات (PDF, DOCX, PNG, JPG, TXT)
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Add Link or Digital OER Resource Row */}
+                <div className="pt-1 space-y-2">
+                  <span className="text-xs font-bold text-slate-700 block">
+                    أو إضافة رابط إلكتروني / أداة رقمية تفاعلية للوحدة:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+                    <input
+                      type="text"
+                      value={newResourceName}
+                      onChange={(e) => setNewResourceName(e.target.value)}
+                      placeholder="عنوان المصدر الرقمي (مثال: بطاقات روافد OER)"
+                      className="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900"
+                    />
+                    <input
+                      type="text"
+                      value={newResourceUrl}
+                      onChange={(e) => setNewResourceUrl(e.target.value)}
+                      placeholder="الرابط الإلكتروني (https://...)"
+                      dir="ltr"
+                      className="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddLinkResource}
+                      className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold transition-colors cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>إضافة</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Palestinian Quick Preset Resources */}
+                <div>
+                  <span className="text-[11px] font-bold text-slate-600 block mb-1.5">
+                    إضافة سريعة لمصادر وكراسات فلسطينية معتمدة:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleAddPresetResource('📚 الكتاب المدرسي المقرر - الجزء الأول', 'pdf')}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      + 📚 الكتاب المدرسي (PDF)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddPresetResource('📝 بطاقات التعلم الاستدراكي OER', 'link', 'https://rawafed.edu.ps/cards')}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      + 📝 بطاقات الاستدراك OER
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddPresetResource('🧪 دليل التجارب والمختبر العلمي', 'pdf')}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      + 🧪 دليل التجارب والمختبر
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddPresetResource('🌐 منصة روافد التعليمية الموحدة', 'link', 'https://rawafed.edu.ps')}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      + 🌐 منصة روافد
+                    </button>
+                  </div>
+                </div>
+
+                {/* Uploaded Resources List */}
+                {uploadedResources.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-800 block">
+                      المصادر والمرفقات المعتمدة للوحدة ({toArabicDigits(uploadedResources.length)}):
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      {uploadedResources.map((res) => (
+                        <div
+                          key={res.id}
+                          className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2 hover:border-emerald-300 transition-colors"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 shrink-0">
+                              {res.type === 'pdf' ? (
+                                <FileText className="w-4 h-4 text-rose-600" />
+                              ) : res.type === 'image' ? (
+                                <ImageIcon className="w-4 h-4 text-purple-600" />
+                              ) : res.type === 'word' ? (
+                                <FileText className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <LinkIcon className="w-4 h-4 text-emerald-600" />
+                              )}
+                            </div>
+                            <div className="overflow-hidden text-right">
+                              <span className="font-extrabold text-slate-800 block truncate text-xs">
+                                {res.name}
+                              </span>
+                              <span className="text-[10px] text-slate-500 block truncate">
+                                {res.sizeFormatted || res.urlOrContent || 'مرفق تعليمي للوحدة'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveResource(res.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="حذف هذا المصدر من الوحدة"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Lesson Sequence & Customizer Card */}
