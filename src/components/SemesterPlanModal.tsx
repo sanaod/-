@@ -156,6 +156,15 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
   const [bookPart, setBookPart] = useState('الكتاب المدرسي المقرر - الجزء الأول');
   const [bookTargetScope, setBookTargetScope] = useState<'all' | 'specific_row' | 'specific_unit'>('all');
 
+  // Semester Time Period state (من تاريخ - إلى تاريخ)
+  const [semesterStartDate, setSemesterStartDate] = useState<string>(
+    currentPlan.semesterStartDate || '2026-09-01'
+  );
+  const [semesterEndDate, setSemesterEndDate] = useState<string>(
+    currentPlan.semesterEndDate || '2027-01-15'
+  );
+  const [aiEndDate, setAiEndDate] = useState<string>('2027-01-15');
+
   // Extract unique units for filter
   const unitList = useMemo(() => {
     const set = new Set<string>();
@@ -722,6 +731,60 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
     setIsAddBookModalOpen(false);
   };
 
+  // Handle recalculating and applying dates to plan rows
+  const handleApplySemesterDates = (sDate: string, eDate: string) => {
+    if (!sDate || !eDate) return;
+    const start = new Date(sDate);
+    const end = new Date(eDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+      alert('يرجى اختيار تاريخ بداية سابق لتاريخ النهاية بشكل صحيح.');
+      return;
+    }
+
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const calculatedWeeks = Math.max(1, Math.round(totalDays / 7));
+
+    setCurrentPlan((prev) => {
+      const updatedRows = prev.rows.map((row, idx) => {
+        const rowStart = new Date(start);
+        rowStart.setDate(rowStart.getDate() + idx * 7);
+
+        const rowEnd = new Date(rowStart);
+        rowEnd.setDate(rowEnd.getDate() + 4);
+
+        const formatShortDate = (d: Date) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${y}/${m}/${day}`;
+        };
+
+        const newTimeframe = `الأسبوع (${toArabicDigits(idx + 1)}): من ${formatShortDate(rowStart)} إلى ${formatShortDate(rowEnd)}`;
+
+        return {
+          ...row,
+          timeframe: newTimeframe,
+          timeframeWeekNumber: idx + 1,
+          startDate: rowStart.toISOString().split('T')[0],
+          endDate: rowEnd.toISOString().split('T')[0],
+        };
+      });
+
+      return {
+        ...prev,
+        semesterStartDate: sDate,
+        semesterEndDate: eDate,
+        totalSemesterWeeks: calculatedWeeks,
+        rows: updatedRows,
+      };
+    });
+
+    setIsSuccessAlert(`تم تحديث الخطة الموحدة بنجاح للفترة من (${sDate}) إلى (${eDate})!`);
+    setTimeout(() => setIsSuccessAlert(null), 3000);
+  };
+
   // Copy to clipboard
   const handleCopyToClipboard = () => {
     let text = `=== ${currentPlan.title} ===\n`;
@@ -876,16 +939,29 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                 </div>
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  تاريخ بدء الفصل (لحساب التواريخ بدقة)
-                </label>
-                <input
-                  type="date"
-                  value={aiStartDate}
-                  onChange={(e) => setAiStartDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
-                />
+              <div className="sm:col-span-2 grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    من تاريخ (بداية الفصل)
+                  </label>
+                  <input
+                    type="date"
+                    value={aiStartDate}
+                    onChange={(e) => setAiStartDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    إلى تاريخ (نهاية الفصل)
+                  </label>
+                  <input
+                    type="date"
+                    value={aiEndDate}
+                    onChange={(e) => setAiEndDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500 font-medium"
+                  />
+                </div>
               </div>
 
               <div className="sm:col-span-2">
@@ -1103,6 +1179,80 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
             </div>
           </div>
 
+          {/* Semester Time Period Control Bar (من تاريخ - إلى تاريخ) */}
+          <div className="bg-linear-to-r from-teal-50 via-emerald-50 to-cyan-50 border border-teal-200/90 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-teal-800 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <Calendar className="w-4 h-4 text-cyan-200" />
+              </div>
+              <div>
+                <span className="font-black text-teal-950 block font-['Tajawal'] text-xs sm:text-sm">
+                  تحديد الفترة الزمنية للفصل الدراسي (من تاريخ - إلى تاريخ):
+                </span>
+                <span className="text-[11px] text-teal-800/90">
+                  يتم حساب أسابيع الفصل والتواريخ وتحديث المدى الزمني لكل درس في الخطة تلقائياً
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-teal-300/80 shadow-2xs">
+                <span className="font-bold text-teal-900 text-[11px] shrink-0">من تاريخ:</span>
+                <input
+                  type="date"
+                  value={semesterStartDate}
+                  onChange={(e) => {
+                    setSemesterStartDate(e.target.value);
+                    handleApplySemesterDates(e.target.value, semesterEndDate);
+                  }}
+                  className="text-xs font-bold text-slate-900 bg-transparent focus:outline-hidden cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-teal-300/80 shadow-2xs">
+                <span className="font-bold text-teal-900 text-[11px] shrink-0">إلى تاريخ:</span>
+                <input
+                  type="date"
+                  value={semesterEndDate}
+                  onChange={(e) => {
+                    setSemesterEndDate(e.target.value);
+                    handleApplySemesterDates(semesterStartDate, e.target.value);
+                  }}
+                  className="text-xs font-bold text-slate-900 bg-transparent focus:outline-hidden cursor-pointer"
+                />
+              </div>
+
+              {/* Quick Semester Term Presets */}
+              <div className="flex flex-wrap items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSemesterStartDate('2026-09-01');
+                    setSemesterEndDate('2027-01-15');
+                    handleApplySemesterDates('2026-09-01', '2027-01-15');
+                  }}
+                  className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
+                  title="الفصل الأول: 01/09/2026 - 15/01/2027"
+                >
+                  🗓️ الفصل الأول
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSemesterStartDate('2027-02-01');
+                    setSemesterEndDate('2027-05-30');
+                    handleApplySemesterDates('2027-02-01', '2027-05-30');
+                  }}
+                  className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
+                  title="الفصل الثاني: 01/02/2027 - 30/05/2027"
+                >
+                  🗓️ الفصل الثاني
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Institutional Metadata & KPI Highlights */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 pt-1 text-xs">
             <div className="p-2.5 bg-white rounded-xl border border-slate-200">
@@ -1138,10 +1288,13 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
             <div className="p-2.5 bg-white rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-500 block mb-0.5 flex items-center gap-1">
                 <CalendarRange className="w-3 h-3 text-emerald-600" />
-                أسابيع التدريس
+                مدة الفصل والأسابيع
               </span>
-              <span className="font-extrabold text-slate-800 tabular-nums">
+              <span className="font-extrabold text-slate-800 tabular-nums block">
                 {toArabicDigits(currentPlan.totalSemesterWeeks)} أسبوعاً
+              </span>
+              <span className="text-[10px] text-teal-700 font-bold block mt-0.5">
+                ({semesterStartDate} ⬅️ {semesterEndDate})
               </span>
             </div>
 

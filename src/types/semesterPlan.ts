@@ -35,6 +35,8 @@ export interface SemesterPlanDocument {
   weeklyPeriodsCount: number;
   totalSemesterWeeks: number;
   totalSemesterPeriods: number;
+  semesterStartDate?: string; // تاريخ بداية الفصل (من تاريخ)
+  semesterEndDate?: string; // تاريخ نهاية الفصل (إلى تاريخ)
   generalCompetencies: string[];
   rows: SemesterPlanRow[];
   createdAt: string;

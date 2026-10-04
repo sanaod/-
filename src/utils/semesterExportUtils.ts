@@ -58,6 +58,10 @@ export function exportSemesterPlanToWord(plan: SemesterPlanDocument) {
     )
     .join('');
 
+  const dateRangeStr = plan.semesterStartDate && plan.semesterEndDate
+    ? `من ${plan.semesterStartDate} إلى ${plan.semesterEndDate}`
+    : 'طوال الفصل الدراسي';
+
   const wordHtml = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
@@ -144,6 +148,7 @@ export function exportSemesterPlanToWord(plan: SemesterPlanDocument) {
       <td style="width: 30%; text-align: left;">
         <span><strong>العام الدراسي:</strong> ${plan.academicYear}</span><br>
         <span><strong>الفصل:</strong> ${plan.semester}</span><br>
+        <span><strong>الفترة الزمنية:</strong> ${dateRangeStr}</span><br>
         <span><strong>إجمالي الحصص:</strong> ${toArabicDigits(plan.totalSemesterPeriods)} حصة</span>
       </td>
     </tr>
@@ -151,6 +156,7 @@ export function exportSemesterPlanToWord(plan: SemesterPlanDocument) {
 
   <div class="info-bar">
     <strong>المعلم/ة:</strong> ${plan.teacherName} &nbsp;|&nbsp;
+    <strong>الفترة الزمنية للفصل:</strong> ${dateRangeStr} &nbsp;|&nbsp;
     <strong>الحصص الأسبوعية:</strong> ${toArabicDigits(plan.weeklyPeriodsCount)} حصص &nbsp;|&nbsp;
     <strong>إجمالي الأسابيع:</strong> ${toArabicDigits(plan.totalSemesterWeeks)} أسبوعاً &nbsp;|&nbsp;
     <strong>إجمالي حصص الفصل:</strong> ${toArabicDigits(plan.totalSemesterPeriods)} حصة موزعة
