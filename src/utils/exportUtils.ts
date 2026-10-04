@@ -630,3 +630,118 @@ export function exportToHtml(plan: LessonPlan) {
   const fileName = `خطة_درس_${h.subject}_${h.lessonTitle.replace(/[\s/\\:]+/g, '_')}.html`;
   downloadBlob(htmlDoc, fileName, 'text/html;charset=utf-8');
 }
+
+/**
+ * Exports the complete Lesson Plan as a Markdown document (.md).
+ */
+export function exportToMarkdown(plan: LessonPlan) {
+  const p = plan;
+  const h = p.header;
+
+  const markdownContent = `
+# خطة درس نموذجية متكاملة
+**الدولة:** ${h.country} | **الوزارة:** ${h.ministry} | **المديرية:** ${h.directorate} | **المدرسة:** ${h.school}
+**المبحث:** ${h.subject} | **الصف والشعبة:** ${h.grade} - الشعبة (${h.section})
+**عنوان الدرس:** ${toArabicDigits(h.lessonTitle)}
+**المعلم/ة:** ${h.teacherName} | **التاريخ:** ${toArabicDigits(h.date)} | **الفصل:** ${h.semester}
+**الحصة:** ${toArabicDigits(h.currentPeriod)} من أصل ${toArabicDigits(h.totalPeriods)} حصص • مدة الحصة: ${toArabicDigits(h.periodDurationMinutes)} دقيقة
+
+---
+
+## أولاً: التحليل والتخطيط التكيفي ومصادر التعلم
+
+### 1. الكفايات التكاملية الأربعة:
+${p.section1.integrativeCompetencies.map((c: any) => `- **${c.title}:** ${c.description}`).join('\n')}
+
+### 2. تحليل خصائص الطلبة والتكييف:
+- **الفروق الفردية:** ${p.section1.studentCharacteristics.individualDifferences}
+- **ذوو الاحتياجات الخاصة:** ${p.section1.studentCharacteristics.specialNeeds}
+- **التكييف البيئي الصفي:** ${p.section1.studentCharacteristics.environmentalAdaptation}
+
+### 3. مصادر التعلم والمراجع:
+- **الكتاب المدرسي:** ${p.section1.learningResources.textbook}
+- **الوسائط والمحسوسات:** ${p.section1.learningResources.tangibleMedia}
+- **الجاهزية الرقمية:** ${p.section1.learningResources.digitalReadiness}
+
+---
+
+## ثانياً: الأنشطة التعليمية وتسلل سير الدرس (التدريس المتمركز حول المتعلم)
+
+${p.section2Timeline.map((phase: any, idx: number) => `
+### الخطوة ${toArabicDigits(idx + 1)}: ${phase.phaseName} (${toArabicDigits(phase.durationMinutes)} دقيقة)
+- **إجراءات المعلم وأنشطة المتعلم:**
+  ${phase.teacherAndStudentActions.map((a: string) => `  - ${toArabicDigits(a)}`).join('\n')}
+- **استراتيجيات ومصادر التعلم:**
+  ${phase.strategiesAndResources.map((s: string) => `  - ${toArabicDigits(s)}`).join('\n')}
+- **التقويم والتغذية الراجعة:**
+  ${phase.assessmentAndFeedback.map((e: string) => `  - ${toArabicDigits(e)}`).join('\n')}
+`).join('\n')}
+
+---
+
+## ثالثاً: المتابعة والتقويم المستمر والأنشطة العلاجية والبديلة
+
+### 1. مهمة التقويم الأصيل (GRASPS):
+- **عنوان المهمة:** ${p.section3Assessment.graspsTask.title}
+- **الدور (Role):** ${p.section3Assessment.graspsTask.role}
+- **الجمهور (Audience):** ${p.section3Assessment.graspsTask.audience}
+- **الموقف (Situation):** ${p.section3Assessment.graspsTask.situation}
+- **المنتج (Product):** ${p.section3Assessment.graspsTask.product}
+- **المعايير:** ${p.section3Assessment.graspsTask.standards}
+- **الوصف التفصيلي:** ${p.section3Assessment.graspsTask.fullDescription}
+
+### 2. سلم التقدير اللفظي (Rubric):
+${p.section3Assessment.rubric.map((r: any, idx: number) => `
+- **المعيار ${toArabicDigits(idx + 1)}: ${r.criterion}**
+  - *مبتدئ (1):* ${r.level1}
+  - *نامٍ (2):* ${r.level2}
+  - *كفء (3):* ${r.level3}
+  - *متميز (4):* ${r.level4}
+`).join('\n')}
+
+### 3. الأنشطة العلاجية والإثراء:
+- **الأنشطة العلاجية:**
+  ${p.section3Assessment.remedialActivities.map((a: any) => `  - **${a.title}:** ${a.description}`).join('\n')}
+- **أنشطة الإثراء:**
+  - **العنوان:** ${p.section3Assessment.enrichmentActivities.title}
+  - **التحدي / اللغز:** ${p.section3Assessment.enrichmentActivities.puzzleOrChallenge}
+  - **التعلم بالقرناء:** ${p.section3Assessment.enrichmentActivities.peerTutoring}
+
+---
+
+## رابعاً: بيئة التعلم والشراكة الأسرية
+
+- **الروتين الصفى:** ${p.section4Environment.classroomRoutines}
+- **المناخ الآمن والمحفز:** ${p.section4Environment.safeAndMotivatingClimate}
+- **بطاقة الشراكة الأسرية:**
+  - **عنوان البطاقة:** ${p.section4Environment.familyPartnership.cardTitle}
+  - **التعليمات:** ${p.section4Environment.familyPartnership.instructions}
+  - **مهمة الطالب المنزلية:** ${p.section4Environment.familyPartnership.studentTask}
+  - **دور ولي الأمر:** ${p.section4Environment.familyPartnership.parentRole}
+
+---
+
+## خامساً: التأمل الذاتي والتطور المهني
+
+- **مواطن القوة وأثر التعلم:**
+  ${p.section5Reflection.strengthsAndImpact.map((s: string) => `  - ${s}`).join('\n')}
+- **فرص التحسين والتطوير:** ${p.section5Reflection.improvementOpportunities}
+- **مجتمعات التعلم المهنية (PLCs):** ${p.section5Reflection.professionalLearningCommunities}
+
+---
+
+## سادساً: التوقيع والاعتماد الرسمي
+
+- **المعلم/ة:** ${p.section6Signatures.teacher.name} (التاريخ: ${toArabicDigits(p.section6Signatures.teacher.date)})
+- **مدير/ة المدرسة:** ${p.section6Signatures.schoolPrincipal.name} (التاريخ: ${toArabicDigits(p.section6Signatures.schoolPrincipal.date)})
+- **المشرف/ة التربوي/ة:** ${p.section6Signatures.educationalSupervisor.name} (التاريخ: ${toArabicDigits(p.section6Signatures.educationalSupervisor.date)})
+
+---
+*إعداد وتصميم: الأستاذ عبد الرحمن دويكات | منظومة عبقور للتخطيط التربوي*
+*جميع الحقوق محفوظة © برخصة المشاع الإبداعي (CC BY-NC-SA 4.0)*
+  `.trim();
+
+  const fileName = `خطة_درس_${h.subject}_${h.lessonTitle.replace(/[\s/\\:]+/g, '_')}.md`;
+  downloadBlob(markdownContent, fileName, 'text/markdown;charset=utf-8');
+}
+

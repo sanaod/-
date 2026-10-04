@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { Section3ContinuousAssessment } from '../types/lessonPlan';
-import { Target, Award, Stethoscope, Lightbulb, MessageSquare, Edit3, Check, Sparkles, FileCheck2 } from 'lucide-react';
+import { Target, Award, Stethoscope, Lightbulb, MessageSquare, Edit3, Check, Sparkles, FileCheck2, Activity, ListTree } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface Section3AssessmentCardProps {
   data: Section3ContinuousAssessment;
   onChange: (data: Section3ContinuousAssessment) => void;
   onOpenWorksheetModal?: () => void;
+  onOpenAssessmentModal?: () => void;
+  onOpenAuthenticTaskModal?: () => void;
+  onOpenRubricModal?: () => void;
 }
 
-export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ data, onChange, onOpenWorksheetModal }) => {
+export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
+  data, 
+  onChange, 
+  onOpenWorksheetModal,
+  onOpenAssessmentModal,
+  onOpenAuthenticTaskModal,
+  onOpenRubricModal
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeRubricTab, setActiveRubricTab] = useState<'matrix' | 'grader'>('matrix');
   // Interactive grader state (for teacher live evaluation of a student)
@@ -47,6 +57,39 @@ export const Section3AssessmentCard: React.FC<Section3AssessmentCardProps> = ({ 
             >
               <FileCheck2 className="w-4 h-4 text-teal-200" />
               <span>ورقة عمل تفاعلية بالـ AI</span>
+            </button>
+          )}
+
+          {onOpenAssessmentModal && (
+            <button
+              onClick={onOpenAssessmentModal}
+              className="px-3 py-1.5 bg-linear-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              title="توليد وإدارة التقويم التشخيصي، التكويني، والختامي الشامل"
+            >
+              <Activity className="w-4 h-4 text-purple-200" />
+              <span>التقويم الشامل</span>
+            </button>
+          )}
+
+          {onOpenAuthenticTaskModal && (
+            <button
+              onClick={onOpenAuthenticTaskModal}
+              className="px-3 py-1.5 bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              title="توليد وتصميم مهمة التقويم الأصيل GRASPS"
+            >
+              <Award className="w-4 h-4 text-pink-200" />
+              <span>المهمة الأصيلة</span>
+            </button>
+          )}
+
+          {onOpenRubricModal && (
+            <button
+              onClick={onOpenRubricModal}
+              className="px-3 py-1.5 bg-linear-to-r from-purple-700 via-violet-600 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              title="توليد وتصميم سلم التقدير اللفظي Rubric الخاص بمهمة الدرس"
+            >
+              <ListTree className="w-4 h-4 text-purple-200" />
+              <span>سلم التقدير Rubric</span>
             </button>
           )}
 

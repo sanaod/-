@@ -25,6 +25,9 @@ import {
   FolderKanban,
   FolderTree,
   FileCheck2,
+  Activity,
+  Award,
+  ListTree,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -37,6 +40,9 @@ interface HeaderNavProps {
   onOpenAiGenerator: () => void;
   onOpenAbacusModal: () => void;
   onOpenWorksheetModal?: () => void;
+  onOpenAssessmentModal?: () => void;
+  onOpenAuthenticTaskModal?: () => void;
+  onOpenRubricModal?: () => void;
   onOpenPrintView: () => void;
   onOpenResourcesModal: () => void;
   resourcesCount: number;
@@ -62,6 +68,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenAiGenerator,
   onOpenAbacusModal,
   onOpenWorksheetModal,
+  onOpenAssessmentModal,
+  onOpenAuthenticTaskModal,
+  onOpenRubricModal,
   onOpenPrintView,
   onOpenResourcesModal,
   resourcesCount,
@@ -320,6 +329,42 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </button>
               )}
 
+              {/* Assessment Hub CTA (Diagnostic, Formative, Summative) */}
+              {onOpenAssessmentModal && (
+                <button
+                  onClick={onOpenAssessmentModal}
+                  title="توليد وإدارة أدوات التقويم التشخيصي، التكويني، والختامي بالذكاء الاصطناعي"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-purple-700 via-indigo-700 to-emerald-800 hover:from-purple-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                >
+                  <Activity className="w-3.5 h-3.5 text-purple-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>التقويم الشامل</span>
+                </button>
+              )}
+
+              {/* Authentic Task CTA (GRASPS) */}
+              {onOpenAuthenticTaskModal && (
+                <button
+                  onClick={onOpenAuthenticTaskModal}
+                  title="توليد وتصميم مهمة التقويم الأصيل GRASPS بالذكاء الاصطناعي"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-indigo-700 via-purple-800 to-pink-800 hover:from-indigo-800 hover:to-pink-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                >
+                  <Award className="w-3.5 h-3.5 text-pink-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>المهمة الأصيلة</span>
+                </button>
+              )}
+
+              {/* Rubric Generator CTA */}
+              {onOpenRubricModal && (
+                <button
+                  onClick={onOpenRubricModal}
+                  title="توليد وتصميم سلم التقدير اللفظي Rubric الخاص بمهمة الدرس بالذكاء الاصطناعي"
+                  className="px-2.5 py-1.5 bg-linear-to-r from-purple-800 via-violet-700 to-indigo-800 hover:from-purple-900 hover:to-indigo-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                >
+                  <ListTree className="w-3.5 h-3.5 text-purple-200 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>سلم التقدير Rubric</span>
+                </button>
+              )}
+
               {/* Interactive Tool / Simulator */}
               <button
                 onClick={onOpenAbacusModal}
@@ -462,6 +507,33 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <span>ورقة عمل AI</span>
                   </button>
                 )}
+                {onOpenAssessmentModal && (
+                  <button
+                    onClick={onOpenAssessmentModal}
+                    className="px-2.5 py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                  >
+                    <Activity className="w-3.5 h-3.5 text-purple-200" />
+                    <span>التقويم الشامل</span>
+                  </button>
+                )}
+                {onOpenAuthenticTaskModal && (
+                  <button
+                    onClick={onOpenAuthenticTaskModal}
+                    className="px-2.5 py-1.5 bg-indigo-800 hover:bg-indigo-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                  >
+                    <Award className="w-3.5 h-3.5 text-pink-200" />
+                    <span>المهمة الأصيلة</span>
+                  </button>
+                )}
+                {onOpenRubricModal && (
+                  <button
+                    onClick={onOpenRubricModal}
+                    className="px-2.5 py-1.5 bg-purple-900 hover:bg-purple-950 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs cursor-pointer"
+                  >
+                    <ListTree className="w-3.5 h-3.5 text-purple-200" />
+                    <span>سلم التقدير</span>
+                  </button>
+                )}
                 <button
                   onClick={onOpenAbacusModal}
                   className="px-2.5 py-1.5 bg-white text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
@@ -579,6 +651,36 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             >
               <FileCheck2 className="w-3.5 h-3.5 text-teal-200 shrink-0" />
               <span>ورقة عمل AI</span>
+            </button>
+          )}
+
+          {onOpenAssessmentModal && (
+            <button
+              onClick={onOpenAssessmentModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-purple-700 to-indigo-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+            >
+              <Activity className="w-3.5 h-3.5 text-purple-200 shrink-0" />
+              <span>التقويم الشامل</span>
+            </button>
+          )}
+
+          {onOpenAuthenticTaskModal && (
+            <button
+              onClick={onOpenAuthenticTaskModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-indigo-700 to-purple-800 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+            >
+              <Award className="w-3.5 h-3.5 text-pink-200 shrink-0" />
+              <span>المهمة الأصيلة</span>
+            </button>
+          )}
+
+          {onOpenRubricModal && (
+            <button
+              onClick={onOpenRubricModal}
+              className="px-2.5 py-1.5 bg-linear-to-r from-purple-800 to-indigo-900 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+            >
+              <ListTree className="w-3.5 h-3.5 text-purple-200 shrink-0" />
+              <span>سلم التقدير</span>
             </button>
           )}
 

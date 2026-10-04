@@ -28,6 +28,9 @@ import { CreativeCommonsFooter } from './components/CreativeCommonsFooter';
 import { PlansViewerModal } from './components/PlansViewerModal';
 import { DeletePlanConfirmModal } from './components/DeletePlanConfirmModal';
 import { InteractiveWorksheetModal } from './components/InteractiveWorksheetModal';
+import { AssessmentHubModal } from './components/AssessmentHubModal';
+import { AuthenticTaskGeneratorModal } from './components/AuthenticTaskGeneratorModal';
+import { RubricGeneratorModal } from './components/RubricGeneratorModal';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
 import { toArabicDigits } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
@@ -92,6 +95,9 @@ export default function App() {
   // Modals
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isWorksheetModalOpen, setIsWorksheetModalOpen] = useState(false);
+  const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
+  const [isAuthenticTaskModalOpen, setIsAuthenticTaskModalOpen] = useState(false);
+  const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
   const [isAbacusModalOpen, setIsAbacusModalOpen] = useState(false);
   const [isExitTicketModalOpen, setIsExitTicketModalOpen] = useState(false);
@@ -282,6 +288,9 @@ export default function App() {
         onOpenAiGenerator={() => setIsAiModalOpen(true)}
         onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
         onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+        onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
+        onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+        onOpenRubricModal={() => setIsRubricModalOpen(true)}
         onOpenPrintView={() => setViewMode('official-print')}
         onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
         resourcesCount={resources.length}
@@ -504,6 +513,9 @@ export default function App() {
                 data={currentPlan.section3Assessment}
                 onChange={(section3Assessment) => updateCurrentPlan({ ...currentPlan, section3Assessment })}
                 onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+                onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
+                onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+                onOpenRubricModal={() => setIsRubricModalOpen(true)}
               />
             )}
 
@@ -588,6 +600,59 @@ export default function App() {
         plan={currentPlan}
         onSaveToResources={(newRes) => {
           setResources((prev) => [newRes, ...prev]);
+        }}
+      />
+
+      <AssessmentHubModal
+        isOpen={isAssessmentModalOpen}
+        onClose={() => setIsAssessmentModalOpen(false)}
+        lessonContext={{
+          subject: currentPlan.header.subject,
+          grade: currentPlan.header.grade,
+          lessonTitle: currentPlan.header.lessonTitle
+        }}
+        onApplyToPlan={(data) => {
+          // Update Section 3 or other parts if desired
+        }}
+      />
+
+      <AuthenticTaskGeneratorModal
+        isOpen={isAuthenticTaskModalOpen}
+        onClose={() => setIsAuthenticTaskModalOpen(false)}
+        lessonContext={{
+          subject: currentPlan.header.subject,
+          grade: currentPlan.header.grade,
+          lessonTitle: currentPlan.header.lessonTitle
+        }}
+        initialTask={currentPlan.section3Assessment.graspsTask}
+        onApplyTask={(newTask) => {
+          updateCurrentPlan({
+            ...currentPlan,
+            section3Assessment: {
+              ...currentPlan.section3Assessment,
+              graspsTask: newTask
+            }
+          });
+        }}
+      />
+
+      <RubricGeneratorModal
+        isOpen={isRubricModalOpen}
+        onClose={() => setIsRubricModalOpen(false)}
+        lessonContext={{
+          subject: currentPlan.header.subject,
+          grade: currentPlan.header.grade,
+          lessonTitle: currentPlan.header.lessonTitle
+        }}
+        initialRubric={currentPlan.section3Assessment.rubric}
+        onApplyRubric={(newRubric) => {
+          updateCurrentPlan({
+            ...currentPlan,
+            section3Assessment: {
+              ...currentPlan.section3Assessment,
+              rubric: newRubric
+            }
+          });
         }}
       />
 

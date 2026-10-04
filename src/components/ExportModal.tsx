@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
-import { exportToWord, exportToHtml } from '../utils/exportUtils';
+import { exportToWord, exportToHtml, exportToMarkdown } from '../utils/exportUtils';
 import { exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
 import { FileEdit } from 'lucide-react';
 
@@ -45,6 +45,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleHtmlExport = () => {
     exportToHtml(plan);
     setSuccessMsg('تم تنزيل صفحة الويب المستقلة HTML (.html) بنجاح!');
+    setTimeout(() => setSuccessMsg(null), 3500);
+  };
+
+  const handleMarkdownExport = () => {
+    exportToMarkdown(plan);
+    setSuccessMsg('تم تنزيل ملف Markdown (.md) بنجاح لمرونة التعديل الكامل!');
     setTimeout(() => setSuccessMsg(null), 3500);
   };
 
@@ -199,6 +205,33 @@ ${plan.section3Assessment.graspsTask.fullDescription}
                 </div>
               </div>
               <Download className="w-5 h-5 text-emerald-700 shrink-0" />
+            </button>
+
+            {/* 4. Markdown (.md) Export */}
+            <button
+              type="button"
+              onClick={handleMarkdownExport}
+              className="p-4 rounded-2xl border-2 border-purple-200 hover:border-purple-500 bg-purple-50/40 hover:bg-purple-50 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-purple-700 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                  <FileCode className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-800 transition-colors">
+                      تصدير بصيغة Markdown (.md)
+                    </h4>
+                    <span className="text-[10px] bg-purple-700 text-white px-2 py-0.2 rounded-full font-bold">
+                      مرن للتعديل الذكي
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    ملف نصي مهيكل ومتوافق مع محررات النصوص ومنصات الذكاء الاصطناعي والتعديل الخارجي
+                  </p>
+                </div>
+              </div>
+              <Download className="w-5 h-5 text-purple-700 shrink-0" />
             </button>
 
             {/* 4. Blank Ministerial Template (.doc) */}

@@ -464,6 +464,44 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
         </div>
       </div>
 
+      {/* 1.5 Smart Reminders & Deadlines Notification Center */}
+      {upcomingTasks.length > 0 && (
+        <div className="bg-linear-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-purple-700 text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-bold text-purple-950 font-['Tajawal']">
+                  مركز التذكير الذكي بالمواعيد النهائية والاستحقاقات القريبة
+                </h4>
+                <span className="bg-purple-200 text-purple-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold tabular-nums">
+                  {toArabicDigits(upcomingTasks.length)} مهام مستحقة في الـ ٧ أيام القادمة
+                </span>
+              </div>
+              <p className="text-xs text-purple-800/80 mt-0.5">
+                تنبيهات فورية لمواعيد تسليم المهام الأصيلة (GRASPS)، الحصص العلاجية، والدروس المجدولة القادمة.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+            {upcomingTasks.slice(0, 3).map((t) => (
+              <button
+                key={`reminder-${t.id}`}
+                onClick={() => setSelectedDateStr(t.date)}
+                className="px-3 py-1.5 bg-white hover:bg-purple-100 text-purple-950 border border-purple-200 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <span className="w-2 h-2 rounded-full bg-purple-600" />
+                <span className="truncate max-w-[140px]">{t.title}</span>
+                <span className="text-[10px] text-purple-700 font-mono tabular-nums">({t.date})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 2. Type Filter & KPI Strip */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
         {/* Type Filter Buttons */}
