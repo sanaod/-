@@ -6,6 +6,8 @@ import {
   analyzeTeachingCalendar,
   getNextTeachingDays,
   PALESTINIAN_MINISTRY_HOLIDAYS,
+  formatDateToIso,
+  parseDateSafely,
 } from '../utils/palestinianCalendar';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 
@@ -37,50 +39,66 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
 
   // Auto-initialize startDate and endDate if missing
   useEffect(() => {
-    if (!header.startDate || !header.endDate || !header.timeframe) {
-      const sDate = header.startDate || header.date || new Date().toISOString().split('T')[0];
-      const daysNeeded = Math.max(1, header.totalPeriods || 2);
-      const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
-      const analysis = analyzeTeachingCalendar(sDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
+    try {
+      if (!header.startDate || !header.endDate || !header.timeframe) {
+        const rawDate = header.startDate || header.date;
+        const sDate = rawDate && typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)
+          ? rawDate
+          : formatDateToIso(rawDate || new Date());
+        
+        const daysNeeded = Math.max(1, Number(header.totalPeriods) || 2);
+        const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
+        const analysis = analyzeTeachingCalendar(result.startDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
 
-      const holidayNotice = analysis.holidaysEncountered.length > 0
-        ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
-        : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
+        const holidayNotice = analysis.holidaysEncountered.length > 0
+          ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
+          : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
 
-      const startFormatted = formatDateDMY(sDate);
-      const endFormatted = formatDateDMY(result.endDate);
+        const startFormatted = formatDateDMY(result.startDate);
+        const endFormatted = formatDateDMY(result.endDate);
 
-      onChange({
-        ...header,
-        startDate: sDate,
-        endDate: result.endDate,
-        timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
-        date: sDate,
-      });
+        onChange({
+          ...header,
+          startDate: result.startDate,
+          endDate: result.endDate,
+          timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
+          date: header.date || result.startDate,
+        });
+      }
+    } catch (err) {
+      console.warn('Safe date initialization fallback in LessonHeaderCard:', err);
     }
   }, []);
 
   // Palestinian Calendar Lesson Timeframe Auto-Calculator
   const handleCalculateLessonTimeframe = () => {
-    const sDate = header.startDate || header.date || new Date().toISOString().split('T')[0];
-    const daysNeeded = Math.max(1, header.totalPeriods || 2);
-    const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
-    const analysis = analyzeTeachingCalendar(sDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
+    try {
+      const rawDate = header.startDate || header.date;
+      const sDate = rawDate && typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)
+        ? rawDate
+        : formatDateToIso(rawDate || new Date());
 
-    const holidayNotice = analysis.holidaysEncountered.length > 0
-      ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
-      : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
+      const daysNeeded = Math.max(1, Number(header.totalPeriods) || 2);
+      const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
+      const analysis = analyzeTeachingCalendar(result.startDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
 
-    const startFormatted = formatDateDMY(sDate);
-    const endFormatted = formatDateDMY(result.endDate);
+      const holidayNotice = analysis.holidaysEncountered.length > 0
+        ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
+        : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
 
-    onChange({
-      ...header,
-      startDate: sDate,
-      endDate: result.endDate,
-      timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
-      date: sDate,
-    });
+      const startFormatted = formatDateDMY(result.startDate);
+      const endFormatted = formatDateDMY(result.endDate);
+
+      onChange({
+        ...header,
+        startDate: result.startDate,
+        endDate: result.endDate,
+        timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
+        date: header.date || result.startDate,
+      });
+    } catch (err) {
+      console.warn('Safe timeframe recalculation fallback in LessonHeaderCard:', err);
+    }
   };
 
   return (
@@ -317,27 +335,31 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                   <label className="block text-[11px] font-bold text-slate-700 mb-0.5">من تاريخ (البداية):</label>
                   <input
                     type="date"
-                    value={header.startDate || ''}
+                    value={header.startDate && header.startDate.match(/^\d{4}-\d{2}-\d{2}$/) ? header.startDate : ''}
                     onChange={(e) => {
-                      const sDate = e.target.value;
-                      const daysNeeded = Math.max(1, header.totalPeriods || 2);
-                      const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
-                      const analysis = analyzeTeachingCalendar(sDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
+                      try {
+                        const sDate = e.target.value || formatDateToIso(new Date());
+                        const daysNeeded = Math.max(1, Number(header.totalPeriods) || 2);
+                        const result = getNextTeachingDays(sDate, daysNeeded, PALESTINIAN_MINISTRY_HOLIDAYS);
+                        const analysis = analyzeTeachingCalendar(result.startDate, result.endDate, PALESTINIAN_MINISTRY_HOLIDAYS);
 
-                      const holidayNotice = analysis.holidaysEncountered.length > 0
-                        ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
-                        : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
+                        const holidayNotice = analysis.holidaysEncountered.length > 0
+                          ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
+                          : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
 
-                      const startFormatted = formatDateDMY(sDate);
-                      const endFormatted = formatDateDMY(result.endDate);
+                        const startFormatted = formatDateDMY(result.startDate);
+                        const endFormatted = formatDateDMY(result.endDate);
 
-                      onChange({
-                        ...header,
-                        startDate: sDate,
-                        endDate: result.endDate,
-                        timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
-                        date: sDate,
-                      });
+                        onChange({
+                          ...header,
+                          startDate: result.startDate,
+                          endDate: result.endDate,
+                          timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
+                          date: header.date || result.startDate,
+                        });
+                      } catch (err) {
+                        console.warn(err);
+                      }
                     }}
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-bold text-slate-900 bg-white"
                   />
@@ -347,24 +369,28 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                   <label className="block text-[11px] font-bold text-slate-700 mb-0.5">إلى تاريخ (النهاية):</label>
                   <input
                     type="date"
-                    value={header.endDate || ''}
+                    value={header.endDate && header.endDate.match(/^\d{4}-\d{2}-\d{2}$/) ? header.endDate : ''}
                     onChange={(e) => {
-                      const eDate = e.target.value;
-                      const sDate = header.startDate || eDate;
-                      const analysis = analyzeTeachingCalendar(sDate, eDate, PALESTINIAN_MINISTRY_HOLIDAYS);
+                      try {
+                        const eDate = e.target.value || formatDateToIso(new Date());
+                        const sDate = header.startDate || eDate;
+                        const analysis = analyzeTeachingCalendar(sDate, eDate, PALESTINIAN_MINISTRY_HOLIDAYS);
 
-                      const holidayNotice = analysis.holidaysEncountered.length > 0
-                        ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
-                        : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
+                        const holidayNotice = analysis.holidaysEncountered.length > 0
+                          ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
+                          : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
 
-                      const startFormatted = formatDateDMY(sDate);
-                      const endFormatted = formatDateDMY(eDate);
+                        const startFormatted = formatDateDMY(sDate);
+                        const endFormatted = formatDateDMY(eDate);
 
-                      onChange({
-                        ...header,
-                        endDate: eDate,
-                        timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
-                      });
+                        onChange({
+                          ...header,
+                          endDate: eDate,
+                          timeframe: `من (${startFormatted}) إلى (${endFormatted})${holidayNotice}`,
+                        });
+                      } catch (err) {
+                        console.warn(err);
+                      }
                     }}
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-bold text-slate-900 bg-white"
                   />

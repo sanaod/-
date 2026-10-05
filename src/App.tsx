@@ -35,6 +35,7 @@ import { UnitPlanGeneratorModal } from './components/UnitPlanGeneratorModal';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
 import { toArabicDigits } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
+import { formatDateToIso } from './utils/palestinianCalendar';
 import {
   Compass,
   Clock,
@@ -77,6 +78,21 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Sanitize any malformed date fields in saved plans
+          parsed.forEach((p: LessonPlan) => {
+            if (p && p.header) {
+              if (!p.header.startDate || !p.header.startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                p.header.startDate = formatDateToIso(p.header.startDate || p.header.date);
+              }
+              if (!p.header.endDate || !p.header.endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                p.header.endDate = formatDateToIso(p.header.endDate || p.header.startDate);
+              }
+              if (!p.header.date || typeof p.header.date !== 'string') {
+                p.header.date = p.header.startDate;
+              }
+            }
+          });
+
           const hasBlank = parsed.some((p: LessonPlan) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
           if (!hasBlank) {
             const merged = [defaultBlankPlan, ...parsed];

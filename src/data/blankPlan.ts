@@ -5,7 +5,7 @@ import { LessonPlan } from '../types/lessonPlan';
  */
 export function getBlankLessonPlan(): LessonPlan {
   const timestamp = Date.now();
-  const dateStr = new Date().toLocaleDateString('ar-EG');
+  const dateStr = new Date().toISOString().split('T')[0];
 
   return {
     id: `plan-blank-${timestamp}`,
@@ -198,7 +198,7 @@ export const defaultBlankPlan: LessonPlan = {
     totalPeriods: 1,
     currentPeriod: 1,
     periodDurationMinutes: 40,
-    date: new Date().toLocaleDateString('ar-EG'),
+    date: new Date().toISOString().split('T')[0],
     semester: 'الفصل الدراسي الأول',
   },
   section1: {

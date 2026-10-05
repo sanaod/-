@@ -111,10 +111,68 @@ export const PALESTINIAN_MINISTRY_HOLIDAYS: MinistryHoliday[] = [
 ];
 
 /**
+ * دالة آمنة لتحليل وتنظيف أي تاريخ أو نص مهما كانت صيغته بدون التسبب في أي انهيار
+ */
+export function parseDateSafely(input?: any): Date {
+  if (!input) return new Date();
+  if (input instanceof Date && !isNaN(input.getTime())) return new Date(input.getTime());
+
+  if (typeof input === 'string') {
+    // استبدال الأرقام المشرقية بالأرقام القياسية
+    const arabicToWestern: Record<string, string> = {
+      '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+      '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+    };
+    let clean = input.replace(/[٠-٩]/g, (d) => arabicToWestern[d] || d);
+    // إزالة علامات المحاذاة الخفية وحرف م أو هـ
+    clean = clean.replace(/[\u200E\u200F\u202A-\u202E\u061C]/g, '').replace(/[مهـ]/g, '').trim();
+
+    // فحص YYYY-MM-DD
+    const isoMatch = clean.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (isoMatch) {
+      const year = parseInt(isoMatch[1], 10);
+      const month = parseInt(isoMatch[2], 10) - 1;
+      const day = parseInt(isoMatch[3], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+
+    // فحص DD/MM/YYYY أو DD-MM-YYYY
+    const dmyMatch = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+    if (dmyMatch) {
+      const day = parseInt(dmyMatch[1], 10);
+      const month = parseInt(dmyMatch[2], 10) - 1;
+      const year = parseInt(dmyMatch[3], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+
+    const standardParsed = new Date(clean);
+    if (!isNaN(standardParsed.getTime())) {
+      return standardParsed;
+    }
+  }
+
+  return new Date();
+}
+
+/**
+ * تحويل آمن لأي تاريخ لصيغة YYYY-MM-DD
+ */
+export function formatDateToIso(input?: any): string {
+  const d = parseDateSafely(input);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * فحص ما إذا كان اليوم عطلة أسبوعية في فلسطين (الجمعة أو السبت)
  * JS getDay(): 0 = الأحد, 1 = الإثنين, 2 = الثلاثاء, 3 = الأربعاء, 4 = الخميس, 5 = الجمعة, 6 = السبت
  */
 export function isWeekendDay(date: Date): boolean {
+  if (!date || isNaN(date.getTime())) return false;
   const day = date.getDay();
   return day === 5 || day === 6; // Friday (5) or Saturday (6)
 }
@@ -123,7 +181,7 @@ export function isWeekendDay(date: Date): boolean {
  * Convenience helper to check if a date string or Date is a weekend (Friday or Saturday)
  */
 export function isWeekend(dateInput: Date | string): boolean {
-  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const d = parseDateSafely(dateInput);
   return isWeekendDay(d);
 }
 
@@ -144,13 +202,13 @@ export function getHolidayForDate(
   dateStr: string,
   holidays: MinistryHoliday[] = PALESTINIAN_MINISTRY_HOLIDAYS
 ): MinistryHoliday | null {
-  const target = new Date(dateStr);
+  const target = parseDateSafely(dateStr);
   target.setHours(0, 0, 0, 0);
 
   for (const h of holidays) {
-    const start = new Date(h.startDate);
+    const start = parseDateSafely(h.startDate);
     start.setHours(0, 0, 0, 0);
-    const end = new Date(h.endDate);
+    const end = parseDateSafely(h.endDate);
     end.setHours(23, 59, 59, 999);
 
     if (target >= start && target <= end) {
@@ -178,10 +236,10 @@ export function checkDayStatus(
   dateInput: Date | string,
   holidays: MinistryHoliday[] = PALESTINIAN_MINISTRY_HOLIDAYS
 ): DayStatus {
-  const d = typeof dateInput === 'string' ? new Date(dateInput) : new Date(dateInput);
-  const dateStr = d.toISOString().split('T')[0];
+  const d = parseDateSafely(dateInput);
+  const dateStr = formatDateToIso(d);
   const dayIndex = d.getDay();
-  const dayNameArabic = ARABIC_DAY_NAMES[dayIndex];
+  const dayNameArabic = ARABIC_DAY_NAMES[dayIndex] || 'الأحد';
   const weekend = isWeekendDay(d);
   const holiday = getHolidayForDate(dateStr, holidays);
 
@@ -240,26 +298,29 @@ export function analyzeTeachingCalendar(
   endDateStr: string,
   holidays: MinistryHoliday[] = PALESTINIAN_MINISTRY_HOLIDAYS
 ): TeachingCalendarAnalysis {
-  const start = new Date(startDateStr);
-  const end = new Date(endDateStr);
+  const start = parseDateSafely(startDateStr);
+  const end = parseDateSafely(endDateStr);
 
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+  const startIso = formatDateToIso(start);
+  const endIso = formatDateToIso(end);
+
+  if (start > end) {
     return {
-      startDate: startDateStr,
-      endDate: endDateStr,
-      totalCalendarDays: 0,
+      startDate: startIso,
+      endDate: endIso,
+      totalCalendarDays: 1,
       weekendDaysCount: 0,
       holidayDaysCount: 0,
-      netTeachingDays: 0,
-      netTeachingWeeks: 0,
+      netTeachingDays: 1,
+      netTeachingWeeks: 0.2,
       holidaysEncountered: [],
       weeklyBreakdown: [],
     };
   }
 
-  let curr = new Date(start);
+  let curr = new Date(start.getTime());
   curr.setHours(0, 0, 0, 0);
-  const last = new Date(end);
+  const last = new Date(end.getTime());
   last.setHours(0, 0, 0, 0);
 
   let totalDays = 0;
@@ -277,11 +338,13 @@ export function analyzeTeachingCalendar(
   }[] = [];
 
   let currentWeekNum = 1;
-  let currentWeekStart = new Date(curr);
+  let currentWeekStart = new Date(curr.getTime());
   let currentWeekTeachingCount = 0;
   let currentWeekHolidays: string[] = [];
 
-  while (curr <= last) {
+  let safetyCounter = 0;
+  while (curr <= last && safetyCounter < 150) {
+    safetyCounter++;
     totalDays++;
     const status = checkDayStatus(curr, holidays);
 
@@ -302,24 +365,24 @@ export function analyzeTeachingCalendar(
     }
 
     // Check if end of week (Thursday = 4) or last day of range
-    if (curr.getDay() === 4 || curr.getTime() === last.getTime()) {
+    if (curr.getDay() === 4 || curr.getTime() >= last.getTime()) {
       weeklyBreakdown.push({
         weekIndex: currentWeekNum,
-        weekStartDate: currentWeekStart.toISOString().split('T')[0],
-        weekEndDate: curr.toISOString().split('T')[0],
+        weekStartDate: formatDateToIso(currentWeekStart),
+        weekEndDate: formatDateToIso(curr),
         teachingDaysInWeek: currentWeekTeachingCount,
         holidaysInWeek: [...currentWeekHolidays],
       });
 
       // Prepare next week
       currentWeekNum++;
-      const nextDay = new Date(curr);
+      const nextDay = new Date(curr.getTime());
       nextDay.setDate(nextDay.getDate() + 1);
       // Skip Friday (5) and Saturday (6) to land on Sunday (0)
       while (nextDay.getDay() === 5 || nextDay.getDay() === 6) {
         nextDay.setDate(nextDay.getDate() + 1);
       }
-      currentWeekStart = new Date(nextDay);
+      currentWeekStart = new Date(nextDay.getTime());
       currentWeekTeachingCount = 0;
       currentWeekHolidays = [];
     }
@@ -337,8 +400,8 @@ export function analyzeTeachingCalendar(
   const netTeachingWeeks = Math.round((teachingDays / 5) * 10) / 10;
 
   return {
-    startDate: startDateStr,
-    endDate: endDateStr,
+    startDate: startIso,
+    endDate: endIso,
     totalCalendarDays: totalDays,
     weekendDaysCount: weekendDays,
     holidayDaysCount: holidayDays,
@@ -353,8 +416,8 @@ export function analyzeTeachingCalendar(
  * الحصول على الأيام التعليمية المتاحة متتالية بدون الجمعة والسبت والإجازات
  */
 export function getNextTeachingDays(
-  startDateStr: string,
-  daysNeeded: number,
+  startDateStr?: string | Date | null,
+  daysNeeded: number = 2,
   holidays: MinistryHoliday[] = PALESTINIAN_MINISTRY_HOLIDAYS
 ): {
   startDate: string;
@@ -362,13 +425,17 @@ export function getNextTeachingDays(
   teachingDates: string[];
   holidaysPassed: string[];
 } {
-  let curr = new Date(startDateStr);
+  const safeStart = parseDateSafely(startDateStr);
+  let curr = new Date(safeStart.getTime());
   curr.setHours(0, 0, 0, 0);
 
+  const needed = Math.max(1, Math.min(Number(daysNeeded) || 1, 60));
   const teachingDates: string[] = [];
   const holidaysPassedSet = new Set<string>();
 
-  while (teachingDates.length < daysNeeded) {
+  let safetyCounter = 0;
+  while (teachingDates.length < needed && safetyCounter < 100) {
+    safetyCounter++;
     const status = checkDayStatus(curr, holidays);
     if (status.isTeaching) {
       teachingDates.push(status.dateStr);
@@ -378,9 +445,12 @@ export function getNextTeachingDays(
     curr.setDate(curr.getDate() + 1);
   }
 
+  const startIso = teachingDates[0] || formatDateToIso(safeStart);
+  const endIso = teachingDates[teachingDates.length - 1] || startIso;
+
   return {
-    startDate: teachingDates[0] || startDateStr,
-    endDate: teachingDates[teachingDates.length - 1] || startDateStr,
+    startDate: startIso,
+    endDate: endIso,
     teachingDates,
     holidaysPassed: Array.from(holidaysPassedSet),
   };
