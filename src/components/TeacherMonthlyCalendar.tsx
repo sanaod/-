@@ -24,7 +24,13 @@ import {
   Printer,
   X,
   Tag,
+  Flag,
 } from 'lucide-react';
+import {
+  PALESTINIAN_MINISTRY_HOLIDAYS,
+  isHoliday,
+  isWeekend,
+} from '../utils/palestinianCalendar';
 
 export interface CalendarTask {
   id: string;
@@ -562,17 +568,21 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
         <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
           {/* Days of Week Header */}
           <div className="grid grid-cols-7 gap-1.5 text-center">
-            {ARABIC_DAYS.map((day, idx) => (
-              <div
-                key={day.name}
-                className={`py-2 text-xs font-black rounded-lg ${
-                  idx === 5 ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                <span className="hidden sm:inline">{day.name}</span>
-                <span className="sm:hidden">{day.short}</span>
-              </div>
-            ))}
+            {ARABIC_DAYS.map((day, idx) => {
+              const isWeekendDay = idx === 5 || idx === 6; // Friday or Saturday in Palestine
+              return (
+                <div
+                  key={day.name}
+                  className={`py-2 text-xs font-black rounded-lg transition-colors ${
+                    isWeekendDay ? 'bg-amber-100/80 text-amber-950 border border-amber-200' : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <span className="hidden sm:inline">{day.name}</span>
+                  <span className="sm:hidden">{day.short}</span>
+                  {isWeekendDay && <span className="hidden md:inline text-[9px] text-amber-700 block font-normal">عطلة 🇵🇸</span>}
+                </div>
+              );
+            })}
           </div>
 
           {/* Days Grid Cells */}
@@ -581,6 +591,8 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
               const dayTasks = tasksByDate[day.dateStr] || [];
               const isSelected = day.dateStr === selectedDateStr;
               const hasTasks = dayTasks.length > 0;
+              const holidayInfo = isHoliday(day.dateStr, PALESTINIAN_MINISTRY_HOLIDAYS);
+              const isWeekendCell = isWeekend(day.dateStr);
 
               return (
                 <div
@@ -591,6 +603,10 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
                       ? 'bg-emerald-50/90 border-emerald-500 shadow-md ring-2 ring-emerald-400/40 z-10'
                       : day.isToday
                       ? 'bg-amber-50/70 border-amber-300'
+                      : holidayInfo
+                      ? 'bg-teal-50/60 border-teal-300/80 hover:bg-teal-100/60'
+                      : isWeekendCell
+                      ? 'bg-amber-50/40 border-amber-200/80 hover:bg-amber-100/50'
                       : day.isCurrentMonth
                       ? 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-slate-50/80'
                       : 'bg-slate-50/50 border-slate-100 text-slate-400'
@@ -605,18 +621,31 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
                           : day.isToday
                           ? 'w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-xs'
                           : day.isCurrentMonth
-                          ? 'text-slate-800'
+                          ? isWeekendCell
+                            ? 'text-amber-900'
+                            : 'text-slate-800'
                           : 'text-slate-400'
                       }`}
                     >
                       {toArabicDigits(day.dayNumber)}
                     </span>
 
-                    {hasTasks && (
-                      <span className="w-5 h-5 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
-                        {toArabicDigits(dayTasks.length)}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {holidayInfo && (
+                        <span
+                          title={`إجازة رسمية: ${holidayInfo.name}`}
+                          className="px-1 py-0.2 bg-teal-700 text-white text-[9px] font-bold rounded-sm flex items-center gap-0.5"
+                        >
+                          <Flag className="w-2.5 h-2.5 text-teal-200" />
+                          <span className="hidden xl:inline truncate max-w-[60px]">{holidayInfo.name}</span>
+                        </span>
+                      )}
+                      {hasTasks && (
+                        <span className="w-5 h-5 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                          {toArabicDigits(dayTasks.length)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Day Mini Task Chips */}

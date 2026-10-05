@@ -10,9 +10,12 @@ export function createBlankLessonPlan(options?: {
   lessonTitle?: string;
   teacherName?: string;
   school?: string;
+  startDate?: string;
+  endDate?: string;
+  timeframe?: string;
 }): LessonPlan {
   const timestamp = Date.now();
-  const dateStr = new Date().toLocaleDateString('ar-EG');
+  const dateStr = options?.startDate || new Date().toLocaleDateString('ar-EG');
 
   return {
     id: `plan-blank-${timestamp}`,
@@ -33,6 +36,9 @@ export function createBlankLessonPlan(options?: {
       currentPeriod: 1,
       periodDurationMinutes: 40,
       date: dateStr,
+      startDate: options?.startDate,
+      endDate: options?.endDate,
+      timeframe: options?.timeframe,
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -252,6 +258,13 @@ export function exportBlankTemplateToWord() {
     <td>(     ) حصص · زمن الحصة: ( 40 ) دقيقة</td>
     <th>تاريخ التنفيذ</th>
     <td>..... / ..... / ٢٠٢٦م</td>
+  </tr>
+  <tr>
+    <th>الفترة الزمنية للدرس:</th>
+    <td colspan="3">
+      من ..... / ..... / ٢٠٢٦م &nbsp; إلى &nbsp; ..... / ..... / ٢٠٢٦م &nbsp;
+      <span style="font-size: 9.5pt; color: #047857; font-weight: bold;">(مع استثناء عطلة يومي الجمعة والسبت والإجازات الرسمية المعتمدة لوزارة التربية والتعليم الفلسطينية)</span>
+    </td>
   </tr>
 </table>
 

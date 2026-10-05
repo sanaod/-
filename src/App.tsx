@@ -57,6 +57,12 @@ import {
   FolderKanban,
   Boxes,
   CalendarRange,
+  Award,
+  Activity,
+  FileCheck2,
+  FolderOpen,
+  Filter,
+  Wand2,
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 
@@ -95,6 +101,7 @@ export default function App() {
 
   const [viewMode, setViewMode] = useState<'editor' | 'official-print' | 'dashboard'>('editor');
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [actionCategoryFilter, setActionCategoryFilter] = useState<'all' | 'ai' | 'resources' | 'plans' | 'export'>('all');
 
   // Modals
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -354,120 +361,520 @@ export default function App() {
         </main>
       ) : (
         <>
-          {/* Hero Pedagogical Context Banner */}
-          <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-4 sm:py-6 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/40">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1.5 max-w-3xl">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full text-[11px] sm:text-xs font-bold border border-amber-500/40 shadow-xs">
-                    <span>📌</span>
-                    <span>استمارة التحضير المفرغة المعتمدة (الصفحة الرئيسية للمنظومة)</span>
+          {/* Hero Pedagogical Context & Categorized Quick Action Hub */}
+          <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md">
+            <div className="max-w-7xl mx-auto space-y-5">
+              
+              {/* Top Row: Plan Title, Ministry Badges & Primary Output CTAs */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-3xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
+                      <span>📌</span>
+                      <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>معايير التميز وإطار تقييم أداء المعلم</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
+                      <span>🇵🇸 وزارة التربية والتعليم</span>
+                    </div>
                   </div>
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full text-[10px] sm:text-[11px] font-semibold border border-emerald-500/30">
-                    <CheckCircle2 className="w-3 h-3 shrink-0" />
-                    <span>معايير التميز الوزارية</span>
-                  </div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black font-['Tajawal'] tracking-wide text-white">
+                    {currentPlan.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
+                    منظومة متكاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
+                  </p>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-black font-['Tajawal'] tracking-wide">
-                  {currentPlan.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  النموذج الرسمي المفرغ المعتمد للتخطيط والتحضير الصفي وفق معايير التميز وإطار تقييم أداء المعلم. يمكنك كتابة عناصر الخطة مباشرة في الحقول أدناه أو الاستعانة بمساعد الذكاء الاصطناعي.
-                </p>
+
+                {/* Direct High-Frequency Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setViewMode('official-print')}
+                    className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
+                  >
+                    <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
+                    <span>معاينة وطباعة PDF</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsExportModalOpen(true)}
+                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    title="تصدير الخطة بصيغ Word و HTML و JSON"
+                  >
+                    <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
+                    <span>تصدير الخطة</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Action Buttons Grid: Fully Responsive on Mobile (2 cols), Tablet (4 cols), and Desktop (flex/wrap) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:flex xl:flex-wrap items-center gap-2 w-full md:w-auto">
-                <button
-                  onClick={handleClearCurrentPlan}
-                  title="مسح وتفريغ الحقول الحالية للبدء من الصفر"
-                  className="min-h-[42px] px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-400/50 shadow-xs cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4 text-amber-200 shrink-0" />
-                  <span className="truncate">تفريغ الحقول</span>
-                </button>
-                <button
-                  onClick={handleCreateNewBlankPlan}
-                  title="بدء نموذج تحضير مفرغ جديد"
-                  className="min-h-[42px] px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-400/50 shadow-xs cursor-pointer"
-                >
-                  <FileEdit className="w-4 h-4 text-emerald-200 shrink-0" />
-                  <span className="truncate">تحضير جديد</span>
-                </button>
-                <button
-                  onClick={() => setIsWorksheetModalOpen(true)}
-                  title="توليد أوراق عمل تفاعلية ذكية متوافقة مع المادة بالذكاء الاصطناعي"
-                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-teal-700 via-teal-800 to-emerald-800 hover:from-teal-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs border border-teal-500/50 cursor-pointer"
-                >
-                  <FileCheck className="w-4 h-4 text-teal-200 shrink-0" />
-                  <span className="truncate">أوراق عمل AI</span>
-                </button>
-                <button
-                  onClick={() => setIsAbacusModalOpen(true)}
-                  title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس"
-                  className="min-h-[42px] px-3 py-2 bg-emerald-900/90 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/40 shadow-xs cursor-pointer"
-                >
-                  <Calculator className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span className="truncate">المحاكي</span>
-                </button>
-                <button
-                  onClick={() => setIsResourcesModalOpen(true)}
-                  title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
-                  className="min-h-[44px] px-4 py-2 bg-linear-to-r from-emerald-600 via-teal-700 to-emerald-800 hover:from-emerald-500 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-97 border-2 border-emerald-400/80 ring-2 ring-emerald-400/30 cursor-pointer group"
-                >
-                  <div className="relative p-1 bg-white/20 rounded-lg shrink-0 group-hover:bg-white/30 transition-colors">
-                    <Layers className="w-5 h-5 text-emerald-200" />
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[9px] font-black shadow-xs">
-                      +
+              {/* Categorized Quick-Access Action Hub (مركز الوصول السريع المنظم للأدوات والأيقونات) */}
+              <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 sm:p-4.5 backdrop-blur-md space-y-4 shadow-xl">
+                
+                {/* 1. Category Filter Selector Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                    <span className="text-slate-400 text-[11px] ml-1 flex items-center gap-1">
+                      <Filter className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>تصنيف الأيقونات:</span>
                     </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setActionCategoryFilter('all')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        actionCategoryFilter === 'all'
+                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/40'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <span>🌟 كافة الأدوات</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActionCategoryFilter('ai')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                        actionCategoryFilter === 'ai'
+                          ? 'bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-sm ring-2 ring-emerald-400/40'
+                          : 'bg-slate-800 text-emerald-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>التخطيط والتوليد بالـ AI</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActionCategoryFilter('resources')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                        actionCategoryFilter === 'resources'
+                          ? 'bg-linear-to-r from-teal-600 to-cyan-700 text-white shadow-sm ring-2 ring-teal-400/40'
+                          : 'bg-slate-800 text-teal-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5 text-teal-300" />
+                      <span>المناهج والوسائل ({toArabicDigits(resources.length)})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActionCategoryFilter('plans')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                        actionCategoryFilter === 'plans'
+                          ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-400/40'
+                          : 'bg-slate-800 text-amber-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <FileEdit className="w-3.5 h-3.5 text-amber-300" />
+                      <span>إدارة ونماذج التحضير</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActionCategoryFilter('export')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                        actionCategoryFilter === 'export'
+                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/40'
+                          : 'bg-slate-800 text-blue-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <Printer className="w-3.5 h-3.5 text-blue-300" />
+                      <span>الطباعة والتصدير</span>
+                    </button>
                   </div>
-                  <span className="truncate font-bold">إضافة المصادر ({toArabicDigits(resources.length)})</span>
-                </button>
-                <button
-                  onClick={() => setIsAiModalOpen(true)}
-                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span className="truncate">توليد بالـ AI</span>
-                </button>
-                <button
-                  onClick={() => setIsUnitPlanModalOpen(true)}
-                  title="توليد وتصميم تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
-                  className="min-h-[42px] px-3 py-2 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer group"
-                >
-                  <Boxes className="w-4 h-4 text-blue-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">تحضير وحدة كاملة (AI)</span>
-                </button>
-                <button
-                  onClick={() => setIsSemesterPlanModalOpen(true)}
-                  title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
-                  className="min-h-[42px] px-3.5 py-2 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer group border border-cyan-400/40"
-                >
-                  <CalendarRange className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">الخطة الفصلية وتوزيع الحصص</span>
-                </button>
-                <button
-                  onClick={() => setIsExportModalOpen(true)}
-                  className="min-h-[42px] px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
-                >
-                  <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
-                  <span className="truncate">تصدير الخطة</span>
-                </button>
-                <button
-                  onClick={() => setViewMode('official-print')}
-                  className="min-h-[42px] px-3 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
-                  <span className="truncate">معاينة PDF</span>
-                </button>
-                <button
-                  onClick={() => handleRequestDeletePlan(currentPlan)}
-                  title="حذف هذه الخطة نهائياً من المنظومة عند وجود أخطاء أو الرغبة بالتراجع"
-                  className="min-h-[42px] px-3 py-2 bg-rose-700/90 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-rose-500/50 shadow-xs col-span-2 sm:col-span-1 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-200 shrink-0" />
-                  <span className="truncate">حذف الخطة</span>
-                </button>
+
+                  <div className="hidden lg:flex items-center gap-2 text-[11px] text-slate-400">
+                    <span>💡 رتّبنا الأدوات حسب الأولوية لتسهيل الوصول والتنقل السريع.</span>
+                  </div>
+                </div>
+
+                {/* 2. Structured Action Cards Grid (مرتبة ومبوبة حسب الفئة) */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                  
+                  {/* === GROUP 1: AI PLANNING & GENERATION === */}
+                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'ai') && (
+                    <>
+                      {/* AI Single Lesson Generator */}
+                      <button
+                        onClick={() => setIsAiModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-emerald-800/90 via-teal-900/90 to-emerald-950 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد خطة درس نموذجية كاملة بالأقسام الستة بالذكاء الاصطناعي"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-600/40 flex items-center justify-center border border-emerald-400/30 group-hover:bg-emerald-500/50 transition-colors">
+                            <Sparkles className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md border border-emerald-500/30">
+                            AI فوري
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
+                            تحضير درس بالـ AI
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            خطة متكاملة للأقسام 1-6
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* AI Unit Plan Generator */}
+                      <button
+                        onClick={() => setIsUnitPlanModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-blue-900/90 via-indigo-950 to-purple-950 border border-blue-500/60 hover:border-blue-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد وتصميم تحضير وحدة كاملة بمجموع دروسها مع رفع المناهج"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-blue-600/40 flex items-center justify-center border border-blue-400/30 group-hover:bg-blue-500/50 transition-colors">
+                            <Boxes className="w-4 h-4 text-blue-200" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded-md border border-blue-500/30">
+                            وحدة كاملة
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-blue-200 transition-colors font-['Tajawal']">
+                            تحضير وحدة (AI)
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            وحدة شاملة + رفع المصادر
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Semester Plan & Periods Distribution */}
+                      <button
+                        onClick={() => setIsSemesterPlanModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-teal-900/90 via-emerald-950 to-cyan-950 border border-teal-500/60 hover:border-cyan-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بالتقويم الفلسطيني"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-teal-600/40 flex items-center justify-center border border-teal-400/30 group-hover:bg-teal-500/50 transition-colors">
+                            <CalendarRange className="w-4 h-4 text-cyan-200" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-500/20 text-cyan-300 rounded-md border border-teal-500/30">
+                            فصلي 🇵🇸
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-cyan-200 transition-colors font-['Tajawal']">
+                            الخطة الفصلية
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            توزيع الحصص والتقويم
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Interactive Worksheets AI */}
+                      <button
+                        onClick={() => setIsWorksheetModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-teal-900/80 via-slate-900 to-slate-950 border border-teal-500/50 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد أوراق عمل تفاعلية ذكية متوافقة مع المادة بالذكاء الاصطناعي"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-teal-700/40 flex items-center justify-center border border-teal-400/30 group-hover:bg-teal-600/50 transition-colors">
+                            <FileCheck className="w-4 h-4 text-teal-200" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-500/20 text-teal-300 rounded-md">
+                            أوراق عمل
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
+                            أوراق عمل AI
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            أنشطة تفاعلية متمايزة
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Authentic Task Generator (GRASPS) */}
+                      <button
+                        onClick={() => setIsAuthenticTaskModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-purple-900/80 via-slate-900 to-indigo-950 border border-purple-500/50 hover:border-purple-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد مهمة تقويم أصيل واقعية وفق إطار GRASPS"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-purple-700/40 flex items-center justify-center border border-purple-400/30 group-hover:bg-purple-600/50 transition-colors">
+                            <Target className="w-4 h-4 text-pink-200" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded-md">
+                            GRASPS
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-purple-200 transition-colors font-['Tajawal']">
+                            المهام الأصيلة
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            مواقف واقعية ومحاكاة
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Rubric Generator */}
+                      <button
+                        onClick={() => setIsRubricModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-indigo-900/80 via-slate-900 to-purple-950 border border-indigo-500/50 hover:border-indigo-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="توليد سلالم التقدير اللفظية Rubric لمهمة الدرس"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-700/40 flex items-center justify-center border border-indigo-400/30 group-hover:bg-indigo-600/50 transition-colors">
+                            <Award className="w-4 h-4 text-indigo-200" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md">
+                            Rubric
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-indigo-200 transition-colors font-['Tajawal']">
+                            سلم التقدير
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            المعايير الوزارية ٤ مستويات
+                          </span>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {/* === GROUP 2: RESOURCES & CURRICULUM TOOLS === */}
+                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'resources') && (
+                    <>
+                      {/* Resources Bank & Uploader */}
+                      <button
+                        onClick={() => setIsResourcesModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-emerald-800 via-teal-800 to-emerald-900 border-2 border-emerald-400/80 hover:border-emerald-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-md min-h-[96px] ring-2 ring-emerald-500/20"
+                        title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center border border-emerald-200/40 group-hover:bg-white/30 transition-colors">
+                            <Layers className="w-4 h-4 text-emerald-100" />
+                          </div>
+                          <span className="text-[10px] font-black px-2 py-0.5 bg-amber-400 text-amber-950 rounded-full shadow-2xs tabular-nums">
+                            +{toArabicDigits(resources.length)} مصدر
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
+                            إضافة المصادر
+                          </span>
+                          <span className="block text-[10px] text-emerald-100/90 truncate">
+                            رفع كتب PDF والدلائل
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Interactive Simulator / Abacus */}
+                      <button
+                        onClick={() => setIsAbacusModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-emerald-950 border border-slate-700 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-800/40 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-700/50 transition-colors">
+                            <Calculator className="w-4 h-4 text-emerald-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-emerald-300 rounded-md border border-slate-700">
+                            تفاعلي
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
+                            المحاكي الرقمي
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            المعداد ولوحة المنازل
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Productivity Dashboard */}
+                      <button
+                        onClick={() => setViewMode('dashboard')}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-teal-950 border border-slate-700 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="لوحة الإنتاجية المفهرسة والإحصاءات والتقويم الشهري"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-teal-800/40 flex items-center justify-center border border-teal-500/30 group-hover:bg-teal-700/50 transition-colors">
+                            <LayoutDashboard className="w-4 h-4 text-teal-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-teal-300 rounded-md border border-slate-700">
+                            إحصاءات
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
+                            لوحة الإنتاجية
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            متابعة الإنجاز والتقويم
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Family Partnership Card */}
+                      <button
+                        onClick={() => setIsParentCardModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-indigo-950 border border-slate-700 hover:border-indigo-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="بطاقة الشراكة الأسرية التفاعلية مع ولي الأمر"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-800/40 flex items-center justify-center border border-indigo-500/30 group-hover:bg-indigo-700/50 transition-colors">
+                            <Users2 className="w-4 h-4 text-indigo-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-indigo-300 rounded-md border border-slate-700">
+                            منزلي
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-indigo-200 transition-colors font-['Tajawal']">
+                            الشراكة الأسرية
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            بطاقة متابعة ولي الأمر
+                          </span>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {/* === GROUP 3: PLANS & TEMPLATES MANAGEMENT === */}
+                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'plans') && (
+                    <>
+                      {/* Blank Template Setup Modal */}
+                      <button
+                        onClick={() => setIsBlankModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-amber-900/80 via-slate-900 to-amber-950 border border-amber-500/60 hover:border-amber-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="استمارة تحضير مفرغة رسمية للطباعة أو البدء الرقمي الفوري"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-amber-600/40 flex items-center justify-center border border-amber-400/30 group-hover:bg-amber-500/50 transition-colors">
+                            <FileEdit className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">
+                            الرئيسية
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
+                            استمارة مفرغة
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            نموذج وزاري فارغ جاهز
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Plans Catalog Viewer */}
+                      <button
+                        onClick={() => setIsPlansViewerModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-emerald-950 border border-slate-700 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="عرض واستعراض كافة خطط الدروس المحفوظة في المنظومة والتبديل المباشر بينها"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-800/40 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-700/50 transition-colors">
+                            <FolderKanban className="w-4 h-4 text-emerald-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md border border-emerald-500/30">
+                            {toArabicDigits(plans.length)} خطة
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
+                            سجل الخطط
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            استعراض وتبديل الخطط
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Clear Fields to Start Blank */}
+                      <button
+                        onClick={handleClearCurrentPlan}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-amber-950 border border-slate-700 hover:border-amber-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="تفريغ ومسح كافة الحقول الحالية للبدء من الصفر"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-amber-800/40 flex items-center justify-center border border-amber-500/30 group-hover:bg-amber-700/50 transition-colors">
+                            <RotateCcw className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded-md border border-slate-700">
+                            تصفير
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
+                            تفريغ الحقول
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            بدء إدخال جديد من الصفر
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Delete Plan Button */}
+                      <button
+                        onClick={() => handleRequestDeletePlan(currentPlan)}
+                        className="p-3 bg-linear-to-br from-rose-950/80 via-slate-900 to-slate-950 border border-rose-600/50 hover:border-rose-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="حذف هذه الخطة نهائياً من المنظومة عند وجود أخطاء أو الرغبة بالتراجع"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-rose-800/40 flex items-center justify-center border border-rose-500/30 group-hover:bg-rose-700/50 transition-colors">
+                            <Trash2 className="w-4 h-4 text-rose-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-rose-500/20 text-rose-300 rounded-md border border-rose-500/30">
+                            تراجع
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-rose-200 group-hover:text-rose-100 transition-colors font-['Tajawal']">
+                            حذف الخطة
+                          </span>
+                          <span className="block text-[10px] text-rose-300/70 truncate">
+                            حذف الخطة المعروضة
+                          </span>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {/* === GROUP 4: EXPORT, PRINT & ASSESSMENT === */}
+                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'export') && (
+                    <>
+                      {/* Exit Ticket Generator */}
+                      <button
+                        onClick={() => setIsExitTicketModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-purple-950 border border-slate-700 hover:border-purple-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="بطاقات خروج الحصة Exit Ticket للتقويم التكويني والختامي"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-purple-800/40 flex items-center justify-center border border-purple-500/30 group-hover:bg-purple-700/50 transition-colors">
+                            <Clock className="w-4 h-4 text-purple-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-purple-300 rounded-md border border-slate-700">
+                            تكويني
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-purple-200 transition-colors font-['Tajawal']">
+                            بطاقة الخروج
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            Exit Ticket ختام الحصة
+                          </span>
+                        </div>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </section>

@@ -120,6 +120,24 @@ export function isWeekendDay(date: Date): boolean {
 }
 
 /**
+ * Convenience helper to check if a date string or Date is a weekend (Friday or Saturday)
+ */
+export function isWeekend(dateInput: Date | string): boolean {
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  return isWeekendDay(d);
+}
+
+/**
+ * Convenience helper to check if a date string has an official holiday
+ */
+export function isHoliday(
+  dateStr: string,
+  holidays: MinistryHoliday[] = PALESTINIAN_MINISTRY_HOLIDAYS
+): MinistryHoliday | null {
+  return getHolidayForDate(dateStr, holidays);
+}
+
+/**
  * البحث عن إجازة رسمية في تاريخ معين
  */
 export function getHolidayForDate(

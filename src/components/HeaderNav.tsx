@@ -842,124 +842,176 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
         {/* Mobile Dropdown Drawer when open */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-3 border-t border-slate-200 bg-white space-y-2 animate-in slide-in-from-top-2 duration-150">
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              {/* WhatsApp Quick Direct Link */}
-              <a
-                href="https://wa.me/972569560022?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D9%88%D8%B1%D8%AD%D9%85%D8%A9%20%D8%A7%D9%84%D9%84%D9%87%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%88%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%B9%D8%A8%D9%82%D9%88%D8%B1%20%D9%84%D9%84%D8%AA%D8%AE%D8%B7%D9%8A%D8%B7%20%D8%A7%D9%84%D8%AA%D8%B1%D8%A8%D9%88%D9%8A."
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs font-bold"
-              >
-                <WhatsAppIcon className="w-4 h-4 text-white" />
-                <span>اتصل بنا عبر الواتساب</span>
-              </a>
+          <div className="md:hidden py-3 border-t border-slate-200 bg-white space-y-3 animate-in slide-in-from-top-2 duration-150 text-right">
+            
+            {/* Direct WhatsApp Contact CTA */}
+            <a
+              href="https://wa.me/972569560022?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D9%88%D8%B1%D8%AD%D9%85%D8%A9%20%D8%A7%D9%84%D9%84%D9%87%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%88%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%B9%D8%A8%D9%82%D9%88%D8%B1%20%D9%84%D9%84%D8%AA%D8%AE%D8%B7%D9%8A%D8%B7%20%D8%A7%D9%84%D8%AA%D8%B1%D8%A8%D9%88%D9%8A."
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-2 shadow-xs font-black text-xs"
+            >
+              <WhatsAppIcon className="w-4 h-4 text-white shrink-0" />
+              <span>تواصل مباشر مع المصمم عبر الواتساب</span>
+            </a>
 
-              {onOpenUnitPlanModal && (
+            {/* Section 1: AI Tools */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-black text-emerald-900 px-1 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>أدوات التوليد والتخطيط بالـ AI:</span>
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs font-bold">
                 <button
                   onClick={() => {
-                    onOpenUnitPlanModal();
+                    onOpenAiGenerator();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="p-2.5 bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs font-bold"
+                  className="p-2.5 bg-linear-to-r from-emerald-700 to-teal-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <Boxes className="w-4 h-4 text-blue-200" />
-                  <span>توليد تحضير وحدة دراسية كاملة (AI)</span>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>تحضير درس AI</span>
                 </button>
-              )}
 
-              <button
-                onClick={() => {
-                  if (onOpenPlansViewer) onOpenPlansViewer();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="p-2.5 bg-emerald-700 text-white rounded-xl flex items-center justify-center gap-2 col-span-2 shadow-xs"
-              >
-                <FolderKanban className="w-4 h-4 text-emerald-200" />
-                <span>عرض كافة الخطط المحفوظة ({toArabicDigits(plans.length)})</span>
-              </button>
+                {onOpenUnitPlanModal && (
+                  <button
+                    onClick={() => {
+                      onOpenUnitPlanModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="p-2.5 bg-linear-to-r from-blue-700 to-indigo-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <Boxes className="w-3.5 h-3.5 text-blue-200" />
+                    <span>تحضير وحدة AI</span>
+                  </button>
+                )}
 
-              <button
-                onClick={() => {
-                  onOpenPrintView();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="p-2.5 bg-slate-800 text-white rounded-xl flex items-center justify-center gap-2"
-              >
-                <Printer className="w-4 h-4 text-slate-300" />
-                <span>الطباعة الرسمية (PDF)</span>
-              </button>
+                {onOpenSemesterPlanModal && (
+                  <button
+                    onClick={() => {
+                      onOpenSemesterPlanModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="p-2.5 bg-linear-to-r from-teal-700 to-cyan-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <CalendarRange className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>الخطة الفصلية 🇵🇸</span>
+                  </button>
+                )}
 
-              {onOpenWorksheetModal && (
-                <button
-                  onClick={() => {
-                    onOpenWorksheetModal();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="p-2.5 bg-teal-700 text-white rounded-xl flex items-center justify-center gap-2"
-                >
-                  <FileCheck2 className="w-4 h-4 text-teal-200" />
-                  <span>أوراق عمل تفاعلية (AI)</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => {
-                  onOpenAbacusModal();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-                <span>الأداة التفاعلية المتوافقة</span>
-              </button>
-
-              {onOpenSemesterPlanModal && (
-                <button
-                  onClick={() => {
-                    onOpenSemesterPlanModal();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="p-3 bg-linear-to-r from-teal-800 to-cyan-900 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer border border-cyan-500/40"
-                >
-                  <CalendarRange className="w-4 h-4 text-cyan-200 shrink-0" />
-                  <span>الخطة الفصلية ودليل توزيع الحصص (OER)</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => {
-                  onOpenResourcesModal();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="p-3 bg-linear-to-r from-emerald-100 to-teal-50 border-2 border-emerald-400 text-emerald-950 font-black rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <div className="relative p-1 bg-emerald-700 text-white rounded-md shrink-0">
-                  <Layers className="w-4 h-4" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
-                    +
-                  </span>
-                </div>
-                <span>إضافة وإدارة المصادر ({toArabicDigits(resourcesCount)})</span>
-              </button>
-
-              {onOpenBlankTemplateModal && (
-                <button
-                  onClick={() => {
-                    onOpenBlankTemplateModal();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="p-2.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <FileEdit className="w-4 h-4 text-amber-700" />
-                  <span>استمارة مفرغة</span>
-                </button>
-              )}
+                {onOpenWorksheetModal && (
+                  <button
+                    onClick={() => {
+                      onOpenWorksheetModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="p-2.5 bg-teal-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <FileCheck2 className="w-3.5 h-3.5 text-teal-200" />
+                    <span>أوراق عمل AI</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Additional Actions row */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 px-1">
+            {/* Section 2: Resources & Curriculum Tools */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-black text-teal-900 px-1 flex items-center gap-1">
+                <Layers className="w-3.5 h-3.5 text-teal-600" />
+                <span>المناهج والوسائل والمصادر:</span>
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                <button
+                  onClick={() => {
+                    onOpenResourcesModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-emerald-100 text-emerald-950 border border-emerald-400 font-black rounded-xl flex items-center justify-center gap-1.5 shadow-2xs col-span-2"
+                >
+                  <Layers className="w-4 h-4 text-emerald-700" />
+                  <span>إضافة وإدارة بنك المصادر ({toArabicDigits(resourcesCount)})</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onOpenAbacusModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-slate-100 border border-slate-300 text-slate-800 rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <Calculator className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>المحاكي الرقمي</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (onChangeView) onChangeView('dashboard');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-slate-100 border border-slate-300 text-slate-800 rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 text-teal-700" />
+                  <span>لوحة الإنتاجية</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 3: Plans Management & Export */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-black text-slate-900 px-1 flex items-center gap-1">
+                <FileEdit className="w-3.5 h-3.5 text-slate-600" />
+                <span>إدارة ونماذج التحضير والتصدير:</span>
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                <button
+                  onClick={() => {
+                    if (onOpenBlankTemplateModal) onOpenBlankTemplateModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <FileEdit className="w-3.5 h-3.5 text-amber-700" />
+                  <span>استمارة مفرغة 📌</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (onOpenPlansViewer) onOpenPlansViewer();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <FolderKanban className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>عرض الخطط ({toArabicDigits(plans.length)})</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onOpenPrintView();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>طباعة PDF (A4)</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onOpenExportModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-blue-700 text-white rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <FileDown className="w-3.5 h-3.5 text-blue-200" />
+                  <span>تصدير Word/HTML</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Additional Actions row (JSON Export / Import & Delete) */}
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 px-1">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleExportJson}
@@ -973,7 +1025,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1 font-semibold"
                 >
                   <Upload className="w-3.5 h-3.5 text-slate-600" />
-                  <span>استيراد JSON</span>
+                  <span>استيراد</span>
                 </button>
                 <button
                   onClick={() => {
@@ -988,7 +1040,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   title="حذف الخطة الحالية لوجود أخطاء"
                 >
                   <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                  <span>حذف الخطة (أخطاء)</span>
+                  <span>حذف</span>
                 </button>
               </div>
 
@@ -1005,7 +1057,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
 
             {/* Creator Credit & License in Mobile Menu */}
-            <div className="p-2 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11px] text-slate-700 text-center space-y-0.5">
+            <div className="p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11px] text-slate-700 text-center space-y-0.5">
               <p className="font-bold text-emerald-950">
                 إعداد وتصميم: الأستاذ عبد الرحمن دويكات
               </p>
