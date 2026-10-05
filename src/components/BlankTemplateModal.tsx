@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X,
   Printer,
@@ -16,9 +16,11 @@ import {
   Info,
   CalendarRange,
   Flag,
+  Loader2,
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
+import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import {
   analyzeTeachingCalendar,
   getNextTeachingDays,
@@ -39,6 +41,9 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   onOpenResourcesModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'sheet' | 'create' | 'guide'>('sheet');
+  const blankSheetRef = useRef<HTMLDivElement>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [exportProgress, setExportProgress] = useState('');
 
   // Fast creation inputs
   const [subject, setSubject] = useState('');
@@ -84,6 +89,28 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPdf = async () => {
+    if (!blankSheetRef.current) return;
+    setIsExportingPdf(true);
+    setExportProgress('جاري معالجة الاستمارة المفرغة وتوليد PDF...');
+
+    try {
+      await exportLessonPlanToPdf(blankSheetRef.current, {
+        fileName: 'استمارة_تحضير_درس_مفرغة_وزارية.pdf',
+        onProgress: (msg) => setExportProgress(msg),
+      });
+      setExportProgress('تم إنشاء وتنزيل ملف PDF بنجاح!');
+      setTimeout(() => {
+        setIsExportingPdf(false);
+        setExportProgress('');
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to export blank sheet PDF:', err);
+      setIsExportingPdf(false);
+      setExportProgress('');
+    }
   };
 
   return (
@@ -156,7 +183,24 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
 
           {/* Quick Actions in Tab Header */}
           {activeTab === 'sheet' && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+                className="px-3.5 py-1.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs disabled:opacity-50"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-200" />
+                    <span className="truncate max-w-[130px]">{exportProgress || 'جاري التصدير...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-emerald-200" />
+                    <span>تصدير كملف PDF</span>
+                  </>
+                )}
+              </button>
               <button
                 onClick={handlePrint}
                 className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
@@ -186,13 +230,16 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                 <div className="space-y-1">
                   <p className="font-bold">استمارة ورقية مفرغة معتمدة مطابقة لمعايير وزارة التربية والتعليم:</p>
                   <p className="text-emerald-800 leading-relaxed text-[11px]">
-                    تحتوي هذه النسخة على الترويسة الرسمية، وجداول مسطرة ومنقطة لكتابة الكفايات وسير الحصة الرباعي ومهمات التقويم الأصيل (GRASPS) وسلالم التقدير اللفظية ومساحات للتوقيع والاعتماد. يمكنك طباعتها فوراً واستخدامها في التحضير اليدوي أو حفظها كملف Word.
+                    تحتوي هذه النسخة على الترويسة الرسمية، وجداول مسطرة ومنقطة لكتابة الكفايات وسير الحصة الرباعي ومهمات التقويم الأصيل (GRASPS) وسلالم التقدير اللفظية ومساحات للتوقيع والاعتماد. يمكنك طباعتها فوراً واستخدامها في التحضير اليدوي أو تنزيلها كملف PDF أو Word.
                   </p>
                 </div>
               </div>
 
               {/* Printable Document Sheet Frame */}
-              <div className="bg-white border-2 border-slate-300 rounded-xl p-6 sm:p-8 text-slate-900 shadow-sm space-y-6 text-xs leading-relaxed print:border-none print:shadow-none print:p-0">
+              <div
+                ref={blankSheetRef}
+                className="official-print-page bg-white border-2 border-slate-300 rounded-xl p-6 sm:p-8 text-slate-900 shadow-sm space-y-6 text-xs leading-relaxed print:border-none print:shadow-none print:p-0"
+              >
                 {/* Official Header Table */}
                 <div className="border-b-2 border-slate-800 pb-4">
                   <div className="flex items-center justify-between">
