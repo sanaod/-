@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
+import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import {
   analyzeTeachingCalendar,
@@ -275,7 +276,7 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
 
                     <div className="text-left space-y-1">
                       <p className="text-slate-600">المدرسة: .......................................</p>
-                      <p className="text-slate-600">العام الدراسي: ٢٠٢٦ / ٢٠٢٧م</p>
+                      <p className="text-slate-600">العام الدراسي: {getCurrentAcademicYear(startDate)}</p>
                       <p className="text-slate-600">الفصل الدراسي: .............................</p>
                     </div>
                   </div>

@@ -7,6 +7,7 @@ import {
   getNextTeachingDays,
   PALESTINIAN_MINISTRY_HOLIDAYS,
 } from '../utils/palestinianCalendar';
+import { getCurrentAcademicYear } from '../utils/academicYear';
 
 interface LessonHeaderCardProps {
   header: LessonHeader;
@@ -363,6 +364,16 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                 </span>
                 <span className="text-xs font-bold text-emerald-700">
                   {toArabicDigits(header.periodDurationMinutes || 40)} دقيقة
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                  العام الدراسي (تلقائي)
+                </span>
+                <span className="text-xs font-black text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300 inline-block shadow-2xs">
+                  {getCurrentAcademicYear(header.startDate || header.date)}
                 </span>
               </div>
 

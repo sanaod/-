@@ -1,5 +1,6 @@
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from './arabicNumerals';
+import { getCurrentAcademicYear } from './academicYear';
 import { exportLessonPlanToPdf } from './pdfExport';
 
 /**
@@ -114,6 +115,7 @@ export function exportToWord(plan: LessonPlan) {
         <p style="margin: 2pt 0; font-size: 11pt; color: #475569;">(وفق إطار تقييم أداء المعلم - الدرجة ٤ التميز)</p>
       </td>
       <td style="width: 33%; text-align: left; border: none; font-size: 11pt;">
+        <strong>العام الدراسي:</strong> ${getCurrentAcademicYear(h.startDate || h.date)}<br>
         <strong>التاريخ:</strong> ${toArabicDigits(h.date)}<br>
         <strong>الفصل:</strong> ${h.semester}<br>
         <strong>المعلم/ة:</strong> ${h.teacherName}
@@ -784,8 +786,8 @@ export async function exportToPdfDirect(plan: LessonPlan, onProgress?: (msg: str
         </div>
         <div style="text-align: center;">
           <h2 style="margin: 0; font-size: 16px; font-weight: 900;">منظومة عبقور للتخطيط التربوي وتحضير الدروس</h2>
-          <h3 style="margin: 4px 0 0 0; font-size: 14px; text-decoration: underline;">نموذج تحضير درس رسميمعتمد (${h.subject})</h3>
-          <p style="margin: 2px 0 0 0; font-size: 10px; color: #333;">المعلم/ة: ${h.teacherName} | العام الدراسي: ٢٠٢٦م</p>
+          <h3 style="margin: 4px 0 0 0; font-size: 14px; text-decoration: underline;">نموذج تحضير درس رسمي معتمد (${h.subject})</h3>
+          <p style="margin: 2px 0 0 0; font-size: 10px; color: #333;">المعلم/ة: ${h.teacherName} | العام الدراسي: ${getCurrentAcademicYear(h.startDate || h.date)}</p>
         </div>
         <div style="text-align: left; font-size: 11px; font-weight: bold;">
           <p style="margin: 0;"><strong>الصف:</strong> ${h.grade} (${h.section})</p>

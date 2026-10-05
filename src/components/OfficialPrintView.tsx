@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
 import { Printer, ArrowRight, Download, Loader2, CheckCircle2, FileText, FileCode } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import { exportToWord, exportToHtml } from '../utils/exportUtils';
 
@@ -178,7 +179,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
               </div>
 
               <div className="text-left space-y-0.5 text-xs font-bold text-black">
-                <p>العام الدراسي: ٢٠٢٦/٢٠٢٥م</p>
+                <p>العام الدراسي: {getCurrentAcademicYear(plan.header.startDate || plan.header.date)}</p>
                 <p>الفصل: {plan.header.semester}</p>
                 <p className="text-emerald-800">النموذج الوزاري المعتمد</p>
               </div>

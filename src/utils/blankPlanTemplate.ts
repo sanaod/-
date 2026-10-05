@@ -1,4 +1,5 @@
 import { LessonPlan } from '../types/lessonPlan';
+import { getCurrentAcademicYear } from './academicYear';
 
 /**
  * Creates a pristine blank lesson plan object with guided placeholder prompts
@@ -233,7 +234,7 @@ export function exportBlankTemplateToWord() {
     </td>
     <td style="width: 33%; text-align: left;">
       المدرسة: .......................................<br/>
-      العام الدراسي: ٢٠٢٦ / ٢٠٢٧م<br/>
+      العام الدراسي: ${getCurrentAcademicYear()}<br/>
       الفصل الدراسي: .............................
     </td>
   </tr>

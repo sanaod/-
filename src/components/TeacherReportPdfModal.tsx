@@ -1,6 +1,7 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits, toArabicPercent } from '../utils/arabicNumerals';
+import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import {
   Download,
@@ -108,7 +109,7 @@ export const TeacherReportPdfModal: React.FC<TeacherReportPdfModalProps> = ({
   const [directorate, setDirectorate] = useState(activePlan.header.directorate || 'المديرية العامة للتربية والتعليم');
   const [country, setCountry] = useState(activePlan.header.country || 'سلطنة عمان');
   const [ministry, setMinistry] = useState(activePlan.header.ministry || 'وزارة التربية والتعليم');
-  const [academicYear, setAcademicYear] = useState('٢٠٢٦ / ٢٠٢٧م');
+  const [academicYear, setAcademicYear] = useState(() => getCurrentAcademicYear(activePlan.header.startDate || activePlan.header.date));
   const [semester, setSemester] = useState(activePlan.header.semester || 'الفصل الدراسي الأول');
   const [supervisorName, setSupervisorName] = useState(
     activePlan.section6Signatures?.educationalSupervisor?.name || 'د. سمير الحلبي'
