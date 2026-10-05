@@ -50,6 +50,7 @@ import {
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
 import { TeacherMonthlyCalendar } from './TeacherMonthlyCalendar';
+import { StudentAssessmentDashboard } from './StudentAssessmentDashboard';
 
 export type FolderIndexingMode = 'by_subject' | 'by_teacher' | 'tree' | 'table';
 
@@ -1268,6 +1269,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onSelectPlan={onSelectPlan}
         onOpenEditor={onOpenEditor}
         onOpenPrintView={onOpenPrintView}
+      />
+
+      {/* 📊 Student Assessment & Grade Distribution Dashboard (لوحة بيانات تحليل أداء الطالب وتوزيع التقديرات) */}
+      <StudentAssessmentDashboard
+        plans={plans}
+        selectedSubjectFilter={selectedSubjectFilter}
+        selectedGradeFilter={selectedGradeFilter}
+        selectedTeacherFilter={selectedTeacherFilter}
       />
 
       {/* Main Charts Row */}
