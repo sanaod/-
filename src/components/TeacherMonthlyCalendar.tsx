@@ -30,6 +30,7 @@ import {
   PALESTINIAN_MINISTRY_HOLIDAYS,
   isHoliday,
   isWeekend,
+  formatDateToIso,
 } from '../utils/palestinianCalendar';
 
 export interface CalendarTask {
@@ -150,7 +151,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
 }) => {
   // Current date anchor
   const today = useMemo(() => new Date(), []);
-  const todayStr = useMemo(() => today.toISOString().split('T')[0], [today]);
+  const todayStr = useMemo(() => formatDateToIso(today), [today]);
 
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth()); // 0-indexed
@@ -173,7 +174,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
     {
       id: 'task-def-2',
       title: 'تطبيق مهمة الأداء الأصيل (GRASPS) لدرس القيمة المنزلية',
-      date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2).toISOString().split('T')[0],
+      date: formatDateToIso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
       time: '10:30 ص',
       subject: 'الرياضيات',
       grade: 'الصف الثالث الأساسي',
@@ -185,7 +186,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
     {
       id: 'task-def-3',
       title: 'اجتماع لجنة المبحث وتبادل الخبرات التعليمية',
-      date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5).toISOString().split('T')[0],
+      date: formatDateToIso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5)),
       time: '12:00 م',
       subject: 'عام',
       type: 'supervision',
@@ -212,12 +213,11 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
   const autoPlanTasks = useMemo(() => {
     return plans.map((plan, idx) => {
       // Try to parse plan date or distribute across current month
-      let dateVal = plan.header?.date?.trim();
+      let dateVal = plan.header?.startDate || plan.header?.date?.trim();
       // If date is empty or invalid, assign a predictable date in current month for demonstration
       if (!dateVal || !dateVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const dayOffset = (idx * 3) % 26 + 1;
-        const d = new Date(currentYear, currentMonth, dayOffset);
-        dateVal = d.toISOString().split('T')[0];
+        dateVal = formatDateToIso(new Date(currentYear, currentMonth, dayOffset));
       }
 
       const task: CalendarTask = {
@@ -284,7 +284,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
     for (let i = startDayIndex - 1; i >= 0; i--) {
       const dayNum = prevMonthLastDay - i;
       const prevDate = new Date(currentYear, currentMonth - 1, dayNum);
-      const dStr = prevDate.toISOString().split('T')[0];
+      const dStr = formatDateToIso(prevDate);
       days.push({
         dateStr: dStr,
         dayNumber: dayNum,
@@ -297,7 +297,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
     // Current month days
     for (let i = 1; i <= totalDays; i++) {
       const curDate = new Date(currentYear, currentMonth, i);
-      const dStr = curDate.toISOString().split('T')[0];
+      const dStr = formatDateToIso(curDate);
       days.push({
         dateStr: dStr,
         dayNumber: i,
@@ -311,7 +311,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const nextDate = new Date(currentYear, currentMonth + 1, i);
-      const dStr = nextDate.toISOString().split('T')[0];
+      const dStr = formatDateToIso(nextDate);
       days.push({
         dateStr: dStr,
         dayNumber: i,

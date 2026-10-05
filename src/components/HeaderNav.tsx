@@ -31,10 +31,12 @@ import {
   Boxes,
   Plus,
   CalendarRange,
+  Database,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { WhatsAppHeaderButton, WhatsAppIcon } from './WhatsAppContactButton';
+import { exportAllPlansToJson, parseAndValidateBackupJson } from '../utils/backupRestore';
 
 interface HeaderNavProps {
   plans: LessonPlan[];
@@ -64,6 +66,7 @@ interface HeaderNavProps {
   isCurrentPlanBlank?: boolean;
   currentView?: 'editor' | 'dashboard';
   onChangeView?: (view: 'editor' | 'dashboard') => void;
+  onOpenBackupRestoreModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -94,6 +97,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   isCurrentPlanBlank,
   currentView = 'editor',
   onChangeView,
+  onOpenBackupRestoreModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -109,21 +113,30 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     setIsMobileMenuOpen(false);
   };
 
+  const handleExportAllPlans = () => {
+    exportAllPlansToJson(plans);
+    setIsMobileMenuOpen(false);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.header && parsed.section1 && parsed.section2Timeline) {
-          onImportPlan(parsed);
-          alert('تم استيراد خطة الدرس بنجاح!');
-        } else {
-          alert('ملف غير صالح، يجب أن يطابق بنية خطط الدروس الوزارية');
+        const content = event.target?.result as string;
+        const validation = parseAndValidateBackupJson(content);
+        if (validation.success && validation.plans.length > 0) {
+          if (validation.plans.length === 1) {
+            onImportPlan(validation.plans[0]);
+          } else if (onOpenBackupRestoreModal) {
+            onOpenBackupRestoreModal();
+          } else {
+            validation.plans.forEach((p) => onImportPlan(p));
+          }
         }
       } catch (err) {
-        alert('حدث خطأ أثناء قراءة ملف JSON');
+        console.error('Failed to parse JSON file:', err);
       }
     };
     reader.readAsText(file);
@@ -302,6 +315,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </span>
               </button>
 
+              {/* Backup & Restore All Plans Button */}
+              {onOpenBackupRestoreModal && (
+                <button
+                  type="button"
+                  onClick={onOpenBackupRestoreModal}
+                  title="تصدير كافة الخطط كملف نسخة احتياطية JSON أو استيرادها"
+                  className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 hover:border-amber-400 rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                >
+                  <Database className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform shrink-0" />
+                  <span>نسخ احتياطي (JSON)</span>
+                </button>
+              )}
+
               {/* Delete Current Plan when Errors Exist Button */}
               <button
                 onClick={() => {
@@ -446,6 +472,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
             {/* Group 4: Output, Export & Print Hub (المخرجات والطباعة الرسمية) */}
             <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {/* Backup & Restore JSON CTA */}
+              <button
+                onClick={onOpenBackupRestoreModal || handleExportAllPlans}
+                title="تصدير نسخة احتياطية موحدة لكافة الخطط المخزنة في المتصفح كملف JSON أو استيرادها"
+                className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <Database className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span>نسخ احتياطي JSON</span>
+              </button>
+
               {/* Export Hub Button */}
               <button
                 onClick={onOpenExportModal}
@@ -630,6 +666,14 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
               <div className="flex items-center gap-1.5">
                 <button
+                  onClick={onOpenBackupRestoreModal || handleExportAllPlans}
+                  className="px-2.5 py-1.5 bg-amber-50 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+                  title="تصدير كافة الخطط كملف JSON أو استيراد نسخة احتياطية"
+                >
+                  <Database className="w-3.5 h-3.5 text-amber-700" />
+                  <span>نسخ احتياطي JSON</span>
+                </button>
+                <button
                   onClick={onOpenExportModal}
                   className="px-2.5 py-1.5 bg-blue-50 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer"
                 >
@@ -794,6 +838,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           >
             <FolderKanban className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
             <span>الخطط ({toArabicDigits(plans.length)})</span>
+          </button>
+
+          <button
+            onClick={onOpenBackupRestoreModal || handleExportAllPlans}
+            className="px-2.5 py-1.5 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-[11px] font-black flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer"
+            title="تصدير نسخة احتياطية JSON أو استيرادها"
+          >
+            <Database className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span>نسخ احتياطي JSON</span>
           </button>
 
           <button
@@ -1018,14 +1071,27 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
 
             {/* Additional Actions row (JSON Export / Import & Delete) */}
-            <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 px-1">
-              <div className="flex items-center gap-2">
+            <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2 px-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {onOpenBackupRestoreModal && (
+                  <button
+                    onClick={() => {
+                      onOpenBackupRestoreModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="px-2.5 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg flex items-center gap-1 font-bold"
+                  >
+                    <Database className="w-3.5 h-3.5 text-amber-700" />
+                    <span>نسخ احتياطي واستيراد</span>
+                  </button>
+                )}
                 <button
-                  onClick={handleExportJson}
-                  className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1 font-semibold"
+                  onClick={handleExportAllPlans}
+                  className="px-2.5 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg flex items-center gap-1 font-bold"
+                  title="تصدير كافة الخطط كملف JSON"
                 >
-                  <Download className="w-3.5 h-3.5 text-slate-600" />
-                  <span>حفظ JSON</span>
+                  <Download className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>تصدير الكل (JSON)</span>
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}

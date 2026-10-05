@@ -1,5 +1,7 @@
 import { LessonPlan } from '../types/lessonPlan';
 import { getCurrentAcademicYear } from './academicYear';
+import { formatDateDMY } from './arabicNumerals';
+import { formatDateToIso } from './palestinianCalendar';
 
 /**
  * Creates a pristine blank lesson plan object with guided placeholder prompts
@@ -16,7 +18,7 @@ export function createBlankLessonPlan(options?: {
   timeframe?: string;
 }): LessonPlan {
   const timestamp = Date.now();
-  const dateStr = options?.startDate || new Date().toLocaleDateString('ar-EG');
+  const dateStr = options?.startDate || formatDateToIso(new Date());
 
   return {
     id: `plan-blank-${timestamp}`,
@@ -37,9 +39,9 @@ export function createBlankLessonPlan(options?: {
       currentPeriod: 1,
       periodDurationMinutes: 40,
       date: dateStr,
-      startDate: options?.startDate,
-      endDate: options?.endDate,
-      timeframe: options?.timeframe,
+      startDate: options?.startDate || dateStr,
+      endDate: options?.endDate || dateStr,
+      timeframe: options?.timeframe || `من (${formatDateDMY(dateStr)}) إلى (${formatDateDMY(dateStr)})`,
       semester: 'الفصل الدراسي الأول',
     },
     section1: {

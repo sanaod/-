@@ -26,7 +26,7 @@ import {
   Compass,
 } from 'lucide-react';
 import { EducationalResource, ResourceType } from '../types/lessonPlan';
-import { toArabicDigits } from '../utils/arabicNumerals';
+import { toArabicDigits, formatDateDMY } from '../utils/arabicNumerals';
 import { analyzeContentLocally, InferredResourceMeta } from '../utils/resourceAnalyzer';
 
 interface ResourcesManagerModalProps {
@@ -243,7 +243,7 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
       title: title.trim(),
       content: content.trim(),
       sourceInfo: sourceInfo.trim() || undefined,
-      createdAt: new Date().toLocaleDateString('ar-EG'),
+      createdAt: formatDateDMY(new Date()),
       tags: tags.length > 0 ? tags : meta.tags,
       fileName: attachedFileName || undefined,
       fileExt: attachedFileExt || undefined,

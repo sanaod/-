@@ -18,12 +18,16 @@ import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { exportToWord, exportToHtml, exportToMarkdown, exportToPdfDirect } from '../utils/exportUtils';
 import { exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
+import { exportAllPlansToJson } from '../utils/backupRestore';
+import { Database } from 'lucide-react';
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
   plan: LessonPlan;
   onOpenPdfPrint: () => void;
+  allPlans?: LessonPlan[];
+  onOpenBackupRestore?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -31,6 +35,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   plan,
   onOpenPdfPrint,
+  allPlans,
+  onOpenBackupRestore,
 }) => {
   const [copied, setCopied] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -310,6 +316,42 @@ ${plan.section3Assessment.graspsTask.fullDescription}
                 </div>
               </div>
               <Download className="w-5 h-5 text-amber-600 shrink-0" />
+            </button>
+
+            {/* 5. Complete JSON Backup (كافة الخطط المحفوظة) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (allPlans && allPlans.length > 0) {
+                  exportAllPlansToJson(allPlans);
+                  setSuccessMsg(`تم تصدير وحفظ النسخة الاحتياطية لكافة الخطط (${toArabicDigits(allPlans.length)} خطة) كملف JSON بنجاح!`);
+                } else {
+                  exportAllPlansToJson([plan]);
+                  setSuccessMsg('تم تصدير ملف الخطة كنسخة احتياطية JSON بنجاح!');
+                }
+                setTimeout(() => setSuccessMsg(null), 3500);
+              }}
+              className="p-4 rounded-2xl border-2 border-emerald-300 hover:border-emerald-600 bg-linear-to-r from-emerald-50/80 to-teal-50/80 hover:from-emerald-100/80 hover:to-teal-100/80 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs cursor-pointer ring-1 ring-emerald-500/20"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-linear-to-tr from-emerald-700 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                  <Database className="w-6 h-6 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black text-slate-900 group-hover:text-emerald-950 transition-colors font-['Tajawal']">
+                      تصدير كافة الخطط كملف نسخة احتياطية موحد (JSON)
+                    </h4>
+                    <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.2 rounded-full font-black">
+                      نسخة احتياطية 💾
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-800/90 mt-0.5">
+                    تنزيل ملف واحد يحتوي على جميع الخطط المخزنة في المتصفح {allPlans ? `(${toArabicDigits(allPlans.length)} خطة)` : ''} ليتسنى استعادتها لاحقاً في أي متصفح آخر
+                  </p>
+                </div>
+              </div>
+              <Download className="w-5 h-5 text-emerald-700 shrink-0" />
             </button>
           </div>
 

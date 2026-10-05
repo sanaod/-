@@ -46,6 +46,7 @@ import {
   FileCheck2,
   Boxes,
   CalendarRange,
+  Database,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
@@ -69,6 +70,7 @@ interface TeacherDashboardProps {
   onOpenResourcesModal?: () => void;
   resourcesCount?: number;
   onOpenAbacusModal?: () => void;
+  onOpenBackupRestore?: () => void;
 }
 
 // Subject color mappings
@@ -228,6 +230,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenResourcesModal,
   resourcesCount = 0,
   onOpenAbacusModal,
+  onOpenBackupRestore,
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
@@ -912,8 +915,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           {/* Vertical Divider */}
           <div className="hidden xl:block h-7 w-px bg-slate-200 shrink-0" />
 
-          {/* Group 3: Reports & Official Print (التقارير والطباعة الرسمية) */}
+          {/* Group 3: Reports & Official Print (التقارير والطباعة الرسمية والنسخ الاحتياطي) */}
           <div className="flex flex-wrap items-center gap-2">
+            {/* Export All Plans JSON Backup Button */}
+            {onOpenBackupRestore && (
+              <button
+                onClick={onOpenBackupRestore}
+                className="px-4 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs hover:shadow-sm active:scale-97 cursor-pointer"
+                title="تصدير كافة الخطط المخزنة كملف موحد JSON لأخذ نسخة احتياطية أو استيرادها"
+              >
+                <Database className="w-4 h-4 text-slate-950 shrink-0" />
+                <span>نسخ احتياطي لكافة الخطط (JSON)</span>
+              </button>
+            )}
+
             {/* Generate & Download Comprehensive PDF Report Button */}
             <button
               onClick={() => setIsReportPdfModalOpen(true)}

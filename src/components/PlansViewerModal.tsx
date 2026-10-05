@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   Boxes,
   CalendarRange,
+  Database,
 } from 'lucide-react';
 
 interface PlansViewerModalProps {
@@ -34,6 +35,7 @@ interface PlansViewerModalProps {
   onOpenUnitPlanModal?: () => void;
   onOpenSemesterPlanModal?: () => void;
   onGoToDashboard?: () => void;
+  onOpenBackupRestore?: () => void;
 }
 
 export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
@@ -50,6 +52,7 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
   onOpenUnitPlanModal,
   onOpenSemesterPlanModal,
   onGoToDashboard,
+  onOpenBackupRestore,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -112,13 +115,30 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-colors shrink-0"
-            title="إغلاق النافذة"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {onOpenBackupRestore && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenBackupRestore();
+                }}
+                className="px-3 py-1.5 bg-amber-400 text-amber-950 hover:bg-amber-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="تصدير كافة الخطط كملف JSON أو استيراد نسخة احتياطية"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>نسخ احتياطي / استيراد</span>
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-colors shrink-0 cursor-pointer"
+              title="إغلاق النافذة"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Search & Subject Filter Bar */}

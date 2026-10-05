@@ -24,6 +24,9 @@ export function getBlankLessonPlan(): LessonPlan {
       currentPeriod: 1,
       periodDurationMinutes: 40,
       date: dateStr,
+      startDate: dateStr,
+      endDate: dateStr,
+      timeframe: `من (${dateStr}) إلى (${dateStr})`,
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -198,7 +201,10 @@ export const defaultBlankPlan: LessonPlan = {
     totalPeriods: 1,
     currentPeriod: 1,
     periodDurationMinutes: 40,
-    date: new Date().toISOString().split('T')[0],
+    date: '2026-10-05',
+    startDate: '2026-10-05',
+    endDate: '2026-10-05',
+    timeframe: 'من (٠٥/١٠/٢٠٢٦م) إلى (٠٥/١٠/٢٠٢٦م)',
     semester: 'الفصل الدراسي الأول',
   },
   section1: {
@@ -337,17 +343,17 @@ export const defaultBlankPlan: LessonPlan = {
   section6Signatures: {
     teacher: {
       name: '',
-      date: new Date().toLocaleDateString('ar-EG'),
+      date: '٢٠٢٦/١٠/٠٥م',
       notes: '',
     },
     schoolPrincipal: {
       name: '',
-      date: new Date().toLocaleDateString('ar-EG'),
+      date: '٢٠٢٦/١٠/٠٥م',
       directives: '',
     },
     educationalSupervisor: {
       name: '',
-      date: new Date().toLocaleDateString('ar-EG'),
+      date: '٢٠٢٦/١٠/٠٥م',
       directives: '',
     },
   },

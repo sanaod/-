@@ -22,6 +22,7 @@ import { ExitTicketModal } from './components/ExitTicketModal';
 import { ParentCardModal } from './components/ParentCardModal';
 import { ResourcesManagerModal } from './components/ResourcesManagerModal';
 import { ExportModal } from './components/ExportModal';
+import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { BlankTemplateModal } from './components/BlankTemplateModal';
 import { CreativeCommonsFooter } from './components/CreativeCommonsFooter';
@@ -33,7 +34,7 @@ import { AuthenticTaskGeneratorModal } from './components/AuthenticTaskGenerator
 import { RubricGeneratorModal } from './components/RubricGeneratorModal';
 import { UnitPlanGeneratorModal } from './components/UnitPlanGeneratorModal';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
-import { toArabicDigits } from './utils/arabicNumerals';
+import { toArabicDigits, formatDateDMY } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
 import { formatDateToIso } from './utils/palestinianCalendar';
 import {
@@ -65,11 +66,63 @@ import {
   Filter,
   Wand2,
   BookOpen,
+  Database,
+  Upload,
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
+
+export function sanitizePlan(p: any): LessonPlan {
+  if (!p) return getBlankLessonPlan();
+  const safeP = p || {};
+  const header = safeP.header || {};
+  const todayIso = new Date().toISOString().split('T')[0];
+
+  const rawDate = header.startDate || header.date || todayIso;
+  const sDate = rawDate && typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)
+    ? rawDate
+    : formatDateToIso(rawDate);
+  const eDate = header.endDate && typeof header.endDate === 'string' && header.endDate.match(/^\d{4}-\d{2}-\d{2}$/)
+    ? header.endDate
+    : sDate;
+
+  const startFormatted = formatDateDMY(sDate);
+  const endFormatted = formatDateDMY(eDate);
+
+  return {
+    ...safeP,
+    id: safeP.id || `plan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    title: safeP.title || header.lessonTitle || 'خطة درس معتمدة',
+    header: {
+      ...header,
+      country: header.country || 'دولة فلسطين',
+      ministry: header.ministry || 'وزارة التربية والتعليم',
+      school: header.school || '',
+      directorate: header.directorate || '',
+      teacherName: header.teacherName || '',
+      subject: header.subject || '',
+      grade: header.grade || 'الصف الثالث الأساسي',
+      section: header.section || 'أ',
+      lessonTitle: header.lessonTitle || '',
+      totalPeriods: Number(header.totalPeriods) || 1,
+      currentPeriod: Number(header.currentPeriod) || 1,
+      periodDurationMinutes: Number(header.periodDurationMinutes) || 40,
+      date: sDate,
+      startDate: sDate,
+      endDate: eDate,
+      semester: header.semester || 'الفصل الدراسي الأول',
+      timeframe: header.timeframe || `من (${startFormatted}) إلى (${endFormatted})`,
+    },
+    section1: safeP.section1 || defaultBlankPlan.section1,
+    section2Timeline: Array.isArray(safeP.section2Timeline) ? safeP.section2Timeline : defaultBlankPlan.section2Timeline,
+    section3Assessment: safeP.section3Assessment || defaultBlankPlan.section3Assessment,
+    section4Environment: safeP.section4Environment || defaultBlankPlan.section4Environment,
+    section5Reflection: safeP.section5Reflection || defaultBlankPlan.section5Reflection,
+    section6Signatures: safeP.section6Signatures || defaultBlankPlan.section6Signatures,
+  };
+}
 
 export default function App() {
   const [plans, setPlans] = useState<LessonPlan[]>(() => {
@@ -78,34 +131,23 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Sanitize any malformed date fields in saved plans
-          parsed.forEach((p: LessonPlan) => {
-            if (p && p.header) {
-              if (!p.header.startDate || !p.header.startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                p.header.startDate = formatDateToIso(p.header.startDate || p.header.date);
-              }
-              if (!p.header.endDate || !p.header.endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                p.header.endDate = formatDateToIso(p.header.endDate || p.header.startDate);
-              }
-              if (!p.header.date || typeof p.header.date !== 'string') {
-                p.header.date = p.header.startDate;
-              }
-            }
-          });
-
-          const hasBlank = parsed.some((p: LessonPlan) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
-          if (!hasBlank) {
-            const merged = [defaultBlankPlan, ...parsed];
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
-            return merged;
-          }
-          return parsed;
+          const sanitized = parsed.map(sanitizePlan);
+          const hasBlank = sanitized.some((p) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
+          const finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalPlans));
+          } catch (e) {}
+          return finalPlans;
         }
       }
     } catch (e) {
       console.error('Failed to load plans from localStorage', e);
     }
-    return [defaultBlankPlan, ...defaultExemplarPlans];
+    const initialDefault = [defaultBlankPlan, ...defaultExemplarPlans].map(sanitizePlan);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialDefault));
+    } catch (e) {}
+    return initialDefault;
   });
 
   const [activePlanId, setActivePlanId] = useState<string>(() => {
@@ -134,6 +176,7 @@ export default function App() {
   const [isParentCardModalOpen, setIsParentCardModalOpen] = useState(false);
   const [isResourcesModalOpen, setIsResourcesModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
@@ -346,6 +389,7 @@ export default function App() {
         isCurrentPlanBlank={isCurrentPlanBlank}
         currentView={viewMode === 'dashboard' ? 'dashboard' : 'editor'}
         onChangeView={(view) => setViewMode(view)}
+        onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
@@ -374,6 +418,7 @@ export default function App() {
             onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
             resourcesCount={resources.length}
             onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
+            onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
           />
         </main>
       ) : (
@@ -456,6 +501,15 @@ export default function App() {
                   >
                     <FileDown className="w-4.5 h-4.5 text-blue-200 shrink-0" />
                     <span>تصدير الخطة</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsBackupRestoreModalOpen(true)}
+                    className="px-4 py-2.5 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
+                  >
+                    <Database className="w-4.5 h-4.5 text-slate-950 shrink-0" />
+                    <span>نسخ احتياطي واستيراد (JSON)</span>
                   </button>
                 </div>
               </div>
@@ -898,6 +952,78 @@ export default function App() {
                   {/* === GROUP 4: EXPORT, PRINT & ASSESSMENT === */}
                   {(actionCategoryFilter === 'all' || actionCategoryFilter === 'export') && (
                     <>
+                      {/* Export All Plans JSON Backup Card */}
+                      <button
+                        onClick={() => setIsBackupRestoreModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-amber-900 via-slate-900 to-emerald-950 border-2 border-amber-400 hover:border-amber-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-md min-h-[96px] ring-2 ring-amber-500/20"
+                        title="تصدير كافة الخطط المخزنة في localStorage كملف JSON موحد لأخذ نسخة احتياطية واستيرادها"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/30 flex items-center justify-center border border-amber-300/40 group-hover:bg-amber-500/50 transition-colors">
+                            <Database className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <span className="text-[9px] font-black px-1.5 py-0.5 bg-amber-400 text-amber-950 rounded-md">
+                            تصدير JSON 💾
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
+                            نسخ احتياطي لكافة الخطط
+                          </span>
+                          <span className="block text-[10px] text-amber-100/90 truncate">
+                            تنزيل ملف موحد (.json)
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Import Backup Card */}
+                      <button
+                        onClick={() => setIsBackupRestoreModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-teal-900/80 via-slate-900 to-slate-950 border border-teal-500/60 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="استيراد واسترجاع خطط من ملف نسخة احتياطية JSON"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-teal-800/40 flex items-center justify-center border border-teal-500/30 group-hover:bg-teal-700/50 transition-colors">
+                            <Upload className="w-4 h-4 text-teal-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-teal-300 rounded-md border border-slate-700">
+                            استرجاع
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
+                            استيراد خطط (JSON)
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            رفع ملف النسخة الاحتياطية
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Export Hub Card */}
+                      <button
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="p-3 bg-linear-to-br from-blue-900/80 via-slate-900 to-slate-950 border border-blue-500/60 hover:border-blue-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
+                        title="تصدير الخطة الحالية بصيغ Word و PDF و HTML و JSON"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-blue-800/40 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-700/50 transition-colors">
+                            <FileDown className="w-4 h-4 text-blue-300" />
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-blue-300 rounded-md border border-slate-700">
+                            Word/PDF
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-blue-200 transition-colors font-['Tajawal']">
+                            مركز التصدير
+                          </span>
+                          <span className="block text-[10px] text-slate-300/80 truncate">
+                            Word و HTML و PDF
+                          </span>
+                        </div>
+                      </button>
+
                       {/* Exit Ticket Generator */}
                       <button
                         onClick={() => setIsExitTicketModalOpen(true)}
@@ -1187,6 +1313,23 @@ export default function App() {
         onClose={() => setIsExportModalOpen(false)}
         plan={currentPlan}
         onOpenPdfPrint={() => setViewMode('official-print')}
+        allPlans={plans}
+        onOpenBackupRestore={() => {
+          setIsExportModalOpen(false);
+          setIsBackupRestoreModalOpen(true);
+        }}
+      />
+
+      <BackupRestoreModal
+        isOpen={isBackupRestoreModalOpen}
+        onClose={() => setIsBackupRestoreModalOpen(false)}
+        plans={plans}
+        onPlansUpdated={(newPlans, activeId) => {
+          setPlans(newPlans);
+          if (activeId) {
+            setActivePlanId(activeId);
+          }
+        }}
       />
 
       <BlankTemplateModal
@@ -1240,6 +1383,10 @@ export default function App() {
         onGoToDashboard={() => {
           setIsPlansViewerModalOpen(false);
           setViewMode('dashboard');
+        }}
+        onOpenBackupRestore={() => {
+          setIsPlansViewerModalOpen(false);
+          setIsBackupRestoreModalOpen(true);
         }}
       />
 
