@@ -11,12 +11,13 @@ import {
   Download,
   Share2,
   ExternalLink,
+  Loader2,
+  FileEdit,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
-import { exportToWord, exportToHtml, exportToMarkdown } from '../utils/exportUtils';
+import { exportToWord, exportToHtml, exportToMarkdown, exportToPdfDirect } from '../utils/exportUtils';
 import { exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
-import { FileEdit } from 'lucide-react';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -33,8 +34,27 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [exportProgress, setExportProgress] = useState('');
 
   if (!isOpen) return null;
+
+  const handleDirectPdfExport = async () => {
+    setIsExportingPdf(true);
+    setExportProgress('جاري تحضير ملف الـ PDF والتنزيل المباشر...');
+
+    try {
+      await exportToPdfDirect(plan, (msg) => setExportProgress(msg));
+      setSuccessMsg('تم تنزيل ملف الـ PDF الرسمي بنجاح!');
+      setTimeout(() => setSuccessMsg(null), 3500);
+      setIsExportingPdf(false);
+      setExportProgress('');
+    } catch (err) {
+      console.error('Failed to export direct PDF:', err);
+      setIsExportingPdf(false);
+      setExportProgress('');
+    }
+  };
 
   const handleWordExport = () => {
     exportToWord(plan);
@@ -153,31 +173,58 @@ ${plan.section3Assessment.graspsTask.fullDescription}
               <Download className="w-5 h-5 text-blue-600 shrink-0" />
             </button>
 
-            {/* 2. PDF Official Print */}
+            {/* 2. Direct PDF Export */}
             <button
               type="button"
-              onClick={handlePdfExport}
-              className="p-4 rounded-2xl border-2 border-rose-200 hover:border-rose-500 bg-rose-50/40 hover:bg-rose-50 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs"
+              onClick={handleDirectPdfExport}
+              disabled={isExportingPdf}
+              className="p-4 rounded-2xl border-2 border-rose-200 hover:border-rose-500 bg-rose-50/40 hover:bg-rose-50 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <div className="flex items-center gap-3.5">
                 <div className="w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                  <Printer className="w-6 h-6" />
+                  {isExportingPdf ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-rose-200" />
+                  ) : (
+                    <Download className="w-6 h-6" />
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-bold text-slate-900 group-hover:text-rose-800 transition-colors">
-                      تصدير كملف PDF رسمي (A4)
+                      {isExportingPdf ? exportProgress || 'جاري التصدير المباشر...' : 'تنزيل الخطة كملف PDF مباشر'}
                     </h4>
                     <span className="text-[10px] bg-rose-600 text-white px-2 py-0.2 rounded-full font-bold">
-                      جاهز للاعتماد
+                      تحميل سريع
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    معاينة وطباعة النموذج الوزاري المعتمد بدقة عالية مع ترويسة وشعار الوزارة والتوقيعات
+                    توليد ملف PDF عالي الجودة جاهز للحفظ على جهازك فوراً بتنسيق النموذج الوزاري
                   </p>
                 </div>
               </div>
-              <ExternalLink className="w-5 h-5 text-rose-600 shrink-0" />
+              <Download className="w-5 h-5 text-rose-600 shrink-0" />
+            </button>
+
+            {/* 2.5 A4 Interactive PDF Print Preview */}
+            <button
+              type="button"
+              onClick={handlePdfExport}
+              className="p-3.5 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-800 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <Printer className="w-5 h-5 text-slate-200" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">
+                    معاينة وطباعة النموذج الوزاري المعتمد (A4)
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    فتح شاشة المعاينة الكاملة والطباعة المباشرة مع التوقيعات الرسمية
+                  </p>
+                </div>
+              </div>
+              <ExternalLink className="w-4 h-4 text-slate-600 shrink-0" />
             </button>
 
             {/* 3. Standalone HTML */}

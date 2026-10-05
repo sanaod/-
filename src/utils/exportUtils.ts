@@ -1,5 +1,6 @@
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from './arabicNumerals';
+import { exportLessonPlanToPdf } from './pdfExport';
 
 /**
  * Downloads a file to the user's browser.
@@ -750,5 +751,151 @@ ${p.section3Assessment.rubric.map((r: any, idx: number) => `
 
   const fileName = `خطة_درس_${h.subject}_${h.lessonTitle.replace(/[\s/\\:]+/g, '_')}.md`;
   downloadBlob(markdownContent, fileName, 'text/markdown;charset=utf-8');
+}
+
+/**
+ * Direct PDF Export from LessonPlan data object.
+ * Creates an offscreen ministerial document container and downloads high-res PDF.
+ */
+export async function exportToPdfDirect(plan: LessonPlan, onProgress?: (msg: string) => void): Promise<void> {
+  const p = plan;
+  const h = p.header;
+
+  const container = document.createElement('div');
+  container.className = 'official-document-wrapper official-print-page';
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0px';
+  container.style.width = '800px';
+  container.style.backgroundColor = '#ffffff';
+  container.style.padding = '28px';
+  container.style.direction = 'rtl';
+  container.style.fontFamily = "'Cairo', sans-serif";
+  container.style.color = '#000000';
+
+  container.innerHTML = `
+    <div style="direction: rtl; text-align: right; color: #000; font-family: 'Cairo', sans-serif; font-size: 12px; line-height: 1.5;">
+      <!-- Top Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+        <div style="font-weight: bold; font-size: 11px;">
+          <p style="margin: 0;">${h.country || 'دولة فلسطين'}</p>
+          <p style="margin: 0;">${h.ministry || 'وزارة التربية والتعليم'}</p>
+          <p style="margin: 0;">${h.school || 'المدرسة'}</p>
+        </div>
+        <div style="text-align: center;">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 900;">منظومة عبقور للتخطيط التربوي وتحضير الدروس</h2>
+          <h3 style="margin: 4px 0 0 0; font-size: 14px; text-decoration: underline;">نموذج تحضير درس رسميمعتمد (${h.subject})</h3>
+          <p style="margin: 2px 0 0 0; font-size: 10px; color: #333;">المعلم/ة: ${h.teacherName} | العام الدراسي: ٢٠٢٦م</p>
+        </div>
+        <div style="text-align: left; font-size: 11px; font-weight: bold;">
+          <p style="margin: 0;"><strong>الصف:</strong> ${h.grade} (${h.section})</p>
+          <p style="margin: 0;"><strong>الحصص:</strong> ${toArabicDigits(h.currentPeriod)} من ${toArabicDigits(h.totalPeriods)}</p>
+          <p style="margin: 0;"><strong>التاريخ:</strong> ${toArabicDigits(h.startDate || h.date)}</p>
+        </div>
+      </div>
+
+      <!-- General Info Table -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; border: 1px solid #000;">
+        <tr>
+          <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right; width: 18%;">المبحث / المادة:</th>
+          <td style="border: 1px solid #000; padding: 5px; width: 32%; font-weight: bold;">${h.subject}</td>
+          <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right; width: 18%;">عنوان الدرس:</th>
+          <td style="border: 1px solid #000; padding: 5px; width: 32%; font-weight: bold;">${toArabicDigits(h.lessonTitle)}</td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right;">الصف والشعبة:</th>
+          <td style="border: 1px solid #000; padding: 5px;">${h.grade} / الشعبة (${h.section})</td>
+          <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right;">المديرية والوزارة:</th>
+          <td style="border: 1px solid #000; padding: 5px;">${h.directorate} (${h.ministry})</td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right;">الفترة الزمنية للدرس:</th>
+          <td colspan="3" style="border: 1px solid #000; padding: 5px;">
+            من ${toArabicDigits(h.startDate || h.date)} إلى ${toArabicDigits(h.endDate || h.date)}
+            <span style="font-size: 9.5px; color: #047857; margin-right: 8px;">(مراعاة الجمعة والسبت والإجازات الرسمية الوزارية)</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Section 1 -->
+      <div style="background: #064e3b; color: #fff; padding: 4px 8px; font-weight: bold; margin-top: 10px; margin-bottom: 6px;">
+        أولاً: التحليل والتخطيط التكيفي ومصادر التعلم
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10.5px; border: 1px solid #000;">
+        <tr>
+          <th style="border: 1px solid #000; background: #f8fafc; padding: 5px; width: 22%; text-align: right;">الكفايات التكاملية:</th>
+          <td style="border: 1px solid #000; padding: 5px;">
+            ${p.section1.integrativeCompetencies.map(c => `• <strong>${c.title}:</strong> ${c.description}`).join('<br>')}
+          </td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; background: #f8fafc; padding: 5px; text-align: right;">مصادر التعلم والجاهزية:</th>
+          <td style="border: 1px solid #000; padding: 5px;">
+            <strong>الكتاب:</strong> ${p.section1.learningResources.textbook} | <strong>المحسوسات:</strong> ${p.section1.learningResources.tangibleMedia}
+          </td>
+        </tr>
+      </table>
+
+      <!-- Section 2 Timeline -->
+      <div style="background: #064e3b; color: #fff; padding: 4px 8px; font-weight: bold; margin-top: 10px; margin-bottom: 6px;">
+        ثانياً: مخطط سير الحصة والأنشطة المتمركزة حول المتعلم (الجدول الرباعي)
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10.5px; border: 1px solid #000;">
+        <thead>
+          <tr style="background: #f0f0f0;">
+            <th style="border: 1px solid #000; padding: 5px; width: 20%; text-align: right;">المرحلة والزمن</th>
+            <th style="border: 1px solid #000; padding: 5px; width: 40%; text-align: right;">إجراءات المعلم وأنشطة المتعلم</th>
+            <th style="border: 1px solid #000; padding: 5px; width: 20%; text-align: right;">الاستراتيجيات</th>
+            <th style="border: 1px solid #000; padding: 5px; width: 20%; text-align: right;">التقويم والتغذية</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${p.section2Timeline.map(phase => `
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px; font-weight: bold;">
+                ${phase.phaseName}<br>
+                <span style="color: #047857;">(${toArabicDigits(phase.durationMinutes)} دقائق)</span>
+              </td>
+              <td style="border: 1px solid #000; padding: 5px;">${phase.teacherAndStudentActions.map(a => `• ${toArabicDigits(a)}`).join('<br>')}</td>
+              <td style="border: 1px solid #000; padding: 5px;">${phase.strategiesAndResources.map(s => `• ${toArabicDigits(s)}`).join('<br>')}</td>
+              <td style="border: 1px solid #000; padding: 5px;">${phase.assessmentAndFeedback.map(e => `• ${toArabicDigits(e)}`).join('<br>')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <!-- Section 3 GRASPS & Rubric -->
+      <div style="background: #064e3b; color: #fff; padding: 4px 8px; font-weight: bold; margin-top: 10px; margin-bottom: 6px;">
+        ثالثاً: التقويم المستمر ومهمة التقويم الأصيل (GRASPS)
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10.5px; border: 1px solid #000;">
+        <tr>
+          <th style="border: 1px solid #000; background: #f8fafc; padding: 5px; width: 22%; text-align: right;">مهمة GRASPS:</th>
+          <td style="border: 1px solid #000; padding: 5px;">
+            <strong>${toArabicDigits(p.section3Assessment.graspsTask.title)}</strong>: ${toArabicDigits(p.section3Assessment.graspsTask.fullDescription)}
+          </td>
+        </tr>
+      </table>
+
+      <!-- Footer -->
+      <div style="margin-top: 15px; border-top: 1px solid #000; padding-top: 6px; text-align: center; font-size: 9.5px; color: #333;">
+        إعداد وتصميم: الأستاذ عبد الرحمن دويكات | منظومة عبقور للتخطيط التربوي وتحضير الدروس © (CC BY-NC-SA 4.0)
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  try {
+    const sanitizedTitle = (h.lessonTitle || 'خطة_درس').replace(/[/\\?%*:|"<>]/g, '-').trim();
+    await exportLessonPlanToPdf(container, {
+      fileName: `${sanitizedTitle}_نموذج_وزاري_عبقور.pdf`,
+      onProgress,
+    });
+  } finally {
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
+  }
 }
 
