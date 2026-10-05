@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LessonHeader, STANDARD_GRADES } from '../types/lessonPlan';
 import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag } from 'lucide-react';
-import { toArabicDigits } from '../utils/arabicNumerals';
+import { toArabicDigits, formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import {
   analyzeTeachingCalendar,
   getNextTeachingDays,
@@ -46,11 +46,14 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
       ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
       : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل)';
 
+    const startFormatted = formatDateDMY(sDate);
+    const endFormatted = formatDateDMY(result.endDate);
+
     onChange({
       ...header,
       startDate: sDate,
       endDate: result.endDate,
-      timeframe: `من ${sDate} إلى ${result.endDate}${holidayNotice}`,
+      timeframe: `من ${startFormatted} إلى ${endFormatted}${holidayNotice}`,
       date: sDate,
     });
   };
@@ -380,9 +383,9 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
               <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                  التاريخ
+                  التاريخ (يوم/شهر/سنة)
                 </span>
-                <span className="text-xs font-bold text-slate-800">{toArabicDigits(header.date || '٢٠٢٦م')}</span>
+                <span className="text-xs font-bold text-slate-800">{formatDateDMY(header.date) || '٠٥/١٠/٢٠٢٦م'}</span>
               </div>
             </div>
 
@@ -394,13 +397,13 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                 </div>
                 <div>
                   <span className="font-bold text-teal-950 block text-xs">
-                    الفترة الزمنية لتنفيذ الدرس (من تاريخ - إلى تاريخ):
+                    الفترة الزمنية لتنفيذ الدرس (من يوم/شهر/سنة إلى يوم/شهر/سنة):
                   </span>
                   <span className="font-black text-emerald-900 text-xs sm:text-sm font-['Tajawal']">
                     {header.startDate && header.endDate
-                      ? `من ${toArabicDigits(header.startDate)} إلى ${toArabicDigits(header.endDate)}`
+                      ? `من ${formatDateDMY(header.startDate)} إلى ${formatDateDMY(header.endDate)}`
                       : header.date
-                      ? `التاريخ المعتمد: ${toArabicDigits(header.date)}`
+                      ? `التاريخ المعتمد: ${formatDateDMY(header.date)}`
                       : 'فترة تنفيذ الدرس المحددة بالخطة'}
                   </span>
                 </div>

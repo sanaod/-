@@ -21,6 +21,7 @@ import {
 import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
 import { getCurrentAcademicYear } from '../utils/academicYear';
+import { formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import {
   analyzeTeachingCalendar,
@@ -74,6 +75,9 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
       ? ` (يتخلله إجازة: ${analysis.holidaysEncountered.map((h) => h.name).join('، ')})`
       : ' (أيام تدريس فعلية مستثناة الجمعة والسبت والعطل الرسمية)';
 
+    const startFormatted = formatDateDMY(sDate);
+    const endFormatted = formatDateDMY(eDate);
+
     const blankPlan = createBlankLessonPlan({
       subject: subject.trim() || 'المبحث الدراسي',
       grade: grade.trim() || 'الصف الدراسي',
@@ -82,7 +86,7 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
       school: school.trim(),
       startDate: sDate,
       endDate: eDate,
-      timeframe: `من ${sDate} إلى ${eDate}${holidayNotice}`,
+      timeframe: `من ${startFormatted} إلى ${endFormatted}${holidayNotice}`,
     });
     onCreatePlan(blankPlan);
     onClose();
@@ -783,7 +787,7 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                     </button>
                     {endDate && (
                       <span className="text-[11px] font-bold text-emerald-900">
-                        المدى: من {startDate} إلى {endDate}
+                        المدى: من {formatDateDMY(startDate)} إلى {formatDateDMY(endDate)}
                       </span>
                     )}
                   </div>
