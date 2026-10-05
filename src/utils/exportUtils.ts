@@ -1,5 +1,5 @@
 import { LessonPlan } from '../types/lessonPlan';
-import { toArabicDigits } from './arabicNumerals';
+import { toArabicDigits, formatDateDMY } from './arabicNumerals';
 import { getCurrentAcademicYear } from './academicYear';
 import { exportLessonPlanToPdf } from './pdfExport';
 
@@ -813,7 +813,7 @@ export async function exportToPdfDirect(plan: LessonPlan, onProgress?: (msg: str
         <tr>
           <th style="border: 1px solid #000; background: #f0f0f0; padding: 5px; text-align: right;">الفترة الزمنية للدرس:</th>
           <td colspan="3" style="border: 1px solid #000; padding: 5px;">
-            من ${toArabicDigits(h.startDate || h.date)} إلى ${toArabicDigits(h.endDate || h.date)}
+            من (${formatDateDMY(h.startDate || h.date)}) إلى (${formatDateDMY(h.endDate || h.date)})
             <span style="font-size: 9.5px; color: #047857; margin-right: 8px;">(مراعاة الجمعة والسبت والإجازات الرسمية الوزارية)</span>
           </td>
         </tr>
