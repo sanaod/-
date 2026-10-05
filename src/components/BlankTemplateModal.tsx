@@ -203,9 +203,24 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                     </div>
 
                     <div className="text-center space-y-1">
-                      <h1 className="text-base sm:text-lg font-black text-slate-900 font-['Tajawal']">
-                        استمارة تحضير درس نموذجية (نسخة مفرغة)
-                      </h1>
+                      <div className="flex items-center justify-center gap-2">
+                        <img
+                          src="/abqoor_logo.jpg"
+                          alt="شعار منظومة عبقور"
+                          className="w-12 h-12 rounded-full object-cover border border-amber-400 shadow-xs shrink-0"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (target.src.includes('abqoor_logo.jpg')) {
+                              target.src = '/logo.png';
+                            } else if (target.src.includes('logo.png')) {
+                              target.src = '/logo.jpg';
+                            }
+                          }}
+                        />
+                        <h1 className="text-base sm:text-lg font-black text-slate-900 font-['Tajawal']">
+                          استمارة تحضير درس نموذجية (منظومة عبقور)
+                        </h1>
+                      </div>
                       <p className="text-[11px] font-semibold text-slate-500">
                         مستند إلى إطار تقييم أداء المعلم ومعايير التميز (الدرجة 4)
                       </p>

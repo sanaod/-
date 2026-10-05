@@ -135,53 +135,60 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print transition-all">
       {/* 1. Top Identity & Title Header Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
+        <div className="flex items-center justify-between py-2 sm:py-3 min-h-[4.5rem] sm:min-h-[5.5rem] gap-3">
           
           {/* Logo, Title & Ministry Context (Home Link) */}
           <div
             onClick={onSelectBlankPlan || onNewBlankPlan}
-            className="flex items-center gap-3 shrink-0 cursor-pointer group select-none"
+            className="flex items-center gap-3 sm:gap-4 shrink-0 cursor-pointer group select-none"
             title="الصفحة الرئيسية للمنظومة: استمارة التحضير المفرغة المعتمدة"
           >
-            <div className="relative group">
+            <div className="relative group shrink-0">
+              <div className="absolute -inset-1 rounded-full bg-linear-to-tr from-amber-400 via-emerald-500 to-teal-400 opacity-80 blur-xs group-hover:opacity-100 transition duration-300"></div>
               <img
-                src="/logo.png"
-                alt="شعار منظومة عبقور"
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover shadow-md ring-2 ring-emerald-500/40 border-2 border-amber-300 transition-transform group-hover:scale-105 shrink-0"
+                src="/abqoor_logo.jpg"
+                alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
+                className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover shadow-xl border-2 sm:border-3 border-amber-300 ring-2 sm:ring-4 ring-emerald-500/30 transition-transform group-hover:scale-105 shrink-0 bg-white"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  target.style.display = 'none';
-                  if (target.nextElementSibling) {
-                    (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                  if (target.src.includes('abqoor_logo.jpg')) {
+                    target.src = '/logo.png';
+                  } else if (target.src.includes('logo.png')) {
+                    target.src = '/logo.jpg';
+                  } else {
+                    target.style.display = 'none';
+                    if (target.nextElementSibling) {
+                      (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                    }
                   }
                 }}
               />
               <div
                 style={{ display: 'none' }}
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-linear-to-tr from-emerald-800 to-teal-700 items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 shrink-0"
+                className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-linear-to-tr from-emerald-800 to-teal-700 items-center justify-center text-white shadow-md ring-2 ring-emerald-500/30 shrink-0"
               >
-                <BookOpen className="w-5 h-5 text-emerald-200" />
+                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-200" />
               </div>
             </div>
             
             <div>
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-base md:text-lg font-black font-['Tajawal'] text-slate-900 leading-tight flex items-center gap-1.5">
+                <h1 className="text-base sm:text-lg md:text-xl font-black font-['Tajawal'] text-slate-900 leading-tight flex items-center gap-1.5">
                   <span className="text-emerald-800 group-hover:text-emerald-700 transition-colors">منظومة عبقور</span>
-                  <span className="hidden sm:inline text-slate-800">للتخطيط التربوي وتحضير الدروس</span>
+                  <span className="hidden sm:inline text-slate-900">للتخطيط التربوي وتحضير الدروس</span>
                 </h1>
-                <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                <span className="text-[11px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
                   عبقور التربوي 👑
                 </span>
-                <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full border border-emerald-300">
-                  <span>المعايير الوزارية</span>
+                <span className="hidden lg:inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-100 text-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-2xs">
+                  <span>المعايير الوزارية المعتمدة</span>
                 </span>
                 <span className="hidden xl:inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-300" title="رخصة المشاع الإبداعي CC BY-NC-SA 4.0">
                   <span>CC BY-NC-SA 4.0</span>
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-600 hidden sm:block truncate max-w-md lg:max-w-none mt-0.5">
-                إعداد وتصميم: <strong className="text-emerald-800 font-bold">الأستاذ عبد الرحمن دويكات</strong> | نظام التخطيط الصفي والتكافل المهني
+              <p className="text-[11px] sm:text-xs text-slate-700 hidden sm:block font-semibold truncate max-w-md lg:max-w-none mt-1">
+                إعداد وتصميم: <strong className="text-emerald-800 font-extrabold">الأستاذ عبد الرحمن دويكات</strong> | المنصة المعتمدة للتخطيط الصفي
               </p>
             </div>
           </div>

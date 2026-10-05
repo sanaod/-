@@ -146,9 +146,17 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-2">
                   <img
-                    src="/logo.png"
-                    alt="شعار منظومة عبقور"
-                    className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 shadow-xs"
+                    src="/abqoor_logo.jpg"
+                    alt="شعار منظومة عبقور للتخطيط التربوي"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-amber-400 shadow-xs shrink-0"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src.includes('abqoor_logo.jpg')) {
+                        target.src = '/logo.png';
+                      } else if (target.src.includes('logo.png')) {
+                        target.src = '/logo.jpg';
+                      }
+                    }}
                   />
                   <div>
                     <h2 className="text-sm font-black text-black font-['Tajawal']">

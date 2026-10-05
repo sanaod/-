@@ -63,6 +63,7 @@ import {
   FolderOpen,
   Filter,
   Wand2,
+  BookOpen,
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 
@@ -365,47 +366,79 @@ export default function App() {
           <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md">
             <div className="max-w-7xl mx-auto space-y-5">
               
-              {/* Top Row: Plan Title, Ministry Badges & Primary Output CTAs */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="space-y-1.5 max-w-3xl">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
-                      <span>📌</span>
-                      <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>معايير التميز وإطار تقييم أداء المعلم</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
-                      <span>🇵🇸 وزارة التربية والتعليم</span>
+              {/* Top Row: Abqoor Prominent Logo, Plan Title, Ministry Badges & Primary Output CTAs */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                
+                {/* Large Featured Logo Emblem & Title */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
+                  <div className="relative group shrink-0">
+                    <div className="absolute -inset-2 rounded-full bg-linear-to-tr from-amber-400 via-emerald-400 to-teal-300 opacity-85 blur-md group-hover:opacity-100 transition duration-300"></div>
+                    <img
+                      src="/abqoor_logo.jpg"
+                      alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
+                      className="relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src.includes('abqoor_logo.jpg')) {
+                          target.src = '/logo.png';
+                        } else if (target.src.includes('logo.png')) {
+                          target.src = '/logo.jpg';
+                        } else {
+                          target.style.display = 'none';
+                          if (target.nextElementSibling) {
+                            (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                          }
+                        }
+                      }}
+                    />
+                    <div
+                      style={{ display: 'none' }}
+                      className="relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 rounded-full bg-linear-to-tr from-emerald-800 via-teal-800 to-amber-700 items-center justify-center text-white shadow-2xl ring-4 ring-emerald-500/40 shrink-0"
+                    >
+                      <BookOpen className="w-16 h-16 sm:w-20 sm:h-20 text-emerald-200" />
                     </div>
                   </div>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black font-['Tajawal'] tracking-wide text-white">
-                    {currentPlan.title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
-                    منظومة متكاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
-                  </p>
+
+                  <div className="space-y-2 text-center sm:text-right max-w-2xl">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
+                        <span>📌</span>
+                        <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>معايير التميز وإطار تقييم أداء المعلم</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
+                        <span>🇵🇸 وزارة التربية والتعليم</span>
+                      </div>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-['Tajawal'] tracking-wide text-white leading-snug">
+                      {currentPlan.title}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
+                      منظومة عبقور الشاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Direct High-Frequency Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 shrink-0 pt-2 lg:pt-0">
                   <button
                     onClick={() => setViewMode('official-print')}
-                    className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
                   >
-                    <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
+                    <Printer className="w-4.5 h-4.5 text-emerald-800 shrink-0" />
                     <span>معاينة وطباعة PDF</span>
                   </button>
 
                   <button
                     onClick={() => setIsExportModalOpen(true)}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="تصدير الخطة بصيغ Word و HTML و JSON"
                   >
-                    <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
+                    <FileDown className="w-4.5 h-4.5 text-blue-200 shrink-0" />
                     <span>تصدير الخطة</span>
                   </button>
                 </div>

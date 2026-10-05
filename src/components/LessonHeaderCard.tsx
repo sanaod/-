@@ -58,21 +58,39 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
     <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:shadow-md text-right">
       {/* Top Banner */}
       <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-950 text-white p-3.5 sm:p-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-emerald-200 tracking-wide">
-            <span>{header.country || 'دولة فلسطين'}</span>
-            <span>•</span>
-            <span>{header.ministry || 'وزارة التربية والتعليم'}</span>
-            <span>•</span>
-            <span>{header.directorate || 'مديرية التربية والتعليم'}</span>
+        <div className="flex items-center gap-3">
+          <div className="relative group shrink-0">
+            <div className="absolute -inset-1 rounded-full bg-linear-to-tr from-amber-400 to-emerald-400 opacity-80 blur-xs"></div>
+            <img
+              src="/abqoor_logo.jpg"
+              alt="شعار منظومة عبقور"
+              className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-amber-300 shadow-md shrink-0 bg-white"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src.includes('abqoor_logo.jpg')) {
+                  target.src = '/logo.png';
+                } else if (target.src.includes('logo.png')) {
+                  target.src = '/logo.jpg';
+                }
+              }}
+            />
           </div>
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold font-['Tajawal'] mt-1 flex items-center gap-2">
-            <School className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300 shrink-0" />
-            <span className="truncate">{header.school || 'اسم المدرسة / الصرح التعليمي'}</span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-emerald-100/90 mt-1">
-            نموذج تحضير صفي مفرغ ومعتمد (مستند إلى إطار تقييم أداء المعلم ومعايير التميز الوزارية)
-          </p>
+          <div>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-emerald-200 tracking-wide">
+              <span>{header.country || 'دولة فلسطين'}</span>
+              <span>•</span>
+              <span>{header.ministry || 'وزارة التربية والتعليم'}</span>
+              <span>•</span>
+              <span>{header.directorate || 'مديرية التربية والتعليم'}</span>
+            </div>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold font-['Tajawal'] mt-0.5 flex items-center gap-2">
+              <School className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300 shrink-0" />
+              <span className="truncate">{header.school || 'اسم المدرسة / الصرح التعليمي'}</span>
+            </h2>
+            <p className="text-[11px] sm:text-xs text-emerald-100/90 mt-0.5">
+              منظومة عبقور - نموذج تحضير صفي مفرغ ومعتمد وفق معايير التميز الوزارية
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
