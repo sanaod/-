@@ -1,4 +1,5 @@
 import { LessonPlan } from '../types/lessonPlan';
+import { getCurrentSemesterName } from '../utils/academicYear';
 
 /**
  * Creates a completely blank, pristine ministerial lesson plan ready for teacher input.
@@ -6,6 +7,7 @@ import { LessonPlan } from '../types/lessonPlan';
 export function getBlankLessonPlan(): LessonPlan {
   const timestamp = Date.now();
   const dateStr = new Date().toISOString().split('T')[0];
+  const autoSemester = getCurrentSemesterName();
 
   return {
     id: `plan-blank-${timestamp}`,
@@ -27,7 +29,7 @@ export function getBlankLessonPlan(): LessonPlan {
       startDate: dateStr,
       endDate: dateStr,
       timeframe: `من (${dateStr}) إلى (${dateStr})`,
-      semester: 'الفصل الدراسي الأول',
+      semester: autoSemester,
     },
     section1: {
       integrativeCompetencies: [

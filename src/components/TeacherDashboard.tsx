@@ -53,12 +53,15 @@ import {
   ArrowRight,
   Plus,
   Circle,
+  QrCode,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
 import { TeacherMonthlyCalendar } from './TeacherMonthlyCalendar';
 import { StudentAssessmentDashboard } from './StudentAssessmentDashboard';
+import { CompetencyDistributionDashboard } from './CompetencyDistributionDashboard';
 import { DailyPedagogicalRemindersModal } from './DailyPedagogicalRemindersModal';
+import { QrCodeModal } from './QrCodeModal';
 import {
   DailyPedagogicalReminder,
   REMINDER_CATEGORY_CONFIG,
@@ -260,6 +263,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     loadDailyReminders(plans)
   );
   const [isDailyRemindersModalOpen, setIsDailyRemindersModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [quickReminderText, setQuickReminderText] = useState('');
 
   const todayIso = useMemo(() => formatDateToIso(new Date()), []);
@@ -1035,6 +1039,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </button>
 
             <button
+              onClick={() => {
+                const el = document.getElementById('competency-matrix-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="px-3.5 py-2 bg-linear-to-r from-indigo-700 via-purple-700 to-indigo-800 hover:from-indigo-800 hover:to-purple-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-indigo-400/50"
+              title="الانتقال إلى مصفوفة توزيع الكفايات التعليمية وكشف فجوات التخطيط عبر الفصول"
+            >
+              <Compass className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>مصفوفة الكفايات والفجوات 🧭</span>
+            </button>
+
+            <button
               onClick={() => setIsDailyRemindersModalOpen(true)}
               className="px-3.5 py-2 bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-amber-400/80 relative"
               title="إدارة وجدولة الملاحظات التذكيرية اليومية للمهام التربوية والصفية"
@@ -1046,6 +1064,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   {toArabicDigits(todayPendingCount)}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              className="px-3.5 py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-teal-400/80"
+              title="تصميم وتوليد رمز الاستجابة السريعة (QR) للمنظومة"
+            >
+              <QrCode className="w-4 h-4 text-emerald-200 shrink-0" />
+              <span>تصميم QR للمنظومة 📱</span>
             </button>
           </div>
 
@@ -1560,6 +1587,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         selectedSubjectFilter={selectedSubjectFilter}
         selectedGradeFilter={selectedGradeFilter}
         selectedTeacherFilter={selectedTeacherFilter}
+      />
+
+      {/* 🧭 Competency Distribution & Planning Gaps Sub-Dashboard (لوحة تحليل توزيع الكفايات وفجوات التخطيط عبر الفصول) */}
+      <CompetencyDistributionDashboard
+        plans={plans}
+        selectedSubjectFilter={selectedSubjectFilter}
+        selectedGradeFilter={selectedGradeFilter}
+        selectedTeacherFilter={selectedTeacherFilter}
+        onSelectPlan={onSelectPlan}
+        onOpenEditor={onOpenEditor}
       />
 
       {/* Main Charts Row */}
@@ -3004,6 +3041,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         plans={plans}
         onSelectPlan={onSelectPlan}
         onOpenEditor={onOpenEditor}
+      />
+
+      {/* QR Code Designer Modal */}
+      <QrCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
       />
     </div>
   );

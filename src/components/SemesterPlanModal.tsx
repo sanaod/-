@@ -66,6 +66,7 @@ import {
   getNextTeachingDays,
   checkDayStatus,
 } from '../utils/palestinianCalendar';
+import { getCurrentAcademicYear, getCurrentSemesterName } from '../utils/academicYear';
 import { CurriculumPdfExtractorModal } from './CurriculumPdfExtractorModal';
 
 interface SemesterPlanModalProps {
@@ -804,6 +805,8 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
       : [];
 
     const analysis = analyzeTeachingCalendar(sDate, eDate, holidaysToUse);
+    const dynamicAcademicYear = getCurrentAcademicYear(sDate);
+    const dynamicSemester = getCurrentSemesterName(sDate);
 
     let currentTeachingStartDate = sDate;
 
@@ -842,6 +845,8 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
 
       return {
         ...prev,
+        academicYear: dynamicAcademicYear,
+        semester: dynamicSemester,
         semesterStartDate: sDate,
         semesterEndDate: eDate,
         totalSemesterWeeks: Math.max(1, Math.round(analysis.netTeachingWeeks)),
