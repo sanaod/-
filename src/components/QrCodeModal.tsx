@@ -28,7 +28,7 @@ interface QrCodeModalProps {
 export const QrCodeModal: React.FC<QrCodeModalProps> = ({
   isOpen,
   onClose,
-  defaultUrl = typeof window !== 'undefined' ? window.location.href : 'https://ais-pre-kqy4zj6hpoh4irugeqrjm3-635321306957.europe-west2.run.app',
+  defaultUrl = 'https://ais-pre-kqy4zj6hpoh4irugeqrjm3-635321306957.europe-west2.run.app',
   appName = 'منظومة عبقور للتخطيط التربوي',
   designerName = 'الأستاذ عبد الرحمن دويكات',
 }) => {
@@ -37,7 +37,7 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
   const [bgColor, setBgColor] = useState('#ffffff');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
-  const [badgeTitle, setBadgeTitle] = useState('مسح للوصول السريع للمنظومة');
+  const [badgeTitle, setBadgeTitle] = useState('مسح للوصول السريع للمنظومة (بدون تسجيل دخول)');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -193,6 +193,9 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
                 placeholder="أدخل الرابط أو المسار..."
                 className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
               />
+              <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+                <span>✨ رابط عام (Public URL) يفتح مباشرة لدى المعلمين والطلاب دون الحاجة لتسجيل الدخول أو المطالبة بالإيميل.</span>
+              </p>
             </div>
 
             <div>

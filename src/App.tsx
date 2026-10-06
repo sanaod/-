@@ -33,6 +33,7 @@ import { AssessmentHubModal } from './components/AssessmentHubModal';
 import { AuthenticTaskGeneratorModal } from './components/AuthenticTaskGeneratorModal';
 import { RubricGeneratorModal } from './components/RubricGeneratorModal';
 import { UnitPlanGeneratorModal } from './components/UnitPlanGeneratorModal';
+import { QrCodeModal } from './components/QrCodeModal';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
 import { toArabicDigits, formatDateDMY } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
@@ -180,6 +181,7 @@ export default function App() {
   const [isResourcesModalOpen, setIsResourcesModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
@@ -393,6 +395,7 @@ export default function App() {
         currentView={viewMode === 'dashboard' ? 'dashboard' : 'editor'}
         onChangeView={(view) => setViewMode(view)}
         onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
+        onOpenQrModal={() => setIsQrModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
@@ -1448,6 +1451,11 @@ export default function App() {
         plan={planToDelete || undefined}
         onConfirmDelete={handleConfirmDelete}
         onClearFieldsInstead={handleClearCurrentPlan}
+      />
+
+      <QrCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
       />
 
       {/* Floating WhatsApp Contact Button */}

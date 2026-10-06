@@ -32,6 +32,7 @@ import {
   Plus,
   CalendarRange,
   Database,
+  QrCode,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -67,6 +68,7 @@ interface HeaderNavProps {
   currentView?: 'editor' | 'dashboard';
   onChangeView?: (view: 'editor' | 'dashboard') => void;
   onOpenBackupRestoreModal?: () => void;
+  onOpenQrModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -98,6 +100,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   currentView = 'editor',
   onChangeView,
   onOpenBackupRestoreModal,
+  onOpenQrModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -208,6 +211,18 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
           {/* Left Side: Active Plan Indicator, WhatsApp Contact & Mobile Menu Toggle */}
           <div className="flex items-center gap-2">
+            {/* Direct QR Code Generator Button */}
+            {onOpenQrModal && (
+              <button
+                onClick={onOpenQrModal}
+                className="px-3 py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-teal-400/60"
+                title="تصميم وتوليد رمز الاستجابة السريعة (QR) للمنظومة"
+              >
+                <QrCode className="w-4 h-4 text-emerald-200 shrink-0" />
+                <span className="hidden md:inline">QR المنظومة 📱</span>
+              </button>
+            )}
+
             {/* Direct WhatsApp Contact Button (Desktop / Tablet) */}
             <div className="hidden sm:block">
               <WhatsAppHeaderButton />
