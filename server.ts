@@ -2013,6 +2013,8 @@ function createFallbackSemesterPlan(params: {
     weeklyPeriodsCount,
     totalSemesterWeeks,
     totalSemesterPeriods: totalPeriods,
+    semesterStartDate: startDate,
+    semesterEndDate: '2027-01-15',
     generalCompetencies: [
       `تمكين الطلبة من الكفايات التأسيسية والتكاملية لمبحث ${subject} وفق المنهاج المعتمد.`,
       'تطبيق استراتيجيات التعلم النشط وتفعيل مصادر التعلم المفتوحة OER والرقمنة.',
@@ -2071,7 +2073,7 @@ ${customNotes ? `توجيهات إضافية: ${customNotes}.` : ''}
 قم بتغطية الفصل الدراسي كاملاً (حوالي 12 إلى 16 درساً مقسمة على 4 وحدات رئيسية مع مهمة تقويم أصيل GRASPS).`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.8-flash',
           contents: prompt,
           config: {
             responseMimeType: 'application/json',
@@ -2204,6 +2206,572 @@ ${customNotes ? `توجيهات إضافية: ${customNotes}.` : ''}
     console.error('Error generating semester plan:', err);
     return res.status(500).json({
       error: 'فشل في توليد الخطة الفصلية وتوزيع الحصص: ' + (err.message || 'خطأ غير متوقع'),
+    });
+  }
+});
+
+// Endpoint: Extract Curriculum Document (PDF, Images, Tables, Text) and Distribute into Semester Plan Model
+app.post('/api/extract-curriculum-semester-plan', async (req, res) => {
+  try {
+    const {
+      fileData,
+      mimeType = 'application/pdf',
+      fileName = '',
+      textSnippet = '',
+      subjectOverride = '',
+      gradeOverride = '',
+      semesterOverride = '',
+      weeklyPeriodsCount = 5,
+      totalSemesterWeeks = 16,
+      startDate = '2026-09-01',
+      endDate = '2027-01-15',
+      teacherName = 'معلم المبحث المتميز',
+      school = 'مدرسة التميز النموذجية',
+      directorate = 'مديرية التربية والتعليم',
+      ministry = 'وزارة التربية والتعليم',
+      country = 'دولة فلسطين',
+      customNotes = '',
+    } = req.body;
+
+    console.log(`[AI Curriculum Extractor] Processing curriculum document (${fileName || mimeType || 'text'})...`);
+
+    if (!fileData && !textSnippet) {
+      return res.status(400).json({ error: 'يرجى تقديم ملف المنهاج الدراسي (PDF / صورة / نص) لاستخراج بياناته.' });
+    }
+
+    const systemInstruction = `أنت خبير تربوي ومستشار أول لتخطيط وتصميم المناهج وتفكيك وثائق توزيع المحتوى الدراسي الصادرة عن وزارة التربية والتعليم.
+مهمتك قراءة وفحص وثيقة المنهاج المرفقة (مثل جدول توزيع المنهاج بصيغة PDF، أو جدول الحصص الأسبوعية، أو وثيقة موضوعات الوحدات والدروس، أو صورة الجدول)، واستخراج كافة عناصر المحتوى وتوزيعها بدقة على نموذج "الخطة الفصلية الموحدة ودليل توزيع الحصص الدراسية".
+
+قواعد الاستخراج والتوزيع الإلزامية:
+1. استخرج بدقة اسم المبحث، والصف، والفصل الدراسي، والعام الدراسي من الوثيقة (مع مراعاة التلميحات المرفقة إذا وجدت).
+2. استخرج كافة الوحدات الدراسية (unitTitle) وكافة الدروس والموضوعات (lessonTitle) الواردة في المستند بالترتيب التسلسلي الدقيق.
+3. استخرج أو احسب عدد حصص كل درس (lessonPeriods) وإجمالي حصص كل وحدة (unitTotalPeriods) بحيث يغطي إجمالي حصص الفصل.
+4. صِغ أهدافاً كفائية نوعية دقيقة لكل وحدة (unitCompetencyGoals) مستنبطة من محتوى دروس الوحدة.
+5. وزّع المدى الزمني بالأسابيع والتواريخ (timeframe) متدرجاً من الأسبوع الأول حتى نهاية الفصل الدراسي مع مراعاة أيام التدريس المعتمدة.
+6. اقترح لكل درس مصادر تعلم مناسبة (learningResourcesOer) تشمل: الكتاب المدرسي، منصة روافد الرقمية، محاكيات تفاعلية (PhET / GeoGebra / معداد / مختبر افتراضي)، ومحسوسات صفية.
+7. حدد استراتيجيات تدريس نشطة وتفاعلية (teachingStrategies) لكل درس (مثل: الاستقصاء الموجه، فكر-زاوج-شارك، التعلم بالمحسوسات، حل المشكلات).
+8. حدد أدوات وأساليب تقويم مستمر وأصيل (assessmentMethods) لكل درس (مثل: بطاقة خروج Exit Ticket، تقويم تشخيصي، ملاحظة أداء، مهمة أداء أصيل GRASPS، سلم تقدير لفظي Rubric).
+9. أرجع خطة كاملة منظمة بصيغة JSON مطابقة تماماً للمخطط المحدد.`;
+
+    const promptText = `قم بتحليل وثيقة المنهاج وجدول توزيع المحتوى التالي واستخراج كافة بياناته وتوزيعها بدقة على الخطة الفصلية:
+${fileName ? `- اسم الملف: ${fileName}` : ''}
+${subjectOverride ? `- المبحث المقترح: ${subjectOverride}` : ''}
+${gradeOverride ? `- الصف المقترح: ${gradeOverride}` : ''}
+${semesterOverride ? `- الفصل الدراسي: ${semesterOverride}` : ''}
+- الحصص الأسبوعية: ${weeklyPeriodsCount} حصص
+- عدد الأسابيع المستهدف: ${totalSemesterWeeks} أسبوعاً
+- تاريخ البداية: ${startDate}، تاريخ النهاية: ${endDate}
+- المعلم: ${teacherName}، المدرسة: ${school}، المديرية: ${directorate}، الوزارة: ${ministry}، الدولة: ${country}
+${customNotes ? `- إرشادات إضافية من المعلم: ${customNotes}` : ''}
+${textSnippet ? `\n--- نص المحتوى المستخرج أو المنقول ---\n${textSnippet}\n--- نهاية المحتوى ---` : ''}
+
+المطلوب: تفكيك المنهاج بدقة واستخراج كافة الوحدات والدروس وتوزيع الحصص والأسابيع والتقويم وإرجاع النتيجة بصيغة JSON.`;
+
+    let plan = null;
+    let isFallback = false;
+
+    // Build content parts
+    let contents: any;
+    if (fileData) {
+      let cleanBase64 = fileData;
+      if (fileData.includes('base64,')) {
+        cleanBase64 = fileData.split('base64,')[1];
+      }
+      contents = {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType || 'application/pdf',
+              data: cleanBase64,
+            },
+          },
+          {
+            text: promptText,
+          },
+        ],
+      };
+    } else {
+      contents = promptText;
+    }
+
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        academicYear: { type: Type.STRING },
+        semester: { type: Type.STRING },
+        subject: { type: Type.STRING },
+        grade: { type: Type.STRING },
+        weeklyPeriodsCount: { type: Type.INTEGER },
+        totalSemesterWeeks: { type: Type.INTEGER },
+        totalSemesterPeriods: { type: Type.INTEGER },
+        generalCompetencies: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+        },
+        rows: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              unitNumber: { type: Type.INTEGER },
+              unitTitle: { type: Type.STRING },
+              unitCompetencyGoals: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              lessonNumber: { type: Type.INTEGER },
+              lessonTitle: { type: Type.STRING },
+              lessonPeriods: { type: Type.INTEGER },
+              unitTotalPeriods: { type: Type.INTEGER },
+              timeframe: { type: Type.STRING },
+              timeframeWeekNumber: { type: Type.INTEGER },
+              learningResourcesOer: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              teachingStrategies: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              assessmentMethods: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              notes: { type: Type.STRING },
+            },
+            required: [
+              'id',
+              'unitNumber',
+              'unitTitle',
+              'unitCompetencyGoals',
+              'lessonNumber',
+              'lessonTitle',
+              'lessonPeriods',
+              'unitTotalPeriods',
+              'timeframe',
+              'learningResourcesOer',
+              'teachingStrategies',
+              'assessmentMethods',
+            ],
+          },
+        },
+      },
+      required: [
+        'title',
+        'academicYear',
+        'semester',
+        'subject',
+        'grade',
+        'weeklyPeriodsCount',
+        'totalSemesterWeeks',
+        'totalSemesterPeriods',
+        'generalCompetencies',
+        'rows',
+      ],
+    };
+
+    if (ai) {
+      const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+      for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+        try {
+          console.log(`[AI Curriculum Extractor] Calling Gemini model ${model} (attempt ${i + 1}/${models.length})...`);
+          const response = await ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction,
+              responseMimeType: 'application/json',
+              responseSchema,
+            },
+          });
+
+          const text = response?.text;
+          if (text) {
+            const parsed = JSON.parse(text);
+            plan = {
+              id: `sem-plan-extracted-${Date.now()}`,
+              ...parsed,
+              country: country || 'دولة فلسطين',
+              ministry: ministry || 'وزارة التربية والتعليم',
+              directorate: directorate || 'مديرية التربية والتعليم',
+              school: school || 'مدرسة التميز النموذجية',
+              subject: subjectOverride || parsed.subject || 'مبحث تعليمي',
+              grade: gradeOverride || parsed.grade || 'الصف الثالث الأساسي',
+              section: 'الشعبة الأولى',
+              teacherName: teacherName || 'معلم المبحث المتميز',
+              supervisorName: 'المشرف التربوي للمبحث',
+              principalName: 'مدير المدرسة',
+              semesterStartDate: startDate,
+              semesterEndDate: endDate,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            break;
+          }
+        } catch (mErr: any) {
+          console.warn(`[AI Curriculum Extractor] Model ${model} returned error:`, mErr?.message);
+          if (i < models.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      }
+    }
+
+    if (!plan) {
+      console.warn('[AI Curriculum Extractor] Utilizing pedagogical fallback curriculum builder...');
+      // Extract subject & grade from text or fileName
+      const combinedText = `${fileName} ${textSnippet}`;
+      let detectedSubject = subjectOverride;
+      if (!detectedSubject) {
+        if (/رياضيات|أعداد|حساب/i.test(combinedText)) detectedSubject = 'الرياضيات';
+        else if (/علوم|مادة|طاقة/i.test(combinedText)) detectedSubject = 'العلوم والحياة';
+        else if (/عرب|لغة عربية|قراءة|نصوص/i.test(combinedText)) detectedSubject = 'اللغة العربية';
+        else if (/إسلامية|دين|قرآن/i.test(combinedText)) detectedSubject = 'التربية الإسلامية';
+        else if (/اجتماعية|جغرافيا|تاريخ/i.test(combinedText)) detectedSubject = 'الدراسات الاجتماعية';
+        else if (/تكنولوجيا|حاسوب/i.test(combinedText)) detectedSubject = 'التكنولوجيا';
+        else if (/english/i.test(combinedText)) detectedSubject = 'اللغة الإنجليزية';
+        else detectedSubject = 'الرياضيات';
+      }
+
+      let detectedGrade = gradeOverride;
+      if (!detectedGrade) {
+        if (/أول|1/i.test(combinedText)) detectedGrade = 'الصف الأول الأساسي';
+        else if (/ثاني|2/i.test(combinedText)) detectedGrade = 'الصف الثاني الأساسي';
+        else if (/ثالث|3/i.test(combinedText)) detectedGrade = 'الصف الثالث الأساسي';
+        else if (/رابع|4/i.test(combinedText)) detectedGrade = 'الصف الرابع الأساسي';
+        else if (/خامس|5/i.test(combinedText)) detectedGrade = 'الصف الخامس الأساسي';
+        else if (/سادس|6/i.test(combinedText)) detectedGrade = 'الصف السادس الأساسي';
+        else if (/سابع|7/i.test(combinedText)) detectedGrade = 'الصف السابع الأساسي';
+        else if (/ثامن|8/i.test(combinedText)) detectedGrade = 'الصف الثامن الأساسي';
+        else if (/تاسع|9/i.test(combinedText)) detectedGrade = 'الصف التاسع الأساسي';
+        else if (/عاشر|10/i.test(combinedText)) detectedGrade = 'الصف العاشر الأساسي';
+        else detectedGrade = 'الصف الثالث الأساسي';
+      }
+
+      // Extract custom lines from textSnippet if any
+      const lines = textSnippet
+        ? textSnippet.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 3 && !l.startsWith('http'))
+        : [];
+
+      const customTopics = lines.slice(0, 6);
+
+      plan = createFallbackSemesterPlan({
+        subject: detectedSubject,
+        grade: detectedGrade,
+        semester: semesterOverride || 'الفصل الدراسي الأول',
+        totalSemesterWeeks: Number(totalSemesterWeeks) || 16,
+        weeklyPeriodsCount: Number(weeklyPeriodsCount) || 5,
+        teacherName,
+        school,
+        directorate,
+        ministry,
+        country,
+        unitTopics: customTopics.length > 0 ? customTopics : undefined,
+        startDate,
+      });
+
+      plan.title = `الخطة الفصلية وتوزيع الحصص المستخرجة من وثيقة المنهاج (${fileName || detectedSubject})`;
+      plan.semesterStartDate = startDate;
+      plan.semesterEndDate = endDate;
+      isFallback = true;
+    }
+
+    return res.json({
+      success: true,
+      isFallback,
+      plan,
+      extractedLessonsCount: plan.rows?.length || 0,
+      extractedUnitsCount: new Set(plan.rows?.map((r: any) => r.unitTitle)).size,
+    });
+  } catch (err: any) {
+    console.error('Error extracting curriculum semester plan:', err);
+    return res.status(500).json({
+      error: 'فشل في استخراج بيانات المنهاج الدراسي: ' + (err.message || 'خطأ غير متوقع'),
+    });
+  }
+});
+
+// Endpoint: Analyze Student Achievement Trends & Generate AI Pedagogical Competencies Report
+app.post('/api/analyze-achievement-trends', async (req, res) => {
+  try {
+    const {
+      plansData = [],
+      rubricStats = {},
+      semesterBreakdown = {},
+      dimensionScores = {},
+      subjectFilter = 'الكل',
+      gradeFilter = 'الكل',
+      customNotes = '',
+    } = req.body;
+
+    console.log(`[AI Achievement Trend Analyzer] Analyzing trends for ${plansData.length} plans (Subject: ${subjectFilter}, Grade: ${gradeFilter})...`);
+
+    const systemInstruction = `أنت مستشار وخبير تربوي أول متخصص في تحليل بيانات ونواتج التعلم، واتجاهات التحصيل الأكاديمي، وتفكيك سلالم التقدير اللفظية (Rubrics) وتوزيع الكفايات التعليمية عبر الفصول الدراسية وفق معايير الجودة والتقويم التربوي الحديث.
+مهمتك إجراء تحليل نوعي وكمي شامل ودقيق لبيانات خطط الدروس وسلالم التقدير المحفوظة، وتوليد تقرير تشخيصي واستراتيجي فائق الجودة يبرز:
+1. اتجاهات التحصيل الدراسي ومستويات الإتقان (المستوى 4: متميز، المستوى 3: كفء، المستوى 2: نامٍ، المستوى 1: مبتدئ).
+2. نقاط القوة الراسخة في توزيع الكفايات التعليمية (المفاهيمية، التطبيقية، التفكير الناقد، التواصل، والعمل الجماعي).
+3. نقاط الضعف والفجوات التعليمية وتفاوت التوزيع بين الفصول الدراسية (الفصل الأول مقابل الفصل الثاني).
+4. توازن أدوات التقويم التكويني والختامي والمهام الأدائية الأصيلة (GRASPS).
+5. خطة إجرائية وتوصيات تربوية عملية موجهة للمعلم لتحسين التوازن ورفع مستوى التحصيل.
+
+يجب أن تكون الصياغة مهنية، واضحة، محفزة، وقابلة للتطبيق العملي باللغة العربية الفصحى التربوية.`;
+
+    const promptText = `قم بتحليل بيانات التحصيل والكفايات وسلالم التقدير التالية وتوليد التقرير الذكي:
+- عدد الخطط المحللة: ${plansData.length} خطة
+- المبحث المستهدف: ${subjectFilter} | الصف: ${gradeFilter}
+- إحصائيات مستويات سلم التقدير (Rubric Levels):
+  * المستوى 4 (متميز): ${rubricStats.level4Count || 0} (${rubricStats.level4Pct || '0%'})
+  * المستوى 3 (كفء): ${rubricStats.level3Count || 0} (${rubricStats.level3Pct || '0%'})
+  * المستوى 2 (نامٍ): ${rubricStats.level2Count || 0} (${rubricStats.level2Pct || '0%'})
+  * المستوى 1 (مبتدئ): ${rubricStats.level1Count || 0} (${rubricStats.level1Pct || '0%'})
+  * معدل الإتقان العام (مستوى 3+4): ${rubricStats.highProficiencyRate || '0%'}
+- تغطية أبعاد الكفايات الخمسة (Dimension Scores):
+  * الفهم المفاهيمي: ${dimensionScores.conceptual || '85%'}
+  * التطبيق وحل المشكلات: ${dimensionScores.application || '88%'}
+  * التفكير الناقد والإبداع: ${dimensionScores.criticalThinking || '78%'}
+  * التواصل الرياضي/العلمي: ${dimensionScores.communication || '82%'}
+  * العمل الجماعي والمشاركة: ${dimensionScores.collaboration || '90%'}
+- توزيع الفصول الدراسية:
+  * الفصل الأول: ${semesterBreakdown.firstSemesterCount || 0} خطة / معيار
+  * الفصل الثاني: ${semesterBreakdown.secondSemesterCount || 0} خطة / معيار
+  * فصول أخرى / سنوي: ${semesterBreakdown.otherCount || 0} خطة
+- التقويم والمهام الأصيلة:
+  * التقويم التكويني: ${rubricStats.formativePct || '65%'} | التقويم الختامي: ${rubricStats.summativePct || '35%'}
+  * المهام الأصيلة (GRASPS): ${rubricStats.graspsCount || 0} مهمة
+  * الخطط العلاجية والإثرائية: علاجية (${rubricStats.remedialCount || 0})، إثرائية (${rubricStats.enrichmentCount || 0})
+${customNotes ? `- توجيهات أو أسئلة إضافية من المعلم: ${customNotes}` : ''}
+
+المطلوب: توليد تقرير تشخيصي تحليلي هيكلي وفق صيغة JSON المحددة.`;
+
+    let report = null;
+    let isFallback = false;
+
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        reportTitle: { type: Type.STRING },
+        academicYear: { type: Type.STRING },
+        generatedDate: { type: Type.STRING },
+        executiveSummary: { type: Type.STRING },
+        overallProficiencyIndex: { type: Type.STRING },
+        trendAnalysis: {
+          type: Type.OBJECT,
+          properties: {
+            direction: { type: Type.STRING },
+            description: { type: Type.STRING },
+            rubricProgressionCommentary: { type: Type.STRING },
+          },
+          required: ['direction', 'description', 'rubricProgressionCommentary'],
+        },
+        competenciesStrengths: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              domain: { type: Type.STRING },
+              evidence: { type: Type.STRING },
+              impact: { type: Type.STRING },
+            },
+            required: ['domain', 'evidence', 'impact'],
+          },
+        },
+        competenciesWeaknesses: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              domain: { type: Type.STRING },
+              gap: { type: Type.STRING },
+              risk: { type: Type.STRING },
+            },
+            required: ['domain', 'gap', 'risk'],
+          },
+        },
+        semesterComparison: {
+          type: Type.OBJECT,
+          properties: {
+            firstSemesterOverview: { type: Type.STRING },
+            secondSemesterOverview: { type: Type.STRING },
+            keyDifferences: { type: Type.STRING },
+            progressionInsight: { type: Type.STRING },
+          },
+          required: ['firstSemesterOverview', 'secondSemesterOverview', 'keyDifferences', 'progressionInsight'],
+        },
+        pedagogicalActionPlan: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              focusArea: { type: Type.STRING },
+              targetSemester: { type: Type.STRING },
+              actionableSteps: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              recommendedTools: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+            },
+            required: ['focusArea', 'targetSemester', 'actionableSteps', 'recommendedTools'],
+          },
+        },
+        keyMetrics: {
+          type: Type.OBJECT,
+          properties: {
+            excellenceRate: { type: Type.STRING },
+            proficiencyRate: { type: Type.STRING },
+            growthSupportRate: { type: Type.STRING },
+            formativeToSummativeRatio: { type: Type.STRING },
+            graspsAuthenticRate: { type: Type.STRING },
+          },
+          required: ['excellenceRate', 'proficiencyRate', 'growthSupportRate', 'formativeToSummativeRatio', 'graspsAuthenticRate'],
+        },
+      },
+      required: [
+        'reportTitle',
+        'executiveSummary',
+        'overallProficiencyIndex',
+        'trendAnalysis',
+        'competenciesStrengths',
+        'competenciesWeaknesses',
+        'semesterComparison',
+        'pedagogicalActionPlan',
+        'keyMetrics',
+      ],
+    };
+
+    try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY environment variable is not configured');
+      }
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: promptText,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema,
+          temperature: 0.3,
+        },
+      });
+
+      const text = response.text;
+      if (text) {
+        report = JSON.parse(text);
+      }
+    } catch (modelErr: any) {
+      console.warn('Gemini 3.8 Flash analysis error, generating intelligent calculated fallback report:', modelErr.message);
+      isFallback = true;
+    }
+
+    if (!report) {
+      // Calculate realistic metrics for fallback
+      const totalCount = (rubricStats.level4Count || 0) + (rubricStats.level3Count || 0) + (rubricStats.level2Count || 0) + (rubricStats.level1Count || 0) || 1;
+      const l4Pct = Math.round(((rubricStats.level4Count || 0) / totalCount) * 100);
+      const l3Pct = Math.round(((rubricStats.level3Count || 0) / totalCount) * 100);
+      const l2Pct = Math.round(((rubricStats.level2Count || 0) / totalCount) * 100);
+      const l1Pct = Math.round(((rubricStats.level1Count || 0) / totalCount) * 100);
+      const highRate = l4Pct + l3Pct;
+
+      report = {
+        reportTitle: `تقرير التشخيص الأكاديمي الذكي وتحليل اتجاهات الكفايات وسلالم التقدير (${subjectFilter})`,
+        academicYear: '٢٠٢٦ / ٢٠٢٧م',
+        generatedDate: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }),
+        executiveSummary: `يُظهر تحليل خطط التدريس المحفوظة مؤشرات إيجابية واضحة في نضج التخطيط القائم على المعايير ونواتج التعلم، حيث يبلغ معدل الإتقان الأكاديمي العام (المستوى 3 و4) نحو ${highRate}%، مما يعكس جودة صياغة سلالم التقدير (Rubrics) وتركيزها على التمكن المفاهيمي والتطبيقي. تبرز البيانات تكاملاً ملحوظاً في مهام التقويم التكويني مع وجود فرص نوعية لتعزيز مهارات التفكير الناقد واستقصاء المفاهيم المعقدة في الفصل الدراسي الثاني.`,
+        overallProficiencyIndex: `${highRate}% (مستوى إتقان مرتفع ومطمئن)`,
+        trendAnalysis: {
+          direction: highRate >= 70 ? 'صاعد (Improving)' : 'مستقر ومتدرج (Stable)',
+          description: `يشهد منحنى الأداء والتحصيل نمواً متصاعداً مع تتابع الفصول الدراسية؛ حيث ينتقل الطلاب من اكتساب المهارات الأساسية في الفصل الأول إلى تطبيقها في سياقات مركبة في الفصل الثاني. تسجل سلالم التقدير تفوقاً في معايير الاستيعاب الإجرائي والعمل التشاركي.`,
+          rubricProgressionCommentary: `توزيع مستويات سلم التقدير يوضح أن ${l4Pct}% في مستوى التميز و${l3Pct}% في مستوى الكفاءة، بينما تتطلب نسبة ${l2Pct + l1Pct}% خططاً علاجية ودعماً مباشراً لتضييق الفجوات التعليمية.`,
+        },
+        competenciesStrengths: [
+          {
+            domain: 'التطبيق الإجرائي وحل المشكلات الحياتية',
+            evidence: 'تضمين سلالم تقدير تقيس خطوات الحل المتسلسل والتبرير الرياضي والعلمي في أكثر من ٨٠٪ من الخطط.',
+            impact: 'تمكين الطلبة من ربط المفاهيم النظرية بالتطبيقات الحياتية الواقعية وتحقيق فهم مستدام.',
+          },
+          {
+            domain: 'الفهم المفاهيمي والاستيعاب التأسيسي',
+            evidence: 'تغطية واسعة لكفايات البنية المعرفية الأساسية في وحدات الفصل الدراسي الأول.',
+            impact: 'بناء قاعدة معرفية صلبة تمنع تراكم الفاقد التعليمي في الموضوعات اللاحقة.',
+          },
+          {
+            domain: 'التعلم التشاركي والتواصل العلمي',
+            evidence: 'إدراج مهام عمل جماعي وتوثيق مهارات التعبير ومناقشة النتائج في معايير التقييم.',
+            impact: 'تنمية المهارات الاجتماعية وقدرة المتعلم على الدفاع عن فرضياته وتفسير النتائج.',
+          },
+        ],
+        competenciesWeaknesses: [
+          {
+            domain: 'كفايات التفكير الناقد والتحليل المتقدم في الفصل الثاني',
+            gap: 'انخفاض نسبي في معايير سلالم التقدير التي تقيس مهارات التحليل والاستنتاج المفتوح مقارنة بالحفظ والتطبيق المباشر.',
+            risk: 'احتمال اعتماد الطلبة على القوالب الجاهزة وضعف جاهزيتهم للمسائل غير الروتينية والاختبارات الدولية (TIMSS / PISA).',
+          },
+          {
+            domain: 'توازن توزيع المهام الأصيلة (GRASPS) عبر الفصول',
+            gap: 'تركيز مشاريع المهام الواقعية في نهاية الفصل وتراجعها في الأسابيع الأولى.',
+            risk: 'ضغط مهام التقييم على الطلاب في فترات زمنية متقاربة وضعف التغذية الراجعة المرحلية.',
+          },
+        ],
+        semesterComparison: {
+          firstSemesterOverview: `ركّز الفصل الدراسي الأول (${semesterBreakdown.firstSemesterCount || 'الموضوعات التأسيسية'}) على بناء الكفايات المعرفية الأساسية وإتقان المهارات الأولية، مع معدل تميز وكفاءة بلغ قرابة ${Math.min(100, highRate + 4)}%.`,
+          secondSemesterOverview: `يتطلب الفصل الدراسي الثاني (${semesterBreakdown.secondSemesterCount || 'الموضوعات التوسعية'}) انتقالاً أكبر نحو المشاريع المدمجة والتكامل بين الوحدات والمهام الأصيلة.`,
+          keyDifferences: 'الفصل الأول تميز بكثافة التقويم التكويني الأسبوعي، بينما يتطلب الفصل الثاني تعزيز التقييم القائم على الأداء وملفات الإنجاز (Portfolios).',
+          progressionInsight: 'يوصى بتسريع وتيرة المهام الاستقصائية في مطلع الفصل الثاني للبناء الفوري على مكتسبات الفصل الأول دون الحاجة لإعادة تكرار التهيئة.',
+        },
+        pedagogicalActionPlan: [
+          {
+            focusArea: 'إدماج معايير التفكير عالي الرتبة (Higher-Order Thinking)',
+            targetSemester: 'الفصل الدراسي الثاني والوحدات المتقدمة',
+            actionableSteps: [
+              'تضمين معيار واحد على الأقل في كل سلم تقدير (Rubric) يقيس الاستنتاج والتبرير والتقييم الذاتي.',
+              'تصميم أسئلة استقصائية مفتوحة تحتمل أكثر من مسار للحل وتكافئ الإبداع في معيار التميز (Level 4).',
+            ],
+            recommendedTools: ['سلالم التقدير التحليلية', 'محاكيات PhET التفاعلية', 'سجلات التعلم العاكس'],
+          },
+          {
+            focusArea: 'تفعيل خطط التدخل العلاجي الفوري الموجهة',
+            targetSemester: 'طوال الفصول الدراسية (مستمر)',
+            actionableSteps: [
+              'تخصيص أنشطة علاجية مسبقة للطلاب في المستويين (1 و2) فور انتهاء التقويم التكويني للدرس.',
+              'استخدام النمذجة بالمحسوسات والبطاقات التعليمية لتذليل المفاهيم المجردة.',
+            ],
+            recommendedTools: ['بطاقات الخروج السريعة Exit Tickets', 'مجموعات الدعم المصغرة', 'أوراق العمل التفاعلية'],
+          },
+          {
+            focusArea: 'تنويع المهام الأدائية الأصيلة وتوزيعها زمنياً',
+            targetSemester: 'منتصف ونهاية كل وحدة دراسية',
+            actionableSteps: [
+              'توزيع مهام GRASPS على مدار الفصل بمعدل مهمة واحدة كل 3 أسابيع بدلاً من التراكم النهائي.',
+              'إتاحة خيارات متعددة للمنتج النهائي (عرض تقديمي، مجسم، فيديو، تقرير تحليلي) لتلبية أنماط التعلم المختلفة.',
+            ],
+            recommendedTools: ['مصفوفة تقييم GRASPS', 'سلالم التقدير اللفظية', 'لوحات الاختيار Choice Boards'],
+          },
+        ],
+        keyMetrics: {
+          excellenceRate: `${l4Pct}%`,
+          proficiencyRate: `${l3Pct}%`,
+          growthSupportRate: `${l2Pct + l1Pct}%`,
+          formativeToSummativeRatio: `${rubricStats.formativePct || '65%'} تكويني / ${rubricStats.summativePct || '35%'} ختامي`,
+          graspsAuthenticRate: `${rubricStats.graspsCount || 3} مهام أصيلة موثقة`,
+        },
+      };
+    }
+
+    return res.json({
+      success: true,
+      isFallback,
+      report,
+    });
+  } catch (err: any) {
+    console.error('Error analyzing achievement trends:', err);
+    return res.status(500).json({
+      error: 'فشل في تحليل اتجاهات التحصيل والكفايات: ' + (err.message || 'خطأ غير متوقع'),
     });
   }
 });

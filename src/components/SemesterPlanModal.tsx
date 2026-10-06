@@ -41,6 +41,7 @@ import {
   Info,
   ShieldAlert,
   AlertCircle,
+  FileUp,
 } from 'lucide-react';
 import { SemesterPlanDocument, SemesterPlanRow } from '../types/semesterPlan';
 import { LessonPlan } from '../types/lessonPlan';
@@ -65,6 +66,7 @@ import {
   getNextTeachingDays,
   checkDayStatus,
 } from '../utils/palestinianCalendar';
+import { CurriculumPdfExtractorModal } from './CurriculumPdfExtractorModal';
 
 interface SemesterPlanModalProps {
   isOpen: boolean;
@@ -142,6 +144,9 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [isSuccessAlert, setIsSuccessAlert] = useState<string | null>(null);
+
+  // Curriculum PDF / Document Extractor state
+  const [isPdfExtractorOpen, setIsPdfExtractorOpen] = useState(false);
 
   // AI Generator Wizard state
   const [isAiWizardOpen, setIsAiWizardOpen] = useState(false);
@@ -374,6 +379,22 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
     } finally {
       setIsGeneratingAi(false);
     }
+  };
+
+  // Apply extracted plan from Curriculum PDF / File uploader
+  const handleApplyExtractedCurriculumPlan = (extracted: SemesterPlanDocument) => {
+    setCurrentPlan(extracted);
+    setSelectedSubjectKey(extracted.subject);
+    if (extracted.semesterStartDate && extracted.semesterEndDate) {
+      setSemesterStartDate(extracted.semesterStartDate);
+      setSemesterEndDate(extracted.semesterEndDate);
+    }
+    setIsSuccessAlert(
+      `تم استخراج وتوزيع المنهاج الدراسي بنجاح (${toArabicDigits(extracted.rows.length)} درساً مقسمة على ${toArabicDigits(
+        new Set(extracted.rows.map((r) => r.unitTitle)).size
+      )} وحدات)!`
+    );
+    setTimeout(() => setIsSuccessAlert(null), 4000);
   };
 
   // Import all lessons from this plan to the app's saved plans
@@ -1082,24 +1103,39 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={handleGenerateWithAi}
-                disabled={isGeneratingAi}
-                className="px-4 py-2 bg-linear-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isGeneratingAi ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-cyan-200" />
-                    <span>جاري التوليد البيداغوجي وفق المعايير الوزارية...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 text-cyan-200" />
-                    <span>⚡ بدء التوليد الآلي للخطة ودليل توزيع الحصص</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAiWizardOpen(false);
+                    setIsPdfExtractorOpen(true);
+                  }}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-200 border border-cyan-400/50 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="رفع ملف PDF للمنهاج أو جدول توزيع المحتوى لاستخراجه تلقائياً"
+                >
+                  <FileUp className="w-3.5 h-3.5 text-cyan-300" />
+                  <span>📂 رفع ملف PDF / صورة المنهاج</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateWithAi}
+                  disabled={isGeneratingAi}
+                  className="px-4 py-2 bg-linear-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isGeneratingAi ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-cyan-200" />
+                      <span>جاري التوليد البيداغوجي وفق المعايير الوزارية...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-cyan-200" />
+                      <span>⚡ بدء التوليد الآلي للخطة ودليل توزيع الحصص</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1107,15 +1143,25 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
         {/* Toolbar: Presets, AI Trigger, Import, and Export Hub */}
         <div className="bg-slate-50 border-b border-slate-200 p-3 sm:p-4 space-y-3 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Primary Action Buttons: AI Wizard, Add Resource, & Subject Presets */}
+            {/* Primary Action Buttons: AI Wizard, PDF Extractor, Add Resource, & Subject Presets */}
             <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setIsPdfExtractorOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-cyan-600 via-teal-700 to-emerald-800 hover:from-cyan-700 hover:to-emerald-900 text-white shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-300/50 ring-2 ring-cyan-400/30 animate-pulse"
+                title="رفع واستخراج جدول توزيع المنهاج الدراسي بصيغة PDF وتوزيعه تلقائياً على الخطة الفصلية لتقليل وقت الإدخال اليدوي"
+              >
+                <FileUp className="w-3.5 h-3.5 text-cyan-200" />
+                <span>📂 استخراج من PDF / منهاج</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setIsAiWizardOpen(!isAiWizardOpen)}
                 className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-linear-to-r from-emerald-600 via-teal-700 to-cyan-800 hover:from-emerald-700 hover:to-cyan-900 text-white shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-400/40 ring-1 ring-emerald-400/20"
                 title="فتح نموذج توليد الخطة الفصلية ودليل توزيع الحصص بالذكاء الاصطناعي"
               >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
                 <span>توليد بالذكاء الاصطناعي (AI)</span>
               </button>
 
@@ -2395,6 +2441,18 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Curriculum PDF / Document Extractor Modal */}
+        <CurriculumPdfExtractorModal
+          isOpen={isPdfExtractorOpen}
+          onClose={() => setIsPdfExtractorOpen(false)}
+          onApplyPlan={handleApplyExtractedCurriculumPlan}
+          onImportLessonsToApp={onImportLessonsToApp}
+          currentSubject={currentPlan.subject}
+          currentGrade={currentPlan.grade}
+          teacherName={currentPlan.teacherName || teacherName}
+          schoolName={currentPlan.school || schoolName}
+        />
       </div>
     </div>
   );

@@ -68,8 +68,10 @@ import {
   BookOpen,
   Database,
   Upload,
+  FileUp,
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
+import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -166,6 +168,7 @@ export default function App() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isUnitPlanModalOpen, setIsUnitPlanModalOpen] = useState(false);
   const [isSemesterPlanModalOpen, setIsSemesterPlanModalOpen] = useState(false);
+  const [isCurriculumPdfExtractorOpen, setIsCurriculumPdfExtractorOpen] = useState(false);
   const [isWorksheetModalOpen, setIsWorksheetModalOpen] = useState(false);
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
   const [isAuthenticTaskModalOpen, setIsAuthenticTaskModalOpen] = useState(false);
@@ -669,6 +672,30 @@ export default function App() {
                           </span>
                           <span className="block text-[10px] text-slate-300/80 truncate">
                             توزيع الحصص والتقويم
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Extract Curriculum PDF / Content Tables */}
+                      <button
+                        onClick={() => setIsCurriculumPdfExtractorOpen(true)}
+                        className="p-3 bg-linear-to-br from-cyan-900/90 via-teal-950 to-slate-950 border border-cyan-400/80 hover:border-cyan-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px] ring-2 ring-cyan-500/30"
+                        title="رفع ملفات المناهج وجداول توزيع المحتوى (PDF / صور / جداول) واستخراج بياناتها وتوزيعها تلقائياً على نماذج الخطة الفصلية"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="w-8 h-8 rounded-lg bg-cyan-600/40 flex items-center justify-center border border-cyan-400/40 group-hover:bg-cyan-500/50 transition-colors">
+                            <FileUp className="w-4 h-4 text-cyan-200" />
+                          </div>
+                          <span className="text-[9px] font-black px-1.5 py-0.5 bg-amber-400 text-amber-950 rounded-md shadow-2xs">
+                            PDF ⚡
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-black text-xs text-white group-hover:text-cyan-200 transition-colors font-['Tajawal']">
+                            استخراج منهاج PDF
+                          </span>
+                          <span className="block text-[10px] text-cyan-100/90 truncate">
+                            توزيع فصلي آلي وتلقائي
                           </span>
                         </div>
                       </button>
@@ -1399,6 +1426,20 @@ export default function App() {
         teacherName={currentPlan.header.teacherName}
         schoolName={currentPlan.header.school}
         onImportLessonsToApp={handleUnitPlansGenerated}
+      />
+
+      <CurriculumPdfExtractorModal
+        isOpen={isCurriculumPdfExtractorOpen}
+        onClose={() => setIsCurriculumPdfExtractorOpen(false)}
+        onApplyPlan={(_extractedPlan) => {
+          setIsCurriculumPdfExtractorOpen(false);
+          setIsSemesterPlanModalOpen(true);
+        }}
+        onImportLessonsToApp={handleUnitPlansGenerated}
+        currentSubject={currentPlan.header.subject}
+        currentGrade={currentPlan.header.grade}
+        teacherName={currentPlan.header.teacherName}
+        schoolName={currentPlan.header.school}
       />
 
       <DeletePlanConfirmModal

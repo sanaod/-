@@ -47,11 +47,24 @@ import {
   Boxes,
   CalendarRange,
   Database,
+  BrainCircuit,
+  Bell,
+  Check,
+  ArrowRight,
+  Plus,
+  Circle,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
 import { TeacherMonthlyCalendar } from './TeacherMonthlyCalendar';
 import { StudentAssessmentDashboard } from './StudentAssessmentDashboard';
+import { DailyPedagogicalRemindersModal } from './DailyPedagogicalRemindersModal';
+import {
+  DailyPedagogicalReminder,
+  REMINDER_CATEGORY_CONFIG,
+} from '../types/dailyReminder';
+import { loadDailyReminders, saveDailyReminders } from '../utils/dailyRemindersStorage';
+import { formatDateToIso } from '../utils/palestinianCalendar';
 
 export type FolderIndexingMode = 'by_subject' | 'by_teacher' | 'tree' | 'table';
 
@@ -241,6 +254,88 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [hoveredPhaseIndex, setHoveredPhaseIndex] = useState<number | null>(null);
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
   const [isReportPdfModalOpen, setIsReportPdfModalOpen] = useState(false);
+
+  // Daily Pedagogical Reminders State
+  const [dailyReminders, setDailyReminders] = useState<DailyPedagogicalReminder[]>(() =>
+    loadDailyReminders(plans)
+  );
+  const [isDailyRemindersModalOpen, setIsDailyRemindersModalOpen] = useState(false);
+  const [quickReminderText, setQuickReminderText] = useState('');
+
+  const todayIso = useMemo(() => formatDateToIso(new Date()), []);
+
+  const todayReminders = useMemo(
+    () => dailyReminders.filter((r) => r.date === todayIso),
+    [dailyReminders, todayIso]
+  );
+
+  const todayPendingCount = useMemo(
+    () => dailyReminders.filter((r) => r.date === todayIso && !r.completed).length,
+    [dailyReminders, todayIso]
+  );
+
+  const handleAddReminder = (reminderData: Omit<DailyPedagogicalReminder, 'id' | 'createdAt'>) => {
+    const newRem: DailyPedagogicalReminder = {
+      ...reminderData,
+      id: `rem-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [newRem, ...dailyReminders];
+    setDailyReminders(updated);
+    saveDailyReminders(updated);
+  };
+
+  const handleUpdateReminder = (updatedRem: DailyPedagogicalReminder) => {
+    const updated = dailyReminders.map((r) => (r.id === updatedRem.id ? updatedRem : r));
+    setDailyReminders(updated);
+    saveDailyReminders(updated);
+  };
+
+  const handleDeleteReminder = (id: string) => {
+    const updated = dailyReminders.filter((r) => r.id !== id);
+    setDailyReminders(updated);
+    saveDailyReminders(updated);
+  };
+
+  const handleToggleCompleteReminder = (id: string) => {
+    const updated = dailyReminders.map((r) => {
+      if (r.id === id) {
+        const nextCompleted = !r.completed;
+        return {
+          ...r,
+          completed: nextCompleted,
+          completedAt: nextCompleted ? new Date().toISOString() : undefined,
+        };
+      }
+      return r;
+    });
+    setDailyReminders(updated);
+    saveDailyReminders(updated);
+  };
+
+  const handleQuickAddTodayReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickReminderText.trim()) return;
+
+    const currentActivePlan = plans.find((p) => p.id === activePlanId) || plans[0];
+
+    handleAddReminder({
+      title: quickReminderText.trim(),
+      date: todayIso,
+      time: '08:30 ص',
+      category: 'lesson_prep',
+      priority: 'medium',
+      note: 'ملاحظة تذكيرية سريعة للمهام التربوية والصفية.',
+      linkedPlanId: currentActivePlan?.id,
+      linkedPlanTitle: currentActivePlan?.header.lessonTitle || currentActivePlan?.title,
+      linkedSubject: currentActivePlan?.header.subject,
+      linkedGrade: currentActivePlan?.header.grade,
+      completed: false,
+      tags: ['تذكير يومي'],
+    });
+
+    setQuickReminderText('');
+  };
 
   // Folder Indexing state (Default: by subject, easily toggled by teacher or tree)
   const [indexingMode, setIndexingMode] = useState<FolderIndexingMode>('by_subject');
@@ -910,6 +1005,48 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>الأداة التفاعلية / المحاكي</span>
               </button>
             )}
+
+            <button
+              onClick={() => {
+                const el = document.getElementById('student-assessment-dashboard-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="px-3.5 py-2 bg-linear-to-r from-purple-700 to-indigo-800 hover:from-purple-800 hover:to-indigo-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-purple-400/40"
+              title="الانتقال المباشر لرسوم بيانية تفاعلية توضح توزيع مستويات التحصيل وسلالم التقدير"
+            >
+              <PieIcon className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>رسوم التقديرات (Rubrics) 📊</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const el = document.getElementById('student-assessment-dashboard-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-amber-400/60"
+              title="تحليل ذكي لاتجاهات التحصيل ونقاط القوة والضعف في توزيع الكفايات عبر الفصول"
+            >
+              <BrainCircuit className="w-4 h-4 text-slate-950 shrink-0" />
+              <span>تقرير الكفايات والتحصيل (AI) 🪄</span>
+            </button>
+
+            <button
+              onClick={() => setIsDailyRemindersModalOpen(true)}
+              className="px-3.5 py-2 bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-amber-400/80 relative"
+              title="إدارة وجدولة الملاحظات التذكيرية اليومية للمهام التربوية والصفية"
+            >
+              <Bell className="w-4 h-4 text-slate-950 shrink-0" />
+              <span>الملاحظات التذكيرية 🔔</span>
+              {todayPendingCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded-full text-[10px] font-black animate-pulse leading-none">
+                  {toArabicDigits(todayPendingCount)}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Vertical Divider */}
@@ -1277,6 +1414,136 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onSelectTeacherFilter={(teacher) => setSelectedTeacherFilter(teacher)}
       />
 
+      {/* 📌 Daily Pedagogical Reminders & Agenda Card (الملاحظات التذكيرية والمهام اليومية المجدولة) */}
+      <div
+        id="daily-reminders-section"
+        className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 text-right scroll-mt-6"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-linear-to-tr from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center shrink-0 shadow-md">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-black font-['Tajawal'] text-slate-900">
+                  الملاحظات التذكيرية والمهام الصفية المجدولة
+                </h3>
+                {todayPendingCount > 0 && (
+                  <span className="px-2.5 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded-full text-[11px] font-black animate-pulse">
+                    {toArabicDigits(todayPendingCount)} مهام بحاجة لمتابعة اليوم ⚠️
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                تتبع التذكيرات اليومية للأنشطة والوسائل والتقويم التكويني المرتبطة بخطط الدروس الحالية
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsDailyRemindersModalOpen(true)}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>فتح مدير التذكيرات الكامل</span>
+              <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Inline Add Form */}
+        <form onSubmit={handleQuickAddTodayReminder} className="flex gap-2">
+          <input
+            type="text"
+            value={quickReminderText}
+            onChange={(e) => setQuickReminderText(e.target.value)}
+            placeholder="إضافة تذكير سريع لليوم (مثال: تجهيز بطاقات الخروج ومحسوسات درس اليوم...)"
+            className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+          />
+          <button
+            type="submit"
+            disabled={!quickReminderText.trim()}
+            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 rounded-2xl text-xs font-black shadow-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>إضافة لليوم</span>
+          </button>
+        </form>
+
+        {/* Today's Checklist Items */}
+        <div className="space-y-2.5 pt-1">
+          {todayReminders.length === 0 ? (
+            <div className="py-6 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-4 text-xs text-slate-500">
+              لا توجد تذكيرات مسجلة لليوم. يمكنك إضافة تذكير سريع بالأعلى أو النقر على «الملاحظات التذكيرية 🔔» لجدولة المهام.
+            </div>
+          ) : (
+            todayReminders.slice(0, 4).map((rem) => {
+              const catCfg = REMINDER_CATEGORY_CONFIG[rem.category] || REMINDER_CATEGORY_CONFIG.general;
+              return (
+                <div
+                  key={rem.id}
+                  className={`p-3 bg-slate-50/90 border rounded-2xl flex flex-wrap items-center justify-between gap-3 transition-all ${
+                    rem.completed ? 'opacity-60 bg-slate-100 border-slate-200' : 'border-slate-200 hover:border-amber-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleCompleteReminder(rem.id)}
+                      className="text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                    >
+                      {rem.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
+                      ) : (
+                        <Circle className="w-5 h-5" />
+                      )}
+                    </button>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs font-bold ${
+                            rem.completed ? 'line-through text-slate-500' : 'text-slate-900'
+                          }`}
+                        >
+                          {rem.title}
+                        </span>
+                        <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${catCfg.bg} ${catCfg.text} ${catCfg.border}`}>
+                          {catCfg.label}
+                        </span>
+                        {rem.priority === 'high' && (
+                          <span className="text-[10px] text-rose-600 font-bold">🔴 عاجل</span>
+                        )}
+                      </div>
+                      {rem.note && (
+                        <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                          {rem.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs">
+                    {rem.linkedPlanTitle && (
+                      <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] text-indigo-900 font-bold">
+                        📖 {rem.linkedPlanTitle}
+                      </span>
+                    )}
+                    {rem.time && (
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        ⏰ {rem.time}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
       {/* Monthly Planning & Pedagogical Tasks Calendar (تقويم التخطيط والمهام الشهرية) */}
       <TeacherMonthlyCalendar
         plans={plans}
@@ -1284,6 +1551,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onSelectPlan={onSelectPlan}
         onOpenEditor={onOpenEditor}
         onOpenPrintView={onOpenPrintView}
+        onOpenDailyRemindersModal={() => setIsDailyRemindersModalOpen(true)}
       />
 
       {/* 📊 Student Assessment & Grade Distribution Dashboard (لوحة بيانات تحليل أداء الطالب وتوزيع التقديرات) */}
@@ -2722,6 +2990,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         filteredPlans={filteredPlans}
         activeSubjectFilter={selectedSubjectFilter}
         activeGradeFilter={selectedGradeFilter}
+      />
+
+      {/* Daily Pedagogical Reminders Modal */}
+      <DailyPedagogicalRemindersModal
+        isOpen={isDailyRemindersModalOpen}
+        onClose={() => setIsDailyRemindersModalOpen(false)}
+        reminders={dailyReminders}
+        onAddReminder={handleAddReminder}
+        onUpdateReminder={handleUpdateReminder}
+        onDeleteReminder={handleDeleteReminder}
+        onToggleComplete={handleToggleCompleteReminder}
+        plans={plans}
+        onSelectPlan={onSelectPlan}
+        onOpenEditor={onOpenEditor}
       />
     </div>
   );

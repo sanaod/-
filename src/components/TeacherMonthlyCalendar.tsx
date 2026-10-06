@@ -25,6 +25,7 @@ import {
   X,
   Tag,
   Flag,
+  Bell,
 } from 'lucide-react';
 import {
   PALESTINIAN_MINISTRY_HOLIDAYS,
@@ -53,6 +54,7 @@ interface TeacherMonthlyCalendarProps {
   onSelectPlan?: (id: string) => void;
   onOpenEditor?: () => void;
   onOpenPrintView?: (planId?: string) => void;
+  onOpenDailyRemindersModal?: () => void;
 }
 
 const ARABIC_MONTHS = [
@@ -148,6 +150,7 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
   onSelectPlan,
   onOpenEditor,
   onOpenPrintView,
+  onOpenDailyRemindersModal,
 }) => {
   // Current date anchor
   const today = useMemo(() => new Date(), []);
@@ -456,6 +459,17 @@ export const TeacherMonthlyCalendar: React.FC<TeacherMonthlyCalendarProps> = ({
           >
             اليوم 📍
           </button>
+
+          {onOpenDailyRemindersModal && (
+            <button
+              onClick={onOpenDailyRemindersModal}
+              className="px-3.5 py-1.5 bg-linear-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs active:scale-97 cursor-pointer border border-amber-400/80"
+              title="إدارة وجدولة الملاحظات التذكيرية اليومية"
+            >
+              <Bell className="w-4 h-4 text-slate-950" />
+              <span>الملاحظات التذكيرية 🔔</span>
+            </button>
+          )}
 
           <button
             onClick={() => {
