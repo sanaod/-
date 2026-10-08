@@ -80,6 +80,7 @@ import {
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
 import { AcademicYearMilestonesModal } from './components/AcademicYearMilestonesModal';
+import { AndroidAppModal } from './components/AndroidAppModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -195,6 +196,7 @@ export default function App() {
   const [isMotionGraphicsModalOpen, setIsMotionGraphicsModalOpen] = useState(false);
   const [isAssessmentSimulatorModalOpen, setIsAssessmentSimulatorModalOpen] = useState(false);
   const [isAcademicMilestonesModalOpen, setIsAcademicMilestonesModalOpen] = useState(false);
+  const [isAndroidAppModalOpen, setIsAndroidAppModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
@@ -413,6 +415,7 @@ export default function App() {
         onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
         onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
         onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
+        onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
@@ -594,6 +597,7 @@ export default function App() {
                 onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
                 onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
+                onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
                 onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
                 onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
                 onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
@@ -1088,6 +1092,12 @@ export default function App() {
         onOpenDashboard={() => setViewMode('dashboard')}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenPrintView={() => setViewMode('official-print')}
+      />
+
+      <AndroidAppModal
+        isOpen={isAndroidAppModalOpen}
+        onClose={() => setIsAndroidAppModalOpen(false)}
+        onOpenQrModal={() => setIsQrModalOpen(true)}
       />
 
       {/* Mobile Sticky Quick Navigation Bar */}

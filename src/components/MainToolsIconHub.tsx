@@ -39,6 +39,7 @@ import {
   Sunrise,
   BookOpen,
   GraduationCap,
+  Smartphone,
 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
@@ -49,6 +50,7 @@ export interface MainToolsIconHubProps {
   onOpenUnitPlanModal: () => void;
   onOpenSemesterPlanModal: () => void;
   onOpenAcademicMilestonesModal?: () => void;
+  onOpenAndroidAppModal?: () => void;
   onOpenCurriculumPdfExtractor: () => void;
   onOpenWorksheetModal: () => void;
   onOpenAssessmentSimulatorModal: () => void;
@@ -94,6 +96,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   onOpenUnitPlanModal,
   onOpenSemesterPlanModal,
   onOpenAcademicMilestonesModal,
+  onOpenAndroidAppModal,
   onOpenCurriculumPdfExtractor,
   onOpenWorksheetModal,
   onOpenAssessmentSimulatorModal,
@@ -234,6 +237,22 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
       iconColor: 'text-amber-300',
       action: onOpenAcademicMilestonesModal || onOpenDashboard,
       keywords: ['نهاية', 'عام', 'ختام', 'حصاد', 'تكريم', 'متفوقين', 'شهادات', 'أرشيف'],
+    },
+    {
+      id: 'android-app',
+      category: 'management',
+      title: 'تطبيق أندرويد (Google Play)',
+      subtitle: 'نسخة الهاتف المستقلة وتعمل بدون إنترنت',
+      badge: 'أندرويد 📱',
+      badgeType: 'success',
+      icon: Smartphone,
+      colorGradient: 'from-emerald-950/95 via-teal-950 to-slate-950',
+      borderColor: 'border-emerald-500/80',
+      hoverBorder: 'hover:border-emerald-400',
+      iconBg: 'bg-emerald-600/40 border-emerald-400/40',
+      iconColor: 'text-emerald-300',
+      action: onOpenAndroidAppModal || (() => alert('جارِ فتح تثبيت تطبيق أندرويد...')),
+      keywords: ['تطبيق', 'أندرويد', 'اندرويد', 'جوجل', 'بلي', 'play', 'android', 'apk', 'pwa', 'هاتف', 'تثبيت'],
     },
     {
       id: 'curriculum-extractor',

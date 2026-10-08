@@ -73,6 +73,7 @@ interface HeaderNavProps {
   onOpenMotionGraphicsModal?: () => void;
   onOpenAssessmentSimulatorModal?: () => void;
   onOpenAcademicMilestonesModal?: () => void;
+  onOpenAndroidAppModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -108,6 +109,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenMotionGraphicsModal,
   onOpenAssessmentSimulatorModal,
   onOpenAcademicMilestonesModal,
+  onOpenAndroidAppModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -270,6 +272,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   >
                     <CalendarRange className="w-3 h-3 text-indigo-200" />
                     <span>محطات العام 🗓️</span>
+                  </button>
+                )}
+                {onOpenAndroidAppModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenAndroidAppModal}
+                    title="تثبيت تطبيق أندرويد (Google Play & WebAPK)"
+                    className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all border border-emerald-400/40"
+                  >
+                    <Smartphone className="w-3 h-3 text-emerald-200" />
+                    <span>تطبيق أندرويد 📱</span>
                   </button>
                 )}
               </div>
