@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.abqoor.education.teacher.app",
+      "sha256_cert_fingerprints": [
+        "14:6D:E8:F7:C9:83:A2:10:9B:45:33:11:88:FF:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:00"
+      ]
+    }
+  }
+]

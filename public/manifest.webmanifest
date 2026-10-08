@@ -1,0 +1,53 @@
+{
+  "id": "/",
+  "name": "منظومة عبقور للتخطيط التربوي - الأستاذ عبد الرحمن دويكات",
+  "short_name": "عبقور أندرويد",
+  "description": "التطبيق الرسمي لمنظومة عبقور للتخطيط التربوي وتحضير الدروس، إعداد وتصميم المصمم المعماري الأستاذ عبد الرحمن دويكات.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#022c22",
+  "theme_color": "#065f46",
+  "dir": "rtl",
+  "lang": "ar",
+  "author": "أ. عبد الرحمن دويكات",
+  "publisher": "عبد الرحمن دويكات",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "تحضير درس جديد بالذكاء الاصطناعي",
+      "short_name": "تحضير ذكي",
+      "description": "توليد تحضير كتابي كامل متوافق مع النماذج الوزارية",
+      "url": "/?action=ai-generate",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "الخطة الفصلية المعتمدة",
+      "short_name": "خطة فصلية",
+      "description": "استعراض الخطة توزيع الحصص الدراسية",
+      "url": "/?action=semester-plan",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
