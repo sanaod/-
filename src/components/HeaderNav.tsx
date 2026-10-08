@@ -72,6 +72,7 @@ interface HeaderNavProps {
   onOpenQrModal?: () => void;
   onOpenMotionGraphicsModal?: () => void;
   onOpenAssessmentSimulatorModal?: () => void;
+  onOpenAcademicMilestonesModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -106,6 +107,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenQrModal,
   onOpenMotionGraphicsModal,
   onOpenAssessmentSimulatorModal,
+  onOpenAcademicMilestonesModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -259,6 +261,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <Layers className="w-3 h-3 text-teal-200" />
                   <span>المصادر ({toArabicDigits(resourcesCount)})</span>
                 </button>
+                {onOpenAcademicMilestonesModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenAcademicMilestonesModal}
+                    title="محطات العام الدراسي (افتتاح - فصل 1 - فصل 2 - ختام)"
+                    className="px-2 py-0.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    <CalendarRange className="w-3 h-3 text-indigo-200" />
+                    <span>محطات العام 🗓️</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

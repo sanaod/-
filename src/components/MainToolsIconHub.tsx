@@ -36,6 +36,9 @@ import {
   X,
   Compass,
   Zap,
+  Sunrise,
+  BookOpen,
+  GraduationCap,
 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
@@ -45,6 +48,7 @@ export interface MainToolsIconHubProps {
   onOpenAiModal: () => void;
   onOpenUnitPlanModal: () => void;
   onOpenSemesterPlanModal: () => void;
+  onOpenAcademicMilestonesModal?: () => void;
   onOpenCurriculumPdfExtractor: () => void;
   onOpenWorksheetModal: () => void;
   onOpenAssessmentSimulatorModal: () => void;
@@ -89,6 +93,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   onOpenAiModal,
   onOpenUnitPlanModal,
   onOpenSemesterPlanModal,
+  onOpenAcademicMilestonesModal,
   onOpenCurriculumPdfExtractor,
   onOpenWorksheetModal,
   onOpenAssessmentSimulatorModal,
@@ -165,6 +170,70 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
       iconColor: 'text-cyan-200',
       action: onOpenSemesterPlanModal,
       keywords: ['فصلية', 'حصص', 'توزيع', 'تقويم', 'فلسطين', 'فصل', 'دليل'],
+    },
+    {
+      id: 'academic-start',
+      category: 'management',
+      title: 'بداية العام الدراسي',
+      subtitle: 'افتتاح العام والافتتاحية والتهيئة الصفية',
+      badge: 'بداية العام 🌅',
+      badgeType: 'success',
+      icon: Sunrise,
+      colorGradient: 'from-emerald-950/95 via-teal-950 to-slate-950',
+      borderColor: 'border-emerald-500/70',
+      hoverBorder: 'hover:border-emerald-400',
+      iconBg: 'bg-emerald-600/40 border-emerald-400/40',
+      iconColor: 'text-emerald-300',
+      action: onOpenAcademicMilestonesModal || onOpenSemesterPlanModal,
+      keywords: ['بداية', 'عام', 'دراسي', 'افتتاح', 'تهيئة', 'انطلاقة', 'توزيع'],
+    },
+    {
+      id: 'semester-1',
+      category: 'management',
+      title: 'الفصل الدراسي الأول',
+      subtitle: 'تحضيرات ونتاجات وتقويم الفصل الأول',
+      badge: 'الفصل الأول 📘',
+      badgeType: 'info',
+      icon: BookOpen,
+      colorGradient: 'from-blue-950/95 via-indigo-950 to-slate-950',
+      borderColor: 'border-blue-500/70',
+      hoverBorder: 'hover:border-blue-400',
+      iconBg: 'bg-blue-600/40 border-blue-400/40',
+      iconColor: 'text-blue-200',
+      action: onOpenAcademicMilestonesModal || onOpenSemesterPlanModal,
+      keywords: ['فصل', 'أول', 'دراسي', 'تحضير', 'اختبارات', 'نصف', 'نتاجات'],
+    },
+    {
+      id: 'semester-2',
+      category: 'management',
+      title: 'الفصل الدراسي الثاني',
+      subtitle: 'خطة ونتاجات ومشاريع الفصل الثاني',
+      badge: 'الفصل الثاني 🧭',
+      badgeType: 'accent',
+      icon: Compass,
+      colorGradient: 'from-purple-950/95 via-fuchsia-950 to-slate-950',
+      borderColor: 'border-purple-500/70',
+      hoverBorder: 'hover:border-purple-400',
+      iconBg: 'bg-purple-600/40 border-purple-400/40',
+      iconColor: 'text-purple-200',
+      action: onOpenAcademicMilestonesModal || onOpenSemesterPlanModal,
+      keywords: ['فصل', 'ثاني', 'دراسي', 'مشاريع', 'معارض', 'تخرج', 'تعمق'],
+    },
+    {
+      id: 'academic-end',
+      category: 'management',
+      title: 'نهاية العام الدراسي',
+      subtitle: 'الختام وحفل الحصاد وتكريم المتفوقين',
+      badge: 'نهاية العام 🏆',
+      badgeType: 'warning',
+      icon: Award,
+      colorGradient: 'from-amber-950/95 via-rose-950 to-slate-950',
+      borderColor: 'border-amber-500/70',
+      hoverBorder: 'hover:border-amber-400',
+      iconBg: 'bg-amber-600/40 border-amber-400/40',
+      iconColor: 'text-amber-300',
+      action: onOpenAcademicMilestonesModal || onOpenDashboard,
+      keywords: ['نهاية', 'عام', 'ختام', 'حصاد', 'تكريم', 'متفوقين', 'شهادات', 'أرشيف'],
     },
     {
       id: 'curriculum-extractor',

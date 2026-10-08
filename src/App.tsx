@@ -79,6 +79,7 @@ import {
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
+import { AcademicYearMilestonesModal } from './components/AcademicYearMilestonesModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -193,6 +194,7 @@ export default function App() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isMotionGraphicsModalOpen, setIsMotionGraphicsModalOpen] = useState(false);
   const [isAssessmentSimulatorModalOpen, setIsAssessmentSimulatorModalOpen] = useState(false);
+  const [isAcademicMilestonesModalOpen, setIsAcademicMilestonesModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
@@ -298,8 +300,9 @@ export default function App() {
   };
 
   const handlePlanGenerated = (newPlan: LessonPlan) => {
-    setPlans((prev) => [newPlan, ...prev]);
-    setActivePlanId(newPlan.id);
+    const withExec = ensureExecutiveData(newPlan);
+    setPlans((prev) => [withExec, ...prev]);
+    setActivePlanId(withExec.id);
   };
 
   const handleCreateNewBlankPlan = () => {
@@ -409,6 +412,7 @@ export default function App() {
         onOpenQrModal={() => setIsQrModalOpen(true)}
         onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
         onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+        onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
@@ -589,6 +593,7 @@ export default function App() {
                 onOpenAiModal={() => setIsAiModalOpen(true)}
                 onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+                onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
                 onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
                 onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
                 onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
@@ -1074,6 +1079,15 @@ export default function App() {
         plans={plans}
         activePlanId={currentPlan.id}
         onSelectPlan={(id) => setActivePlanId(id)}
+      />
+
+      <AcademicYearMilestonesModal
+        isOpen={isAcademicMilestonesModalOpen}
+        onClose={() => setIsAcademicMilestonesModalOpen(false)}
+        onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+        onOpenDashboard={() => setViewMode('dashboard')}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenPrintView={() => setViewMode('official-print')}
       />
 
       {/* Mobile Sticky Quick Navigation Bar */}

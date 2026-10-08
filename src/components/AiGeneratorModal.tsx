@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { EducationalResource, LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { ensureExecutiveData } from '../utils/executivePlanDefaults';
 
 interface AiGeneratorModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
   const [school, setSchool] = useState('مدرسة المعري الأساسية للبنين');
   const [directorate, setDirectorate] = useState('مديرية نابلس');
   const [teacherName, setTeacherName] = useState('أ. عبد الرحمن دويكات');
+  const [selectedTemplateType, setSelectedTemplateType] = useState<'executive' | 'adaptive'>('executive');
   const [customNotes, setCustomNotes] = useState(
     'التركيز على استقصاء علمي وتجارب حسية واستخدام استراتيجيات التعلم النشط ومهمة تقويم أصيل GRASPS وسلالم التقدير والربط بالبيئة المحلية الفلسطينية مع استخدام الأرقام العربية المشرقية ومنازل الآحاد ثم العشرات ثم المئات ثم الآلاف.'
   );
@@ -117,9 +119,11 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
         throw new Error(data.error || 'حدث خطأ أثناء توليد خطة الدرس');
       }
 
-      // Attach used resources to plan
+      // Ensure executive model data is prepared and templateType is assigned
+      const withExec = ensureExecutiveData(data.plan);
       const planWithResources: LessonPlan = {
-        ...data.plan,
+        ...withExec,
+        templateType: selectedTemplateType,
         attachedResources: resources.length > 0 ? [...resources] : undefined,
       };
 
@@ -489,6 +493,51 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                 placeholder="اسم المعلم"
                 className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right"
               />
+            </div>
+          </div>
+
+          {/* Template Model Selection */}
+          <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-2">
+            <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>اختر نموذج التحضير الافتراضي (يتم توليد كلا النموذجين بالذكاء الاصطناعي آلياً):</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-right">
+              <button
+                type="button"
+                onClick={() => setSelectedTemplateType('executive')}
+                className={`p-2.5 rounded-xl border text-xs font-bold transition-all text-right flex flex-col justify-between ${
+                  selectedTemplateType === 'executive'
+                    ? 'bg-emerald-800 text-white border-emerald-800 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>النموذج الأول (الرئيسي المعتمد)</span>
+                  {selectedTemplateType === 'executive' && <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />}
+                </div>
+                <span className={`text-[10px] mt-1 block font-normal ${selectedTemplateType === 'executive' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                  خطة التنفيذ التنفيذية (أهداف SMART + مهمة GRASPS + ٥ مراحل)
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTemplateType('adaptive')}
+                className={`p-2.5 rounded-xl border text-xs font-bold transition-all text-right flex flex-col justify-between ${
+                  selectedTemplateType === 'adaptive'
+                    ? 'bg-emerald-800 text-white border-emerald-800 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>النموذج الثاني (التكيفي الشامل)</span>
+                  {selectedTemplateType === 'adaptive' && <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />}
+                </div>
+                <span className={`text-[10px] mt-1 block font-normal ${selectedTemplateType === 'adaptive' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                  النموذج التربوي التكيفي ذو المحاور الستة والتحليل الشامل
+                </span>
+              </button>
             </div>
           </div>
 
