@@ -34,6 +34,10 @@ import { AuthenticTaskGeneratorModal } from './components/AuthenticTaskGenerator
 import { RubricGeneratorModal } from './components/RubricGeneratorModal';
 import { UnitPlanGeneratorModal } from './components/UnitPlanGeneratorModal';
 import { QrCodeModal } from './components/QrCodeModal';
+import { MotionGraphicsModal } from './components/MotionGraphicsModal';
+import { EducationalAssessmentSimulatorModal } from './components/EducationalAssessmentSimulatorModal';
+import { MainToolsIconHub } from './components/MainToolsIconHub';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { FloatingWhatsAppButton } from './components/WhatsAppContactButton';
 import { toArabicDigits, formatDateDMY } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
@@ -182,6 +186,8 @@ export default function App() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isMotionGraphicsModalOpen, setIsMotionGraphicsModalOpen] = useState(false);
+  const [isAssessmentSimulatorModalOpen, setIsAssessmentSimulatorModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
@@ -364,7 +370,7 @@ export default function App() {
   ];
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-['Cairo',sans-serif] text-right">
+    <div dir="rtl" className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-['Cairo',sans-serif] text-right pb-16 md:pb-0 overflow-x-hidden">
       {/* Top Navbar */}
       <HeaderNav
         plans={plans}
@@ -396,6 +402,8 @@ export default function App() {
         onChangeView={(view) => setViewMode(view)}
         onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
         onOpenQrModal={() => setIsQrModalOpen(true)}
+        onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
+        onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
@@ -425,6 +433,7 @@ export default function App() {
             resourcesCount={resources.length}
             onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
             onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
+            onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
           />
         </main>
       ) : (
@@ -443,7 +452,7 @@ export default function App() {
                     <img
                       src="/abqoor_logo.jpg"
                       alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
-                      className="relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
+                      className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
                       onError={(e) => {
                         const target = e.currentTarget;
                         if (target.src.includes('abqoor_logo.jpg')) {
@@ -489,598 +498,68 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Direct High-Frequency Action Buttons */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 shrink-0 pt-2 lg:pt-0">
+                {/* Direct High-Frequency Action Buttons - Stacked & Organized */}
+                <div className="bg-slate-900/60 p-2 sm:p-2.5 rounded-2xl border border-emerald-500/30 flex flex-wrap items-center justify-center lg:justify-end gap-2 shrink-0 backdrop-blur-xs shadow-lg">
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 text-xs font-bold text-emerald-300">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>إجراءات فورية:</span>
+                  </div>
                   <button
                     onClick={() => setViewMode('official-print')}
-                    className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
                   >
-                    <Printer className="w-4.5 h-4.5 text-emerald-800 shrink-0" />
-                    <span>معاينة وطباعة PDF</span>
+                    <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
+                    <span>طباعة PDF</span>
                   </button>
 
                   <button
                     onClick={() => setIsExportModalOpen(true)}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="تصدير الخطة بصيغ Word و HTML و JSON"
                   >
-                    <FileDown className="w-4.5 h-4.5 text-blue-200 shrink-0" />
+                    <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
                     <span>تصدير الخطة</span>
                   </button>
 
                   <button
                     onClick={() => setIsBackupRestoreModalOpen(true)}
-                    className="px-4 py-2.5 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                    className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
                   >
-                    <Database className="w-4.5 h-4.5 text-slate-950 shrink-0" />
-                    <span>نسخ احتياطي واستيراد (JSON)</span>
+                    <Database className="w-4 h-4 text-slate-950 shrink-0" />
+                    <span>نسخ احتياطي (JSON)</span>
                   </button>
                 </div>
               </div>
 
-              {/* Categorized Quick-Access Action Hub (مركز الوصول السريع المنظم للأدوات والأيقونات) */}
-              <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 sm:p-4.5 backdrop-blur-md space-y-4 shadow-xl">
-                
-                {/* 1. Category Filter Selector Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                    <span className="text-slate-400 text-[11px] ml-1 flex items-center gap-1">
-                      <Filter className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>تصنيف الأيقونات:</span>
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => setActionCategoryFilter('all')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                        actionCategoryFilter === 'all'
-                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/40'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      <span>🌟 كافة الأدوات</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActionCategoryFilter('ai')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                        actionCategoryFilter === 'ai'
-                          ? 'bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-sm ring-2 ring-emerald-400/40'
-                          : 'bg-slate-800 text-emerald-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                      <span>التخطيط والتوليد بالـ AI</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActionCategoryFilter('resources')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                        actionCategoryFilter === 'resources'
-                          ? 'bg-linear-to-r from-teal-600 to-cyan-700 text-white shadow-sm ring-2 ring-teal-400/40'
-                          : 'bg-slate-800 text-teal-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      <Layers className="w-3.5 h-3.5 text-teal-300" />
-                      <span>المناهج والوسائل ({toArabicDigits(resources.length)})</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActionCategoryFilter('plans')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                        actionCategoryFilter === 'plans'
-                          ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-400/40'
-                          : 'bg-slate-800 text-amber-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      <FileEdit className="w-3.5 h-3.5 text-amber-300" />
-                      <span>إدارة ونماذج التحضير</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActionCategoryFilter('export')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                        actionCategoryFilter === 'export'
-                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/40'
-                          : 'bg-slate-800 text-blue-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      <Printer className="w-3.5 h-3.5 text-blue-300" />
-                      <span>الطباعة والتصدير</span>
-                    </button>
-                  </div>
-
-                  <div className="hidden lg:flex items-center gap-2 text-[11px] text-slate-400">
-                    <span>💡 رتّبنا الأدوات حسب الأولوية لتسهيل الوصول والتنقل السريع.</span>
-                  </div>
-                </div>
-
-                {/* 2. Structured Action Cards Grid (مرتبة ومبوبة حسب الفئة) */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                  
-                  {/* === GROUP 1: AI PLANNING & GENERATION === */}
-                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'ai') && (
-                    <>
-                      {/* AI Single Lesson Generator */}
-                      <button
-                        onClick={() => setIsAiModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-emerald-800/90 via-teal-900/90 to-emerald-950 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد خطة درس نموذجية كاملة بالأقسام الستة بالذكاء الاصطناعي"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-600/40 flex items-center justify-center border border-emerald-400/30 group-hover:bg-emerald-500/50 transition-colors">
-                            <Sparkles className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md border border-emerald-500/30">
-                            AI فوري
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
-                            تحضير درس بالـ AI
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            خطة متكاملة للأقسام 1-6
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* AI Unit Plan Generator */}
-                      <button
-                        onClick={() => setIsUnitPlanModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-blue-900/90 via-indigo-950 to-purple-950 border border-blue-500/60 hover:border-blue-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد وتصميم تحضير وحدة كاملة بمجموع دروسها مع رفع المناهج"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-blue-600/40 flex items-center justify-center border border-blue-400/30 group-hover:bg-blue-500/50 transition-colors">
-                            <Boxes className="w-4 h-4 text-blue-200" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded-md border border-blue-500/30">
-                            وحدة كاملة
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-blue-200 transition-colors font-['Tajawal']">
-                            تحضير وحدة (AI)
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            وحدة شاملة + رفع المصادر
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Semester Plan & Periods Distribution */}
-                      <button
-                        onClick={() => setIsSemesterPlanModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-teal-900/90 via-emerald-950 to-cyan-950 border border-teal-500/60 hover:border-cyan-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بالتقويم الفلسطيني"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-teal-600/40 flex items-center justify-center border border-teal-400/30 group-hover:bg-teal-500/50 transition-colors">
-                            <CalendarRange className="w-4 h-4 text-cyan-200" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-500/20 text-cyan-300 rounded-md border border-teal-500/30">
-                            فصلي 🇵🇸
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-cyan-200 transition-colors font-['Tajawal']">
-                            الخطة الفصلية
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            توزيع الحصص والتقويم
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Extract Curriculum PDF / Content Tables */}
-                      <button
-                        onClick={() => setIsCurriculumPdfExtractorOpen(true)}
-                        className="p-3 bg-linear-to-br from-cyan-900/90 via-teal-950 to-slate-950 border border-cyan-400/80 hover:border-cyan-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-sm min-h-[96px] ring-2 ring-cyan-500/30"
-                        title="رفع ملفات المناهج وجداول توزيع المحتوى (PDF / صور / جداول) واستخراج بياناتها وتوزيعها تلقائياً على نماذج الخطة الفصلية"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-cyan-600/40 flex items-center justify-center border border-cyan-400/40 group-hover:bg-cyan-500/50 transition-colors">
-                            <FileUp className="w-4 h-4 text-cyan-200" />
-                          </div>
-                          <span className="text-[9px] font-black px-1.5 py-0.5 bg-amber-400 text-amber-950 rounded-md shadow-2xs">
-                            PDF ⚡
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-cyan-200 transition-colors font-['Tajawal']">
-                            استخراج منهاج PDF
-                          </span>
-                          <span className="block text-[10px] text-cyan-100/90 truncate">
-                            توزيع فصلي آلي وتلقائي
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Interactive Worksheets AI */}
-                      <button
-                        onClick={() => setIsWorksheetModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-teal-900/80 via-slate-900 to-slate-950 border border-teal-500/50 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد أوراق عمل تفاعلية ذكية متوافقة مع المادة بالذكاء الاصطناعي"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-teal-700/40 flex items-center justify-center border border-teal-400/30 group-hover:bg-teal-600/50 transition-colors">
-                            <FileCheck className="w-4 h-4 text-teal-200" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-500/20 text-teal-300 rounded-md">
-                            أوراق عمل
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
-                            أوراق عمل AI
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            أنشطة تفاعلية متمايزة
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Authentic Task Generator (GRASPS) */}
-                      <button
-                        onClick={() => setIsAuthenticTaskModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-purple-900/80 via-slate-900 to-indigo-950 border border-purple-500/50 hover:border-purple-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد مهمة تقويم أصيل واقعية وفق إطار GRASPS"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-purple-700/40 flex items-center justify-center border border-purple-400/30 group-hover:bg-purple-600/50 transition-colors">
-                            <Target className="w-4 h-4 text-pink-200" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded-md">
-                            GRASPS
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-purple-200 transition-colors font-['Tajawal']">
-                            المهام الأصيلة
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            مواقف واقعية ومحاكاة
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Rubric Generator */}
-                      <button
-                        onClick={() => setIsRubricModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-indigo-900/80 via-slate-900 to-purple-950 border border-indigo-500/50 hover:border-indigo-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="توليد سلالم التقدير اللفظية Rubric لمهمة الدرس"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-700/40 flex items-center justify-center border border-indigo-400/30 group-hover:bg-indigo-600/50 transition-colors">
-                            <Award className="w-4 h-4 text-indigo-200" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md">
-                            Rubric
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-indigo-200 transition-colors font-['Tajawal']">
-                            سلم التقدير
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            المعايير الوزارية ٤ مستويات
-                          </span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-
-                  {/* === GROUP 2: RESOURCES & CURRICULUM TOOLS === */}
-                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'resources') && (
-                    <>
-                      {/* Resources Bank & Uploader */}
-                      <button
-                        onClick={() => setIsResourcesModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-emerald-800 via-teal-800 to-emerald-900 border-2 border-emerald-400/80 hover:border-emerald-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-md min-h-[96px] ring-2 ring-emerald-500/20"
-                        title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center border border-emerald-200/40 group-hover:bg-white/30 transition-colors">
-                            <Layers className="w-4 h-4 text-emerald-100" />
-                          </div>
-                          <span className="text-[10px] font-black px-2 py-0.5 bg-amber-400 text-amber-950 rounded-full shadow-2xs tabular-nums">
-                            +{toArabicDigits(resources.length)} مصدر
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
-                            إضافة المصادر
-                          </span>
-                          <span className="block text-[10px] text-emerald-100/90 truncate">
-                            رفع كتب PDF والدلائل
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Interactive Simulator / Abacus */}
-                      <button
-                        onClick={() => setIsAbacusModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-emerald-950 border border-slate-700 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-800/40 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-700/50 transition-colors">
-                            <Calculator className="w-4 h-4 text-emerald-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-emerald-300 rounded-md border border-slate-700">
-                            تفاعلي
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
-                            المحاكي الرقمي
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            المعداد ولوحة المنازل
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Productivity Dashboard */}
-                      <button
-                        onClick={() => setViewMode('dashboard')}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-teal-950 border border-slate-700 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="لوحة الإنتاجية المفهرسة والإحصاءات والتقويم الشهري"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-teal-800/40 flex items-center justify-center border border-teal-500/30 group-hover:bg-teal-700/50 transition-colors">
-                            <LayoutDashboard className="w-4 h-4 text-teal-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-teal-300 rounded-md border border-slate-700">
-                            إحصاءات
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
-                            لوحة الإنتاجية
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            متابعة الإنجاز والتقويم
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Family Partnership Card */}
-                      <button
-                        onClick={() => setIsParentCardModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-indigo-950 border border-slate-700 hover:border-indigo-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="بطاقة الشراكة الأسرية التفاعلية مع ولي الأمر"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-800/40 flex items-center justify-center border border-indigo-500/30 group-hover:bg-indigo-700/50 transition-colors">
-                            <Users2 className="w-4 h-4 text-indigo-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-indigo-300 rounded-md border border-slate-700">
-                            منزلي
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-indigo-200 transition-colors font-['Tajawal']">
-                            الشراكة الأسرية
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            بطاقة متابعة ولي الأمر
-                          </span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-
-                  {/* === GROUP 3: PLANS & TEMPLATES MANAGEMENT === */}
-                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'plans') && (
-                    <>
-                      {/* Blank Template Setup Modal */}
-                      <button
-                        onClick={() => setIsBlankModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-amber-900/80 via-slate-900 to-amber-950 border border-amber-500/60 hover:border-amber-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="استمارة تحضير مفرغة رسمية للطباعة أو البدء الرقمي الفوري"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-amber-600/40 flex items-center justify-center border border-amber-400/30 group-hover:bg-amber-500/50 transition-colors">
-                            <FileEdit className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">
-                            الرئيسية
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
-                            استمارة مفرغة
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            نموذج وزاري فارغ جاهز
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Plans Catalog Viewer */}
-                      <button
-                        onClick={() => setIsPlansViewerModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-emerald-950 border border-slate-700 hover:border-emerald-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="عرض واستعراض كافة خطط الدروس المحفوظة في المنظومة والتبديل المباشر بينها"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-800/40 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-700/50 transition-colors">
-                            <FolderKanban className="w-4 h-4 text-emerald-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md border border-emerald-500/30">
-                            {toArabicDigits(plans.length)} خطة
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-emerald-200 transition-colors font-['Tajawal']">
-                            سجل الخطط
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            استعراض وتبديل الخطط
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Clear Fields to Start Blank */}
-                      <button
-                        onClick={handleClearCurrentPlan}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-amber-950 border border-slate-700 hover:border-amber-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="تفريغ ومسح كافة الحقول الحالية للبدء من الصفر"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-amber-800/40 flex items-center justify-center border border-amber-500/30 group-hover:bg-amber-700/50 transition-colors">
-                            <RotateCcw className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded-md border border-slate-700">
-                            تصفير
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
-                            تفريغ الحقول
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            بدء إدخال جديد من الصفر
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Delete Plan Button */}
-                      <button
-                        onClick={() => handleRequestDeletePlan(currentPlan)}
-                        className="p-3 bg-linear-to-br from-rose-950/80 via-slate-900 to-slate-950 border border-rose-600/50 hover:border-rose-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="حذف هذه الخطة نهائياً من المنظومة عند وجود أخطاء أو الرغبة بالتراجع"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-rose-800/40 flex items-center justify-center border border-rose-500/30 group-hover:bg-rose-700/50 transition-colors">
-                            <Trash2 className="w-4 h-4 text-rose-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-rose-500/20 text-rose-300 rounded-md border border-rose-500/30">
-                            تراجع
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-rose-200 group-hover:text-rose-100 transition-colors font-['Tajawal']">
-                            حذف الخطة
-                          </span>
-                          <span className="block text-[10px] text-rose-300/70 truncate">
-                            حذف الخطة المعروضة
-                          </span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-
-                  {/* === GROUP 4: EXPORT, PRINT & ASSESSMENT === */}
-                  {(actionCategoryFilter === 'all' || actionCategoryFilter === 'export') && (
-                    <>
-                      {/* Export All Plans JSON Backup Card */}
-                      <button
-                        onClick={() => setIsBackupRestoreModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-amber-900 via-slate-900 to-emerald-950 border-2 border-amber-400 hover:border-amber-300 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-97 cursor-pointer group shadow-md min-h-[96px] ring-2 ring-amber-500/20"
-                        title="تصدير كافة الخطط المخزنة في localStorage كملف JSON موحد لأخذ نسخة احتياطية واستيرادها"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-amber-500/30 flex items-center justify-center border border-amber-300/40 group-hover:bg-amber-500/50 transition-colors">
-                            <Database className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <span className="text-[9px] font-black px-1.5 py-0.5 bg-amber-400 text-amber-950 rounded-md">
-                            تصدير JSON 💾
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-amber-200 transition-colors font-['Tajawal']">
-                            نسخ احتياطي لكافة الخطط
-                          </span>
-                          <span className="block text-[10px] text-amber-100/90 truncate">
-                            تنزيل ملف موحد (.json)
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Import Backup Card */}
-                      <button
-                        onClick={() => setIsBackupRestoreModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-teal-900/80 via-slate-900 to-slate-950 border border-teal-500/60 hover:border-teal-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="استيراد واسترجاع خطط من ملف نسخة احتياطية JSON"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-teal-800/40 flex items-center justify-center border border-teal-500/30 group-hover:bg-teal-700/50 transition-colors">
-                            <Upload className="w-4 h-4 text-teal-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-teal-300 rounded-md border border-slate-700">
-                            استرجاع
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-teal-200 transition-colors font-['Tajawal']">
-                            استيراد خطط (JSON)
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            رفع ملف النسخة الاحتياطية
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Export Hub Card */}
-                      <button
-                        onClick={() => setIsExportModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-blue-900/80 via-slate-900 to-slate-950 border border-blue-500/60 hover:border-blue-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="تصدير الخطة الحالية بصيغ Word و PDF و HTML و JSON"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-blue-800/40 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-700/50 transition-colors">
-                            <FileDown className="w-4 h-4 text-blue-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-blue-300 rounded-md border border-slate-700">
-                            Word/PDF
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-blue-200 transition-colors font-['Tajawal']">
-                            مركز التصدير
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            Word و HTML و PDF
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Exit Ticket Generator */}
-                      <button
-                        onClick={() => setIsExitTicketModalOpen(true)}
-                        className="p-3 bg-linear-to-br from-slate-800 via-slate-900 to-purple-950 border border-slate-700 hover:border-purple-400 rounded-xl text-right flex flex-col justify-between gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-97 cursor-pointer group shadow-sm min-h-[96px]"
-                        title="بطاقات خروج الحصة Exit Ticket للتقويم التكويني والختامي"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-lg bg-purple-800/40 flex items-center justify-center border border-purple-500/30 group-hover:bg-purple-700/50 transition-colors">
-                            <Clock className="w-4 h-4 text-purple-300" />
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-800 text-purple-300 rounded-md border border-slate-700">
-                            تكويني
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-black text-xs text-white group-hover:text-purple-200 transition-colors font-['Tajawal']">
-                            بطاقة الخروج
-                          </span>
-                          <span className="block text-[10px] text-slate-300/80 truncate">
-                            Exit Ticket ختام الحصة
-                          </span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+              {/* Master Unified Tools & Icons Hub (مركز الأدوات والأيقونات الموحد لكافة الأجهزة) */}
+              <MainToolsIconHub
+                onOpenAiModal={() => setIsAiModalOpen(true)}
+                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+                onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+                onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
+                onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+                onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+                onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+                onOpenRubricModal={() => setIsRubricModalOpen(true)}
+                onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
+                onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
+                onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                resourcesCount={resources.length}
+                onOpenDashboard={() => setViewMode('dashboard')}
+                onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
+                onOpenBlankModal={() => setIsBlankModalOpen(true)}
+                onOpenPlansViewer={() => setIsPlansViewerModalOpen(true)}
+                totalPlansCount={plans.length}
+                onOpenPrintView={() => setViewMode('official-print')}
+                onOpenExportModal={() => setIsExportModalOpen(true)}
+                onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
+                onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
+                onOpenQrModal={() => setIsQrModalOpen(true)}
+                onClearCurrentPlan={handleClearCurrentPlan}
+                onDeleteCurrentPlan={() => handleRequestDeletePlan(currentPlan)}
+              />
             </div>
           </section>
 
@@ -1187,10 +666,13 @@ export default function App() {
               />
             )}
 
-            {/* Section 5: Self Reflection */}
+            {/* Section 5: Self Reflection, PLC Sharing & Growth Dashboard */}
             {(activeTab === 'all' || activeTab === 'sec5') && (
               <Section5ReflectionCard
                 data={currentPlan.section5Reflection}
+                lessonHeader={currentPlan.header}
+                allPlans={plans}
+                onSelectPlan={(id) => setActivePlanId(id)}
                 onChange={(section5Reflection) => updateCurrentPlan({ ...currentPlan, section5Reflection })}
               />
             )}
@@ -1456,6 +938,41 @@ export default function App() {
       <QrCodeModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
+      />
+
+      <MotionGraphicsModal
+        isOpen={isMotionGraphicsModalOpen}
+        onClose={() => setIsMotionGraphicsModalOpen(false)}
+        activePlan={currentPlan}
+        savedPlans={plans}
+        onSelectPlan={(id) => setActivePlanId(id)}
+      />
+
+      <EducationalAssessmentSimulatorModal
+        isOpen={isAssessmentSimulatorModalOpen}
+        onClose={() => setIsAssessmentSimulatorModalOpen(false)}
+        plans={plans}
+        activePlanId={currentPlan.id}
+        onSelectPlan={(id) => setActivePlanId(id)}
+      />
+
+      {/* Mobile Sticky Quick Navigation Bar */}
+      <MobileBottomNav
+        currentView={viewMode}
+        onChangeView={(view) => setViewMode(view)}
+        onOpenToolsHub={() => {
+          if (viewMode !== 'editor') {
+            setViewMode('editor');
+          }
+          setTimeout(() => {
+            const el = document.getElementById('main-tools-hub');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenAiModal={() => setIsAiModalOpen(true)}
       />
 
       {/* Floating WhatsApp Contact Button */}

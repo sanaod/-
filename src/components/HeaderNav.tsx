@@ -33,6 +33,7 @@ import {
   CalendarRange,
   Database,
   QrCode,
+  Clapperboard,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -69,6 +70,8 @@ interface HeaderNavProps {
   onChangeView?: (view: 'editor' | 'dashboard') => void;
   onOpenBackupRestoreModal?: () => void;
   onOpenQrModal?: () => void;
+  onOpenMotionGraphicsModal?: () => void;
+  onOpenAssessmentSimulatorModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -101,6 +104,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onChangeView,
   onOpenBackupRestoreModal,
   onOpenQrModal,
+  onOpenMotionGraphicsModal,
+  onOpenAssessmentSimulatorModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -220,6 +225,18 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               >
                 <QrCode className="w-4 h-4 text-emerald-200 shrink-0" />
                 <span className="hidden md:inline">QR المنظومة 📱</span>
+              </button>
+            )}
+
+            {/* Motion Graphics Video Generator Button */}
+            {onOpenMotionGraphicsModal && (
+              <button
+                onClick={onOpenMotionGraphicsModal}
+                className="px-3 py-2 bg-linear-to-r from-purple-700 via-indigo-700 to-purple-800 hover:from-purple-800 hover:to-indigo-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-purple-400/60"
+                title="توليد ومعاينة فيديو موشن جرافيك تعليمي متناسب مع تحضير الدرس الحالي"
+              >
+                <Clapperboard className="w-4 h-4 text-purple-200 shrink-0" />
+                <span className="hidden lg:inline">موشن جرافيك 🎬</span>
               </button>
             )}
 
@@ -360,129 +377,138 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               </button>
             </div>
 
-            {/* Group 3: Smart Teacher Tools (الأدوات التربوية الذكية) */}
-            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-              {/* AI Plan Generator CTA */}
-              <button
-                onClick={onOpenAiGenerator}
-                className="px-2.5 py-1.5 bg-linear-to-r from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
-                title="توليد خطة درس نموذجية بالذكاء الاصطناعي وفق معايير التميز الوزارية"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span>تحضير بالـ AI</span>
-              </button>
-
-              {/* Unit Plan Generator CTA */}
-              {onOpenUnitPlanModal && (
+            {/* Group 3: Smart Teacher Tools - Stacked & Organized Clusters (الأدوات التربوية المنظمة) */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {/* Cluster A: AI Planning & Curriculum */}
+              <div className="flex items-center bg-white p-1 rounded-xl border border-emerald-200/80 shadow-2xs gap-1">
+                {/* AI Plan Generator CTA */}
                 <button
-                  onClick={onOpenUnitPlanModal}
-                  title="توليد تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-blue-700 via-indigo-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer group"
+                  onClick={onOpenAiGenerator}
+                  className="px-2.5 py-1.5 bg-linear-to-r from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                  title="توليد خطة درس نموذجية بالذكاء الاصطناعي وفق معايير التميز الوزارية"
                 >
-                  <Boxes className="w-3.5 h-3.5 text-blue-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>تحضير وحدة كاملة (AI)</span>
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  <span>تحضير بالـ AI</span>
                 </button>
-              )}
 
-              {/* Semester Plan & Periods Distribution Guide CTA */}
-              {onOpenSemesterPlanModal && (
+                {/* Unit Plan Generator CTA */}
+                {onOpenUnitPlanModal && (
+                  <button
+                    onClick={onOpenUnitPlanModal}
+                    title="توليد تحضير وحدة دراسية كاملة بالذكاء الاصطناعي بمجموع دروسها"
+                    className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <Boxes className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>وحدة كاملة</span>
+                  </button>
+                )}
+
+                {/* Semester Plan Guide CTA */}
+                {onOpenSemesterPlanModal && (
+                  <button
+                    onClick={onOpenSemesterPlanModal}
+                    title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص"
+                    className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <CalendarRange className="w-3.5 h-3.5 text-teal-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>الخطة الفصلية</span>
+                  </button>
+                )}
+
+                {/* Interactive Worksheet CTA */}
+                {onOpenWorksheetModal && (
+                  <button
+                    onClick={onOpenWorksheetModal}
+                    title="توليد ورقة عمل تفاعلية ذكية متوافقة مع الدرس بالذكاء الاصطناعي"
+                    className="px-2 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <FileCheck2 className="w-3.5 h-3.5 text-teal-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>ورقة عمل AI</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Cluster B: Assessment, Tasks & Simulator */}
+              <div className="flex items-center bg-white p-1 rounded-xl border border-amber-200/80 shadow-2xs gap-1">
+                {/* Assessment Hub CTA */}
+                {onOpenAssessmentModal && (
+                  <button
+                    onClick={onOpenAssessmentModal}
+                    title="توليد وإدارة أدوات التقويم التشخيصي، التكويني، والختامي"
+                    className="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <Activity className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>التقويم</span>
+                  </button>
+                )}
+
+                {/* Authentic Task CTA (GRASPS) */}
+                {onOpenAuthenticTaskModal && (
+                  <button
+                    onClick={onOpenAuthenticTaskModal}
+                    title="توليد وتصميم مهمة التقويم الأصيل GRASPS بالذكاء الاصطناعي"
+                    className="px-2 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <Award className="w-3.5 h-3.5 text-pink-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>المهمة الأصيلة</span>
+                  </button>
+                )}
+
+                {/* Rubric Generator CTA */}
+                {onOpenRubricModal && (
+                  <button
+                    onClick={onOpenRubricModal}
+                    title="توليد وتصميم سلم التقدير اللفظي Rubric"
+                    className="px-2 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer group"
+                  >
+                    <ListTree className="w-3.5 h-3.5 text-violet-600 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>Rubric</span>
+                  </button>
+                )}
+
+                {/* Educational Assessment Calendar Simulator */}
+                {onOpenAssessmentSimulatorModal && (
+                  <button
+                    onClick={onOpenAssessmentSimulatorModal}
+                    title="محاكي التقويم التربوي لتصور تواريخ المهام المعقدة"
+                    className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-black flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                  >
+                    <CalendarRange className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                    <span>محاكي التقويم 🗓️</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Cluster C: Simulator & Resources Bank */}
+              <div className="flex items-center bg-white p-1 rounded-xl border border-teal-200/80 shadow-2xs gap-1">
+                {/* Interactive Tool / Simulator */}
                 <button
-                  onClick={onOpenSemesterPlanModal}
-                  title="توليد وعرض الخطة الفصلية الموحدة ودليل توزيع الحصص بجميع الصيغ"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 via-emerald-800 to-cyan-800 hover:from-teal-800 hover:to-cyan-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer group"
+                  onClick={onOpenAbacusModal}
+                  title="المحاكي الرقمي والأداة التفاعلية (المعداد)"
+                  className="px-2 py-1.5 bg-slate-50 hover:bg-emerald-50 text-emerald-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                 >
-                  <CalendarRange className="w-3.5 h-3.5 text-cyan-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>الخطة الفصلية وتوزيع الحصص</span>
+                  <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>المحاكي</span>
                 </button>
-              )}
 
-              {/* Interactive Worksheet CTA */}
-              {onOpenWorksheetModal && (
+                {/* Resources Manager CTA */}
                 <button
-                  onClick={onOpenWorksheetModal}
-                  title="توليد ورقة عمل تفاعلية ذكية متوافقة مع الدرس بالذكاء الاصطناعي"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-teal-700 to-emerald-800 hover:from-teal-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                  onClick={onOpenResourcesModal}
+                  title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
+                  className="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-400 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer group"
                 >
-                  <FileCheck2 className="w-3.5 h-3.5 text-teal-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>ورقة عمل AI</span>
-                </button>
-              )}
-
-              {/* Assessment Hub CTA (Diagnostic, Formative, Summative) */}
-              {onOpenAssessmentModal && (
-                <button
-                  onClick={onOpenAssessmentModal}
-                  title="توليد وإدارة أدوات التقويم التشخيصي، التكويني، والختامي بالذكاء الاصطناعي"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-purple-700 via-indigo-700 to-emerald-800 hover:from-purple-800 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
-                >
-                  <Activity className="w-3.5 h-3.5 text-purple-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>التقويم الشامل</span>
-                </button>
-              )}
-
-              {/* Authentic Task CTA (GRASPS) */}
-              {onOpenAuthenticTaskModal && (
-                <button
-                  onClick={onOpenAuthenticTaskModal}
-                  title="توليد وتصميم مهمة التقويم الأصيل GRASPS بالذكاء الاصطناعي"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-indigo-700 via-purple-800 to-pink-800 hover:from-indigo-800 hover:to-pink-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
-                >
-                  <Award className="w-3.5 h-3.5 text-pink-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>المهمة الأصيلة</span>
-                </button>
-              )}
-
-              {/* Rubric Generator CTA */}
-              {onOpenRubricModal && (
-                <button
-                  onClick={onOpenRubricModal}
-                  title="توليد وتصميم سلم التقدير اللفظي Rubric الخاص بمهمة الدرس بالذكاء الاصطناعي"
-                  className="px-2.5 py-1.5 bg-linear-to-r from-purple-800 via-violet-700 to-indigo-800 hover:from-purple-900 hover:to-indigo-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
-                >
-                  <ListTree className="w-3.5 h-3.5 text-purple-200 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>سلم التقدير Rubric</span>
-                </button>
-              )}
-
-              {/* Interactive Tool / Simulator */}
-              <button
-                onClick={onOpenAbacusModal}
-                title="المحاكي الرقمي والأداة التفاعلية المتوافقة مع الدرس المحضر"
-                className="px-2.5 py-1.5 bg-white hover:bg-emerald-50/80 text-emerald-900 border border-emerald-300/80 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
-              >
-                <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>المحاكي التفاعلي</span>
-              </button>
-
-              {/* Resources Manager CTA - Distinctive & Large */}
-              <button
-                onClick={onOpenResourcesModal}
-                title="إدارة ورفع المصادر والمناهج والمراجع التعليمية بسهولة"
-                className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 via-teal-50 to-emerald-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 border-2 border-emerald-500/80 hover:border-emerald-600 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-97 cursor-pointer ring-2 ring-emerald-500/20 group"
-              >
-                <div className="relative p-1 bg-emerald-700 group-hover:bg-emerald-800 text-white rounded-lg shadow-xs transition-colors shrink-0">
-                  <Layers className="w-4 h-4 text-emerald-100" />
-                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[10px] font-black border border-white">
-                    +
+                  <div className="relative p-0.5 bg-emerald-700 group-hover:bg-emerald-800 text-white rounded-md shadow-2xs transition-colors shrink-0">
+                    <Layers className="w-3.5 h-3.5 text-emerald-100" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                      +
+                    </span>
+                  </div>
+                  <span>إضافة المصادر</span>
+                  <span className="px-1.5 py-0.2 bg-emerald-800 text-white rounded-full text-[10px] font-black tabular-nums">
+                    {toArabicDigits(resourcesCount)}
                   </span>
-                </div>
-                <span className="font-extrabold text-[12px] text-emerald-950">إضافة المصادر</span>
-                <span className="px-2 py-0.5 bg-emerald-800 group-hover:bg-emerald-900 text-white rounded-full text-[11px] font-black tabular-nums shadow-2xs">
-                  {toArabicDigits(resourcesCount)}
-                </span>
-              </button>
-
-              {/* Blank Form Modal CTA */}
-              {onOpenBlankTemplateModal && (
-                <button
-                  onClick={onOpenBlankTemplateModal}
-                  title="استمارة تحضير مفرغة رسمية للطباعة أو البدء الفوري"
-                  className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
-                >
-                  <FileEdit className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                  <span>استمارة مفرغة</span>
                 </button>
-              )}
+              </div>
             </div>
 
             {/* Group 4: Output, Export & Print Hub (المخرجات والطباعة الرسمية) */}

@@ -45,21 +45,21 @@ export const FloatingWhatsAppButton: React.FC = () => {
   return (
     <aside
       aria-label="تواصل عبر الواتساب"
-      className="fixed bottom-5 left-5 z-40 flex items-center gap-2 group no-print select-none animate-in fade-in slide-in-from-bottom-3 duration-300"
+      className="fixed bottom-18 md:bottom-5 left-3 sm:left-5 z-40 flex items-center gap-2 group no-print select-none animate-in fade-in slide-in-from-bottom-3 duration-300"
     >
       <a
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
         title="تواصل معنا مباشرة عبر تطبيق الواتساب"
-        className="flex items-center gap-2.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 border-2 border-white ring-4 ring-emerald-500/20"
+        className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 border-2 border-white ring-4 ring-emerald-500/20 touch-manipulation cursor-pointer"
       >
-        <span className="relative flex h-3 w-3">
+        <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-100"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-100"></span>
         </span>
-        <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
-        <span className="text-xs font-black font-['Tajawal'] tracking-wide">
+        <WhatsAppIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
+        <span className="text-[11px] sm:text-xs font-black font-['Tajawal'] tracking-wide hidden xs:inline">
           اتصل بنا عبر واتساب
         </span>
       </a>

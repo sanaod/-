@@ -54,6 +54,10 @@ import {
   Plus,
   Circle,
   QrCode,
+  GripVertical,
+  Move,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
@@ -62,6 +66,7 @@ import { StudentAssessmentDashboard } from './StudentAssessmentDashboard';
 import { CompetencyDistributionDashboard } from './CompetencyDistributionDashboard';
 import { DailyPedagogicalRemindersModal } from './DailyPedagogicalRemindersModal';
 import { QrCodeModal } from './QrCodeModal';
+import { SmartPlanAlertsWidget } from './SmartPlanAlertsWidget';
 import {
   DailyPedagogicalReminder,
   REMINDER_CATEGORY_CONFIG,
@@ -87,6 +92,7 @@ interface TeacherDashboardProps {
   resourcesCount?: number;
   onOpenAbacusModal?: () => void;
   onOpenBackupRestore?: () => void;
+  onOpenAssessmentSimulatorModal?: () => void;
 }
 
 // Subject color mappings
@@ -231,6 +237,124 @@ const STANDARD_PHASES = [
   },
 ];
 
+const DEFAULT_WIDGET_ORDER = [
+  'smart_alerts',
+  'kpi_metrics',
+  'achievements_visualizer',
+  'daily_reminders',
+  'monthly_calendar',
+  'student_assessment',
+  'competency_matrix',
+  'subject_bar_chart',
+  'phase_donut_chart',
+  'indexed_folders',
+];
+
+const WIDGET_TITLES: Record<string, string> = {
+  smart_alerts: 'التنبيهات والمواعيد الذكية للخطط (Smart Alerts)',
+  kpi_metrics: 'بطاقات مؤشرات الأداء الرئيسية (KPIs)',
+  achievements_visualizer: 'الرسوم البيانية لإنجازات المعلم والنمو الحجمي',
+  daily_reminders: 'الملاحظات التذكيرية والمهام اليومية المجدولة',
+  monthly_calendar: 'تقويم التخطيط والمهام التربوية الشهرية',
+  student_assessment: 'لوحة تحليل أداء الطلاب وسلالم التقدير',
+  competency_matrix: 'مصفوفة الكفايات وفجوات التخطيط عبر الفصول',
+  subject_bar_chart: 'رسم بياني: عدد الخطط والحصص لكل مادة',
+  phase_donut_chart: 'رسم بياني: توزيع زمن المراحل الأربعة ومقارنتها بالمباحث',
+  indexed_folders: 'سجل الخطط والمجلدات المفهرسة',
+};
+
+const DASHBOARD_ORDER_STORAGE_KEY = 'educational_expert_teacher_dashboard_widget_order_v2';
+
+interface DraggableWidgetCardProps {
+  id: string;
+  index: number;
+  title: string;
+  isReorderMode: boolean;
+  draggedWidgetId: string | null;
+  dragOverWidgetId: string | null;
+  onDragStart: (e: React.DragEvent, id: string) => void;
+  onDragOver: (e: React.DragEvent, id: string) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, id: string) => void;
+  onMoveWidget: (id: string, dir: 'up' | 'down') => void;
+  isFirst: boolean;
+  isLast: boolean;
+  children: React.ReactNode;
+}
+
+const DraggableWidgetCard: React.FC<DraggableWidgetCardProps> = ({
+  id,
+  index,
+  title,
+  isReorderMode,
+  draggedWidgetId,
+  dragOverWidgetId,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onMoveWidget,
+  isFirst,
+  isLast,
+  children,
+}) => {
+  const isBeingDragged = draggedWidgetId === id;
+  const isTargetOver = dragOverWidgetId === id;
+
+  return (
+    <div
+      draggable={isReorderMode}
+      onDragStart={(e) => onDragStart(e, id)}
+      onDragOver={(e) => onDragOver(e, id)}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, id)}
+      className={`relative transition-all duration-200 rounded-3xl ${
+        isReorderMode
+          ? 'p-3 border-2 border-dashed border-amber-400 bg-amber-50/20 hover:border-amber-500 hover:shadow-md'
+          : ''
+      } ${isBeingDragged ? 'opacity-30 scale-[0.98]' : ''} ${
+        isTargetOver ? 'ring-4 ring-amber-400 border-amber-500 bg-amber-100/50' : ''
+      }`}
+    >
+      {isReorderMode && (
+        <div className="bg-amber-100/90 border border-amber-300 rounded-2xl px-4 py-2 mb-3 flex items-center justify-between text-xs text-amber-950 select-none shadow-2xs">
+          <div className="flex items-center gap-2 font-bold">
+            <div className="cursor-grab active:cursor-grabbing p-1.5 bg-amber-300 hover:bg-amber-400 rounded-lg text-slate-900 shadow-2xs">
+              <GripVertical className="w-4 h-4" />
+            </div>
+            <span className="px-2 py-0.5 bg-amber-400 text-slate-950 rounded-full font-black text-[11px] tabular-nums">
+              #{toArabicDigits(index + 1)}
+            </span>
+            <span className="font-['Tajawal'] font-black text-slate-900">{title}</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={isFirst}
+              onClick={() => onMoveWidget(id, 'up')}
+              className="p-1.5 bg-white hover:bg-amber-200 text-amber-950 disabled:opacity-30 rounded-lg font-bold border border-amber-300 cursor-pointer"
+              title="تحريك للأعلى"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={isLast}
+              onClick={() => onMoveWidget(id, 'down')}
+              className="p-1.5 bg-white hover:bg-amber-200 text-amber-950 disabled:opacity-30 rounded-lg font-bold border border-amber-300 cursor-pointer"
+              title="تحريك للأسفل"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+      {children}
+    </div>
+  );
+};
+
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   plans,
   activePlanId,
@@ -247,6 +371,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   resourcesCount = 0,
   onOpenAbacusModal,
   onOpenBackupRestore,
+  onOpenAssessmentSimulatorModal,
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
@@ -257,6 +382,92 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [hoveredPhaseIndex, setHoveredPhaseIndex] = useState<number | null>(null);
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
   const [isReportPdfModalOpen, setIsReportPdfModalOpen] = useState(false);
+
+  // Drag and Drop Widget Reordering State
+  const [widgetOrder, setWidgetOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(DASHBOARD_ORDER_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const missing = DEFAULT_WIDGET_ORDER.filter((id) => !parsed.includes(id));
+          return [...parsed, ...missing];
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_WIDGET_ORDER;
+  });
+
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
+  const [dragOverWidgetId, setDragOverWidgetId] = useState<string | null>(null);
+  const [reorderToast, setReorderToast] = useState<string | null>(null);
+
+  const showReorderToast = (msg: string) => {
+    setReorderToast(msg);
+    setTimeout(() => setReorderToast(null), 3200);
+  };
+
+  const saveWidgetOrder = (newOrder: string[]) => {
+    setWidgetOrder(newOrder);
+    try {
+      localStorage.setItem(DASHBOARD_ORDER_STORAGE_KEY, JSON.stringify(newOrder));
+    } catch (e) {}
+  };
+
+  const handleWidgetDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+    setDraggedWidgetId(id);
+  };
+
+  const handleWidgetDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (dragOverWidgetId !== id) {
+      setDragOverWidgetId(id);
+    }
+  };
+
+  const handleWidgetDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverWidgetId(null);
+  };
+
+  const handleWidgetDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    setDragOverWidgetId(null);
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedWidgetId;
+    if (!sourceId || sourceId === targetId) return;
+
+    const oldIndex = widgetOrder.indexOf(sourceId);
+    const newIndex = widgetOrder.indexOf(targetId);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = [...widgetOrder];
+    newOrder.splice(oldIndex, 1);
+    newOrder.splice(newIndex, 0, sourceId);
+
+    saveWidgetOrder(newOrder);
+    setDraggedWidgetId(null);
+    showReorderToast('✨ تم تعديل ترتيب الواجهة بنجاح وحفظ تفضيلاتك!');
+  };
+
+  const handleMoveWidget = (id: string, direction: 'up' | 'down') => {
+    const currentIndex = widgetOrder.indexOf(id);
+    if (currentIndex === -1) return;
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= widgetOrder.length) return;
+
+    const newOrder = [...widgetOrder];
+    const [removed] = newOrder.splice(currentIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+    saveWidgetOrder(newOrder);
+    showReorderToast('✨ تم تعديل ترتيب القسم بنجاح!');
+  };
+
+  const handleResetWidgetOrder = () => {
+    saveWidgetOrder(DEFAULT_WIDGET_ORDER);
+    showReorderToast('🔄 تم إعادة ترتيب اللوحة إلى الترتيب الافتراضي.');
+  };
 
   // Daily Pedagogical Reminders State
   const [dailyReminders, setDailyReminders] = useState<DailyPedagogicalReminder[]>(() =>
@@ -1066,6 +1277,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               )}
             </button>
 
+            {onOpenAssessmentSimulatorModal && (
+              <button
+                onClick={onOpenAssessmentSimulatorModal}
+                className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-emerald-600 to-teal-700 hover:from-amber-600 hover:to-teal-800 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs hover:shadow-md active:scale-97 cursor-pointer border border-amber-400/80 ring-1 ring-amber-400/30"
+                title="محاكي التقويم التربوي لتصور تواريخ المهام المعقدة على تقويم هجري/ميلادي مزدوج مع السحب والإفلات"
+              >
+                <CalendarRange className="w-4 h-4 text-amber-200 shrink-0" />
+                <span>محاكي التقويم التربوي 🗓️</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsQrModalOpen(true)}
               className="px-3.5 py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-teal-400/80"
@@ -1110,6 +1332,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             >
               <Printer className="w-4 h-4 text-slate-200 shrink-0" />
               <span>طباعة تقرير الإنتاجية</span>
+            </button>
+
+            <button
+              onClick={() => setIsReorderMode(!isReorderMode)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer border ${
+                isReorderMode
+                  ? 'bg-amber-400 text-slate-950 border-amber-500 ring-2 ring-amber-300'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'
+              }`}
+              title="تعديل وترتيب بطاقات التقارير والرسوم البيانية بالسحب والإفلات حسب أولوياتك"
+            >
+              <GripVertical className="w-4 h-4 text-amber-800 shrink-0" />
+              <span>{isReorderMode ? 'حفظ ترتيب اللوحة ✓' : 'تخصيص الواجهة (سحب وإفلات) 🎛️'}</span>
             </button>
           </div>
 
@@ -1318,6 +1553,109 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Featured System QR Code Banner in Main Interface (الواجهة الرئيسية) */}
+      <div className="bg-linear-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-emerald-700/50 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="absolute right-10 top-0 w-32 h-32 bg-teal-500/10 rounded-full blur-xl pointer-events-none"></div>
+
+        <div className="flex items-start gap-4 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-emerald-400 to-teal-600 text-slate-950 flex items-center justify-center shadow-lg border border-white/20 shrink-0">
+            <QrCode className="w-8 h-8 text-slate-950" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base sm:text-lg font-black font-['Tajawal'] text-white">
+                رمز الاستجابة السريعة (QR Code) للمنظومة في الواجهة الرئيسية
+              </h3>
+              <span className="text-[11px] font-black bg-emerald-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-2xs">
+                مباشر وسريع 📱
+              </span>
+              <span className="text-[11px] font-bold bg-white/10 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                بدون إيميل أو تسجيل دخول
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl font-medium">
+              امسح الرمز بكاميرا الهاتف أو شاركه مع زملائك المعلمين والطلاب لفتح المنظومة ومتابعة التخطيط الصفي وتحضير الدروس فوراً وبكل سهولة.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0 relative z-10 w-full md:w-auto justify-end">
+          <button
+            onClick={() => setIsQrModalOpen(true)}
+            className="w-full md:w-auto px-5 py-3 bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl active:scale-97 cursor-pointer border border-amber-300"
+            title="فتح نافذة وتصميم رمز الاستجابة السريعة بالكامل"
+          >
+            <QrCode className="w-4 h-4 text-slate-950" />
+            <span>عرض وتخصيص QR المنظومة 🚀</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Reordering Mode Active Helper Banner */}
+      {isReorderMode && (
+        <div className="bg-amber-50 border-2 border-amber-400 rounded-3xl p-4 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs text-amber-950 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-400 text-slate-950 rounded-2xl shadow-xs">
+              <GripVertical className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-black text-sm text-slate-900 font-['Tajawal']">
+                وضع تخصيص ترتيب اللوحة مفّعل الآن 🎛️
+              </h4>
+              <p className="text-amber-900 font-medium mt-0.5">
+                قم بسحب أي قسم من مقبض السحب (⠿) أو استخدام أسهم الترتيب ⬆⬇ لتقديم أو تأخير الرسوم والتقارير حسب أولوياتك.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleResetWidgetOrder}
+              className="px-3.5 py-2 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl font-bold transition-colors cursor-pointer shadow-2xs"
+            >
+              🔄 إعادة الترتيب للافتراضي
+            </button>
+            <button
+              onClick={() => setIsReorderMode(false)}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-black transition-colors cursor-pointer shadow-2xs"
+            >
+              تم الحفظ ✓
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Reorder Toast Feedback */}
+      {reorderToast && (
+        <div className="fixed bottom-6 left-6 z-50 bg-slate-900 text-emerald-300 border border-emerald-500/40 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-bottom duration-300">
+          <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{reorderToast}</span>
+        </div>
+      )}
+
+      {/* Smart Date-Based Alerts & Deadlines Widget */}
+      <DraggableWidgetCard
+        id="smart_alerts"
+        index={widgetOrder.indexOf('smart_alerts')}
+        title={WIDGET_TITLES['smart_alerts'] || 'التنبيهات والمواعيد الذكية'}
+        isReorderMode={isReorderMode}
+        draggedWidgetId={draggedWidgetId}
+        dragOverWidgetId={dragOverWidgetId}
+        onDragStart={handleWidgetDragStart}
+        onDragOver={handleWidgetDragOver}
+        onDragLeave={handleWidgetDragLeave}
+        onDrop={handleWidgetDrop}
+        onMoveWidget={handleMoveWidget}
+        isFirst={widgetOrder.indexOf('smart_alerts') === 0}
+        isLast={widgetOrder.indexOf('smart_alerts') === widgetOrder.length - 1}
+      >
+        <SmartPlanAlertsWidget
+          plans={plans}
+          onSelectPlan={onSelectPlan}
+          onOpenEditor={onOpenEditor}
+        />
+      </DraggableWidgetCard>
 
       {/* Primary KPI Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">

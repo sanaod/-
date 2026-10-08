@@ -1,6 +1,44 @@
 @import "tailwindcss";
 
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    touch-action: manipulation;
+  }
+
+  body {
+    overflow-x: hidden;
+    min-height: 100dvh;
+  }
+
+  /* Optimize touch target sizes and prevent double-tap zoom delay */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
 @layer utilities {
+  /* Safe area padding utilities for notched mobile phones and tablets */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  }
+
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+  }
+
+  /* Responsive smooth touch scrolling */
+  .touch-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .touch-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
   @media print {
     body {
       background-color: white !important;
