@@ -23,6 +23,8 @@ import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blank
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
+import { createDefaultExecutiveData } from '../utils/executivePlanDefaults';
+import { ExecutivePrintDocument } from './ExecutivePrintDocument';
 import {
   analyzeTeachingCalendar,
   getNextTeachingDays,
@@ -48,6 +50,7 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   const [exportProgress, setExportProgress] = useState('');
 
   // Fast creation inputs
+  const [blankTemplateType, setBlankTemplateType] = useState<'executive' | 'adaptive'>('executive');
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('');
   const [lessonTitle, setLessonTitle] = useState('');
@@ -88,7 +91,12 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
       endDate: eDate,
       timeframe: `من ${startFormatted} إلى ${endFormatted}${holidayNotice}`,
     });
-    onCreatePlan(blankPlan);
+    const finalPlan = {
+      ...blankPlan,
+      templateType: blankTemplateType,
+      executiveData: createDefaultExecutiveData(blankPlan),
+    };
+    onCreatePlan(finalPlan);
     onClose();
   };
 
@@ -235,18 +243,72 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                 <div className="space-y-1">
                   <p className="font-bold">استمارة ورقية مفرغة معتمدة مطابقة لمعايير وزارة التربية والتعليم:</p>
                   <p className="text-emerald-800 leading-relaxed text-[11px]">
-                    تحتوي هذه النسخة على الترويسة الرسمية، وجداول مسطرة ومنقطة لكتابة الكفايات وسير الحصة الرباعي ومهمات التقويم الأصيل (GRASPS) وسلالم التقدير اللفظية ومساحات للتوقيع والاعتماد. يمكنك طباعتها فوراً واستخدامها في التحضير اليدوي أو تنزيلها كملف PDF أو Word.
+                    تحتوي هذه النسخة على الترويسة الرسمية، وجداول مسطرة ومنقطة لكتابة الكفايات وسير الحصة ومهمات التقويم الأصيل (GRASPS) وسلالم التقدير ومساحات للتوقيع والاعتماد. يمكنك طباعتها فوراً واستخدامها في التحضير اليدوي أو تنزيلها كملف PDF أو Word.
                   </p>
+                </div>
+              </div>
+
+              {/* Template Switcher for Blank Form */}
+              <div className="bg-white border-2 border-emerald-500/40 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-800">نوع الاستمارة المفرغة:</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                    {blankTemplateType === 'executive' ? '⭐ النموذج الرئيسي (خطة التنفيذ التنفيذية)' : '📋 النموذج الثاني (التكيفي الموسع)'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setBlankTemplateType('executive')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      blankTemplateType === 'executive'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ⭐ النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBlankTemplateType('adaptive')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      blankTemplateType === 'adaptive'
+                        ? 'bg-blue-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📋 النموذج الثاني (التخطيط التكيفي الموسع)
+                  </button>
                 </div>
               </div>
 
               {/* Printable Document Sheet Frame */}
               <div
                 ref={blankSheetRef}
-                className="official-print-page bg-white border-2 border-slate-300 rounded-xl p-6 sm:p-8 text-slate-900 shadow-sm space-y-6 text-xs leading-relaxed print:border-none print:shadow-none print:p-0"
+                className="overflow-x-auto print:overflow-visible"
               >
-                {/* Official Header Table */}
-                <div className="border-b-2 border-slate-800 pb-4">
+                {blankTemplateType === 'executive' ? (
+                  <ExecutivePrintDocument
+                    plan={(() => {
+                      const p = createBlankLessonPlan({
+                        subject: subject.trim() || 'المبحث الدراسي',
+                        grade: grade.trim() || 'الصف الدراسي',
+                        lessonTitle: lessonTitle.trim() || 'درس جديد',
+                        startDate,
+                        endDate: endDate || startDate,
+                      });
+                      return {
+                        ...p,
+                        templateType: 'executive',
+                        executiveData: createDefaultExecutiveData(p),
+                      };
+                    })()}
+                  />
+                ) : (
+                  <div className="official-print-page bg-white border-2 border-slate-300 rounded-xl p-6 sm:p-8 text-slate-900 shadow-sm space-y-6 text-xs leading-relaxed print:border-none print:shadow-none print:p-0">
+                    {/* Official Header Table */}
+                    <div className="border-b-2 border-slate-800 pb-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <p className="font-black text-sm text-slate-900">دولة فلسطين</p>
@@ -597,8 +659,10 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                   </div>
                 </div>
               </div>
+            )}
             </div>
-          )}
+          </div>
+        )}
 
           {/* TAB 2: Fast Digital Plan Setup */}
           {activeTab === 'create' && (
@@ -642,6 +706,46 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
               )}
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                {/* اختيار نموذج التحضير */}
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-slate-800">
+                      نموذج التحضير المطلوب:
+                    </label>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                      {blankTemplateType === 'executive' ? 'النموذج الرئيسي الافتراضي' : 'النموذج الثاني البديل'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBlankTemplateType('executive')}
+                      className={`p-2 rounded-lg border text-right transition-all flex items-center gap-2 cursor-pointer ${
+                        blankTemplateType === 'executive'
+                          ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-300'
+                      }`}
+                    >
+                      <span className="text-xs">⭐</span>
+                      <div className="text-xs font-bold">النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setBlankTemplateType('adaptive')}
+                      className={`p-2 rounded-lg border text-right transition-all flex items-center gap-2 cursor-pointer ${
+                        blankTemplateType === 'adaptive'
+                          ? 'bg-blue-700 text-white border-blue-800 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-300'
+                      }`}
+                    >
+                      <span className="text-xs">📋</span>
+                      <div className="text-xs font-bold">النموذج الثاني (التخطيط التكيفي الموسع)</div>
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">عنوان الدرس *</label>
                   <input

@@ -148,9 +148,84 @@ export interface EducationalResource {
   inferredLessonTitle?: string;
 }
 
+export type PlanTemplateType = 'executive' | 'adaptive';
+
+export interface ExecutiveResourceConditions {
+  competencyAlignment: boolean;    // الارتباط بالكفايات
+  contentAccuracy: boolean;        // دقة المحتوى
+  languageIntegrity: boolean;      // سلامة اللغة
+  ageAppropriate: boolean;         // المواءمة مع المرحلة العمرية
+  palestinianCulture: boolean;     // المواءمة مع الثقافة الفلسطينية
+  integrationValues: boolean;      // تعزيز التكامل والمواطنة والقيم والأخلاق
+}
+
+export interface ExecutiveGraspsDetails {
+  goal: string;        // الهدف (Goal)
+  role: string;        // الدور (Role)
+  audience: string;    // الجمهور (Audience)
+  situation: string;   // الموقف (Situation)
+  performance: string; // الأداء والمنتج (Performance)
+  standards: string;   // المعايير (Standards)
+  steps: string[];     // خطوات تنفيذ المهمة
+  rubricScaleNote: string; // مقياس متدرج لتقويم أداء الطلبة
+}
+
+export interface ExecutiveClosureOptions {
+  worksheet: boolean;             // ورقة عمل تفاعلية
+  videoSummary: boolean;          // فيديو يلخص الحصة
+  posterOrSummaryBoard: boolean;  // ملصق / صورة / لوحة ملخصة
+  learnedCards: boolean;          // بطاقات يكتب فيها ما تم تعلمه
+  keyQuestionsCards: boolean;     // بطاقات يجيب فيها الطلبة عن الأسئلة الرئيسة
+  closingCompetitions: boolean;   // مسابقات تعليمية ختامية
+}
+
+export interface ExecutiveStage {
+  id: number;
+  stageName: string; // المرحلة المحددة بالوثيقة
+  goals: string;     // الأهداف
+  procedures: {
+    mainDescription: string;
+    resourceName?: string;
+    reflectiveQuestionsExample?: string;
+    resourceConditions?: ExecutiveResourceConditions;
+    activeLearningMethods?: string;
+    studentProducts?: string;
+    grasps?: ExecutiveGraspsDetails;
+    howWorksheetUsed?: string;
+    immediateFeedback?: string;
+    closureOptions?: ExecutiveClosureOptions;
+  };
+  assessment: string;
+  resourcesAndTools: string;
+  durationMinutes: number;
+}
+
+export interface ExecutivePlanData {
+  timeframeDetails: {
+    startDay: string;
+    startDate: string;
+    startYear: string;
+    endDay: string;
+    endDate: string;
+    endYear: string;
+  };
+  learningCompetencies: string;           // كفايات التعلّم: المهارات والمعارف الأساسية الخاصة بالمبحث
+  valuesAndEthics: string;                // القيم والأخلاق المراد تعزيزها: المواطنة، التعاون، الأمانة، المهارات الحياتية
+  studentCharacteristicsAnalysis: string; // تحليل خصائص الطلبة
+  environmentalAnalysis: string;          // تحليل البيئة المحيطة
+  smartObjectives: string[];              // أهداف ذكية (SMART Objectives)
+  executiveStages: ExecutiveStage[];      // مراحل جدول تفاصيل خطة التنفيذ التنفيذية للدرس (الـ 5 مراحل)
+  teacherReflection: {
+    strengths: string;                    // نقاط القوة في تنفيذ الدرس
+    improvementsNeeded: string;           // جوانب تحتاج إلى تحسين وتطوير
+    futureSuggestions: string;            // مقترحات للدروس القادمة
+  };
+}
+
 export interface LessonPlan {
   id: string;
   title: string;
+  templateType?: PlanTemplateType;
   header: LessonHeader;
   section1: Section1AdaptivePlanning;
   section2Timeline: LessonPhase[];
@@ -158,6 +233,7 @@ export interface LessonPlan {
   section4Environment: Section4LearningEnvironment;
   section5Reflection: Section5SelfReflection;
   section6Signatures: Section6Signatures;
+  executiveData?: ExecutivePlanData;
   attachedResources?: EducationalResource[];
 }
 

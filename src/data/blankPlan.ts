@@ -1,5 +1,6 @@
 import { LessonPlan } from '../types/lessonPlan';
 import { getCurrentSemesterName } from '../utils/academicYear';
+import { createDefaultExecutiveData } from '../utils/executivePlanDefaults';
 
 /**
  * Creates a completely blank, pristine ministerial lesson plan ready for teacher input.
@@ -9,9 +10,10 @@ export function getBlankLessonPlan(): LessonPlan {
   const dateStr = new Date().toISOString().split('T')[0];
   const autoSemester = getCurrentSemesterName();
 
-  return {
+  const planBase: LessonPlan = {
     id: `plan-blank-${timestamp}`,
-    title: 'استمارة تحضير درس مفرغة (جاهزة للإدخال)',
+    title: 'استمارة تحضير درس مفرغة (النموذج الرئيسي المعتمد)',
+    templateType: 'executive',
     header: {
       country: 'دولة فلسطين',
       ministry: 'وزارة التربية والتعليم',
@@ -182,14 +184,17 @@ export function getBlankLessonPlan(): LessonPlan {
       },
     },
   };
+  planBase.executiveData = createDefaultExecutiveData(planBase);
+  return planBase;
 }
 
 /**
  * Standard primary default blank template instance
  */
-export const defaultBlankPlan: LessonPlan = {
+const initialDefaultPlanBase: LessonPlan = {
   id: 'plan-blank-default',
-  title: 'استمارة تحضير درس مفرغة (جاهزة للإدخال والكتابة)',
+  title: 'استمارة تحضير درس مفرغة (النموذج الرئيسي المعتمد)',
+  templateType: 'executive',
   header: {
     country: 'دولة فلسطين',
     ministry: 'وزارة التربية والتعليم',
@@ -360,3 +365,7 @@ export const defaultBlankPlan: LessonPlan = {
     },
   },
 };
+
+initialDefaultPlanBase.executiveData = createDefaultExecutiveData(initialDefaultPlanBase);
+
+export const defaultBlankPlan: LessonPlan = initialDefaultPlanBase;

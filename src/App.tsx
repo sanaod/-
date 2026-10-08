@@ -16,6 +16,8 @@ import { Section4EnvironmentCard } from './components/Section4EnvironmentCard';
 import { Section5ReflectionCard } from './components/Section5ReflectionCard';
 import { Section6SignaturesCard } from './components/Section6SignaturesCard';
 import { OfficialPrintView } from './components/OfficialPrintView';
+import { ExecutivePlanEditor } from './components/ExecutivePlanEditor';
+import { ensureExecutiveData } from './utils/executivePlanDefaults';
 import { AbacusSimulationModal } from './components/AbacusSimulationModal';
 import { AiGeneratorModal } from './components/AiGeneratorModal';
 import { ExitTicketModal } from './components/ExitTicketModal';
@@ -98,10 +100,11 @@ export function sanitizePlan(p: any): LessonPlan {
   const startFormatted = formatDateDMY(sDate);
   const endFormatted = formatDateDMY(eDate);
 
-  return {
+  const base: LessonPlan = {
     ...safeP,
     id: safeP.id || `plan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     title: safeP.title || header.lessonTitle || 'خطة درس معتمدة',
+    templateType: safeP.templateType || 'executive', // Make executive model primary default!
     header: {
       ...header,
       country: header.country || 'دولة فلسطين',
@@ -129,6 +132,8 @@ export function sanitizePlan(p: any): LessonPlan {
     section5Reflection: safeP.section5Reflection || defaultBlankPlan.section5Reflection,
     section6Signatures: safeP.section6Signatures || defaultBlankPlan.section6Signatures,
   };
+
+  return ensureExecutiveData(base);
 }
 
 export default function App() {
@@ -495,6 +500,52 @@ export default function App() {
                     <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
                       منظومة عبقور الشاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
                     </p>
+
+                    {/* Stacked Quick Shortcuts Directly Below Name (أيقونات الوصول السريع المكدسة والمنظمة أسفل الاسم) */}
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+                      <button
+                        onClick={() => setIsAiModalOpen(true)}
+                        className="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                        <span>تحضير بالـ AI</span>
+                      </button>
+                      <button
+                        onClick={() => setIsUnitPlanModalOpen(true)}
+                        className="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Boxes className="w-3.5 h-3.5 text-blue-300" />
+                        <span>وحدة كاملة</span>
+                      </button>
+                      <button
+                        onClick={() => setIsSemesterPlanModalOpen(true)}
+                        className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <CalendarRange className="w-3.5 h-3.5 text-teal-300" />
+                        <span>الخطة الفصلية</span>
+                      </button>
+                      <button
+                        onClick={() => setIsWorksheetModalOpen(true)}
+                        className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <FileCheck2 className="w-3.5 h-3.5 text-teal-300" />
+                        <span>ورقة عمل AI</span>
+                      </button>
+                      <button
+                        onClick={() => setIsAssessmentModalOpen(true)}
+                        className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Activity className="w-3.5 h-3.5 text-purple-300" />
+                        <span>أدوات التقويم</span>
+                      </button>
+                      <button
+                        onClick={() => setIsAuthenticTaskModalOpen(true)}
+                        className="px-2.5 py-1 bg-pink-600/30 hover:bg-pink-600/50 border border-pink-400/40 text-pink-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Award className="w-3.5 h-3.5 text-pink-300" />
+                        <span>المهمة الأصيلة</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -608,81 +659,150 @@ export default function App() {
 
           {/* Main Content Body */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-            {/* Header / Institutional Metadata */}
-            <LessonHeaderCard
-              header={currentPlan.header}
-              onChange={(header) => updateCurrentPlan({ ...currentPlan, header })}
-              onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
-              onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
-              onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-              resourcesCount={resources.length}
-            />
+            {/* Template Model Switcher (النموذجان: الرئيسي والتكيفي) */}
+            <div className="bg-white border-2 border-emerald-500/50 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-700 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Sparkles className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-black text-slate-900 font-['Tajawal']">
+                      نموذج تحضير الدرس المعتمد
+                    </h3>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-amber-100 text-amber-900 border border-amber-300">
+                      {(currentPlan.templateType || 'executive') === 'executive'
+                        ? '⭐ النموذج الرئيسي (الرسمي المعتمد)'
+                        : '📋 النموذج الثاني (التكيفي الموسع)'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    يمكنك التبديل بين النموذجين في أي وقت؛ بياناتك تُحفظ وتُزامن تلقائياً وبدقة عالية
+                  </p>
+                </div>
+              </div>
 
-            {/* Section 1: Adaptive Planning */}
-            {(activeTab === 'all' || activeTab === 'sec1') && (
-              <Section1Card
-                data={currentPlan.section1}
-                lessonContext={{
-                  subject: currentPlan.header.subject,
-                  grade: currentPlan.header.grade,
-                  lessonTitle: currentPlan.header.lessonTitle,
-                }}
-                onChange={(section1) => updateCurrentPlan({ ...currentPlan, section1 })}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
+                    updateCurrentPlan(updated);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                    (currentPlan.templateType || 'executive') === 'executive'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
+                  }`}
+                >
+                  <span className="text-amber-300">⭐</span>
+                  <span>النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateCurrentPlan({ ...currentPlan, templateType: 'adaptive' });
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                    currentPlan.templateType === 'adaptive'
+                      ? 'bg-blue-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
+                  }`}
+                >
+                  <span>📋</span>
+                  <span>النموذج الثاني (التخطيط التكيفي الموسع)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Render Selected Template */}
+            {(currentPlan.templateType || 'executive') === 'executive' ? (
+              <ExecutivePlanEditor
+                plan={ensureExecutiveData(currentPlan)}
+                onChange={updateCurrentPlan}
+                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
               />
-            )}
+            ) : (
+              <>
+                {/* Header / Institutional Metadata */}
+                <LessonHeaderCard
+                  header={currentPlan.header}
+                  onChange={(header) => updateCurrentPlan({ ...currentPlan, header })}
+                  onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+                  onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+                  onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                  resourcesCount={resources.length}
+                />
 
-            {/* Section 2: Timeline */}
-            {(activeTab === 'all' || activeTab === 'sec2') && (
-              <Section2TimelineCard
-                timeline={currentPlan.section2Timeline}
-                totalMinutes={currentPlan.header.periodDurationMinutes}
-                onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
-                onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
-                onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
-                onChange={(section2Timeline) => updateCurrentPlan({ ...currentPlan, section2Timeline })}
-                plan={currentPlan}
-              />
-            )}
+                {/* Section 1: Adaptive Planning */}
+                {(activeTab === 'all' || activeTab === 'sec1') && (
+                  <Section1Card
+                    data={currentPlan.section1}
+                    lessonContext={{
+                      subject: currentPlan.header.subject,
+                      grade: currentPlan.header.grade,
+                      lessonTitle: currentPlan.header.lessonTitle,
+                    }}
+                    onChange={(section1) => updateCurrentPlan({ ...currentPlan, section1 })}
+                    onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                  />
+                )}
 
-            {/* Section 3: Assessment & GRASPS */}
-            {(activeTab === 'all' || activeTab === 'sec3') && (
-              <Section3AssessmentCard
-                data={currentPlan.section3Assessment}
-                onChange={(section3Assessment) => updateCurrentPlan({ ...currentPlan, section3Assessment })}
-                onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
-                onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
-                onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
-                onOpenRubricModal={() => setIsRubricModalOpen(true)}
-              />
-            )}
+                {/* Section 2: Timeline */}
+                {(activeTab === 'all' || activeTab === 'sec2') && (
+                  <Section2TimelineCard
+                    timeline={currentPlan.section2Timeline}
+                    totalMinutes={currentPlan.header.periodDurationMinutes}
+                    onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
+                    onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
+                    onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+                    onChange={(section2Timeline) => updateCurrentPlan({ ...currentPlan, section2Timeline })}
+                    plan={currentPlan}
+                  />
+                )}
 
-            {/* Section 4: Learning Environment & Parents */}
-            {(activeTab === 'all' || activeTab === 'sec4') && (
-              <Section4EnvironmentCard
-                data={currentPlan.section4Environment}
-                onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
-                onChange={(section4Environment) => updateCurrentPlan({ ...currentPlan, section4Environment })}
-              />
-            )}
+                {/* Section 3: Assessment & GRASPS */}
+                {(activeTab === 'all' || activeTab === 'sec3') && (
+                  <Section3AssessmentCard
+                    data={currentPlan.section3Assessment}
+                    onChange={(section3Assessment) => updateCurrentPlan({ ...currentPlan, section3Assessment })}
+                    onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+                    onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
+                    onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+                    onOpenRubricModal={() => setIsRubricModalOpen(true)}
+                  />
+                )}
 
-            {/* Section 5: Self Reflection, PLC Sharing & Growth Dashboard */}
-            {(activeTab === 'all' || activeTab === 'sec5') && (
-              <Section5ReflectionCard
-                data={currentPlan.section5Reflection}
-                lessonHeader={currentPlan.header}
-                allPlans={plans}
-                onSelectPlan={(id) => setActivePlanId(id)}
-                onChange={(section5Reflection) => updateCurrentPlan({ ...currentPlan, section5Reflection })}
-              />
-            )}
+                {/* Section 4: Learning Environment & Parents */}
+                {(activeTab === 'all' || activeTab === 'sec4') && (
+                  <Section4EnvironmentCard
+                    data={currentPlan.section4Environment}
+                    onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
+                    onChange={(section4Environment) => updateCurrentPlan({ ...currentPlan, section4Environment })}
+                  />
+                )}
 
-            {/* Section 6: Official Signatures */}
-            {(activeTab === 'all' || activeTab === 'sec6') && (
-              <Section6SignaturesCard
-                data={currentPlan.section6Signatures}
-                onChange={(section6Signatures) => updateCurrentPlan({ ...currentPlan, section6Signatures })}
-              />
+                {/* Section 5: Self Reflection, PLC Sharing & Growth Dashboard */}
+                {(activeTab === 'all' || activeTab === 'sec5') && (
+                  <Section5ReflectionCard
+                    data={currentPlan.section5Reflection}
+                    lessonHeader={currentPlan.header}
+                    allPlans={plans}
+                    onSelectPlan={(id) => setActivePlanId(id)}
+                    onChange={(section5Reflection) => updateCurrentPlan({ ...currentPlan, section5Reflection })}
+                  />
+                )}
+
+                {/* Section 6: Official Signatures */}
+                {(activeTab === 'all' || activeTab === 'sec6') && (
+                  <Section6SignaturesCard
+                    data={currentPlan.section6Signatures}
+                    onChange={(section6Signatures) => updateCurrentPlan({ ...currentPlan, section6Signatures })}
+                  />
+                )}
+              </>
             )}
           </main>
         </>

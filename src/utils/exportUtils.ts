@@ -26,6 +26,153 @@ export function exportToWord(plan: LessonPlan) {
   const p = plan;
   const h = p.header;
 
+  if ((plan.templateType || 'executive') === 'executive' && plan.executiveData) {
+    const d = plan.executiveData;
+    const stage1 = d.executiveStages.find((s) => s.id === 1) || d.executiveStages[0];
+    const stage2 = d.executiveStages.find((s) => s.id === 2) || d.executiveStages[1];
+    const stage3 = d.executiveStages.find((s) => s.id === 3) || d.executiveStages[2];
+    const stage4 = d.executiveStages.find((s) => s.id === 4) || d.executiveStages[3];
+    const stage5 = d.executiveStages.find((s) => s.id === 5) || d.executiveStages[4];
+
+    const execDoc = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>${h.lessonTitle || 'خطة درس'} - ${h.subject || 'المبحث'}</title>
+<style>
+  body {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Traditional Arabic', 'Calibri', 'Arial', sans-serif;
+    font-size: 13pt;
+    line-height: 1.5;
+    color: #111;
+    margin: 20mm 15mm 20mm 15mm;
+  }
+  h1 { font-size: 18pt; text-align: center; color: #064e3b; margin-bottom: 4pt; }
+  .subtitle { text-align: center; font-size: 11pt; color: #475569; margin-bottom: 12pt; }
+  h2 { font-size: 14pt; border-bottom: 2pt solid #059669; padding-bottom: 3pt; color: #064e3b; margin-top: 14pt; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 12pt 0;
+    font-size: 11pt;
+  }
+  th, td {
+    border: 1pt solid #475569;
+    padding: 6pt 8pt;
+    text-align: right;
+    vertical-align: top;
+  }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: bold; }
+  .box { border: 1pt solid #475569; padding: 8pt; margin-bottom: 10pt; background-color: #f8fafc; }
+</style>
+</head>
+<body>
+  <h1>نموذج خطة تحضير درس</h1>
+  <div class="subtitle">النموذج التنفيذي المعتمد • وزارة التربية والتعليم</div>
+
+  <table>
+    <tr>
+      <td style="width: 20%; font-weight: bold; background-color: #f1f5f9;">المبحث:</td>
+      <td style="width: 30%;">${h.subject || '....................'}</td>
+      <td style="width: 20%; font-weight: bold; background-color: #f1f5f9;">الصف:</td>
+      <td style="width: 30%;">${h.grade || '....................'}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">عنوان الدرس / الوحدة:</td>
+      <td>${h.lessonTitle || h.unitTitle || '....................'}</td>
+      <td style="font-weight: bold; background-color: #f1f5f9;">عدد الحصص:</td>
+      <td>${toArabicDigits(h.totalPeriods)} حصص</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">الفترة الزمنية:</td>
+      <td colspan="3">
+        <strong>من:</strong> اليوم (${d.timeframeDetails.startDay}) التاريخ (${d.timeframeDetails.startDate}) السنة (${d.timeframeDetails.startYear}) &nbsp;|&nbsp;
+        <strong>إلى:</strong> اليوم (${d.timeframeDetails.endDay}) التاريخ (${d.timeframeDetails.endDate}) السنة (${d.timeframeDetails.endYear})
+      </td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">كفايات التعلّم:</td>
+      <td colspan="3">المهارات والمعارف الأساسية الخاصة بالمبحث: ${d.learningCompetencies}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">القيم والأخلاق المراد تعزيزها:</td>
+      <td colspan="3">${d.valuesAndEthics}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">خصائص الطلبة والبيئة المحيطة:</td>
+      <td colspan="3">
+        • <strong>تحليل خصائص الطلبة:</strong> ${d.studentCharacteristicsAnalysis}<br>
+        • <strong>تحليل البيئة المحيطة:</strong> ${d.environmentalAnalysis}
+      </td>
+    </tr>
+  </table>
+
+  <div class="box">
+    <strong>أهداف ذكية (SMART Objectives):</strong> (محددة · قابلة للقياس · قابلة للتحقيق · ذات صلة بالكفاية · محددة بزمن)<br>
+    ${d.smartObjectives.map((o, idx) => `${toArabicDigits(idx + 1)}. ${o}`).join('<br>')}
+  </div>
+
+  <h2>تفاصيل خطة التنفيذ التنفيذية للدرس</h2>
+  <table>
+    <tr style="background-color: #064e3b; color: white;">
+      <th style="width: 15%; color: white;">الأهداف</th>
+      <th style="width: 45%; color: white;">الإجراءات والأنشطة</th>
+      <th style="width: 15%; color: white;">التقويم</th>
+      <th style="width: 15%; color: white;">المصادر والأدوات</th>
+      <th style="width: 10%; color: white;">الزمن</th>
+    </tr>
+    ${d.executiveStages.map((st) => `
+      <tr>
+        <td><strong>${st.stageName}</strong><br><small>${st.goals}</small></td>
+        <td>
+          ${st.procedures.mainDescription}
+          ${st.id === 1 && st.procedures.resourceName ? `<br><strong>المصدر:</strong> ${st.procedures.resourceName}` : ''}
+          ${st.id === 1 && st.procedures.reflectiveQuestionsExample ? `<br><strong>أسئلة تأملية:</strong> ${st.procedures.reflectiveQuestionsExample}` : ''}
+          ${st.id === 3 && st.procedures.grasps ? `<br><strong>مهمة تقويم GRASPS:</strong> ${st.procedures.grasps.goal} (${st.procedures.grasps.performance})` : ''}
+          ${st.id === 4 && st.procedures.howWorksheetUsed ? `<br><strong>استخدام ورقة العمل:</strong> ${st.procedures.howWorksheetUsed}` : ''}
+        </td>
+        <td>${st.assessment}</td>
+        <td>${st.resourcesAndTools}</td>
+        <td style="text-align: center; font-weight: bold;">${toArabicDigits(st.durationMinutes)} د</td>
+      </tr>
+    `).join('')}
+  </table>
+
+  <h2>ملاحظات وتأملات المعلم حول الدرس</h2>
+  <table>
+    <tr>
+      <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">نقاط القوة في تنفيذ الدرس:</td>
+      <td>${d.teacherReflection.strengths}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">جوانب تحتاج إلى تحسين وتطوير:</td>
+      <td>${d.teacherReflection.improvementsNeeded}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">مقترحات للدروس القادمة:</td>
+      <td>${d.teacherReflection.futureSuggestions}</td>
+    </tr>
+  </table>
+
+  <table style="margin-top: 25pt; border: none;">
+    <tr style="border: none;">
+      <td style="border: none; text-align: center;"><strong>توقيع المعلم/ة:</strong><br><br>${h.teacherName || '....................'}</td>
+      <td style="border: none; text-align: center;"><strong>مدير/ة المدرسة:</strong><br><br>....................</td>
+      <td style="border: none; text-align: center;"><strong>المشرف/ة التربوي/ة:</strong><br><br>....................</td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const sanitizedTitle = (h.lessonTitle || 'خطة_درس').replace(/[/\\?%*:|"<>]/g, '-').trim();
+    const filename = `${sanitizedTitle}_النموذج_الرئيسي.doc`;
+    downloadBlob('\ufeff' + execDoc, filename, 'application/msword');
+    return;
+  }
+
   const htmlDoc = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>

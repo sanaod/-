@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { ensureExecutiveData } from '../utils/executivePlanDefaults';
 
 export interface UnitUploadedResource {
   id: string;
@@ -151,6 +152,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
   const [step, setStep] = useState<'config' | 'generating' | 'results'>('config');
 
   // Basic Unit Inputs
+  const [selectedTemplateType, setSelectedTemplateType] = useState<'executive' | 'adaptive'>('executive');
   const [unitTitle, setUnitTitle] = useState('الوحدة الأولى: الأعداد حتى ٩٩٩٩ والقيمة المنزلية');
   const [subject, setSubject] = useState(defaultSubject);
   const [grade, setGrade] = useState(defaultGrade);
@@ -433,21 +435,29 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
       const resNamesList = uploadedResources.map((r) => r.name).join('، ');
       const rawPlans: LessonPlan[] = data.plans || [];
       const augmentedPlans = rawPlans.map((plan) => {
-        if (!resNamesList) return plan;
-        const existingResources = plan.section1?.learningResources?.digitalReadiness || '';
-        return {
-          ...plan,
-          section1: {
-            ...plan.section1,
-            learningResources: {
-              ...plan.section1?.learningResources,
-              textbook: plan.section1?.learningResources?.textbook || 'الكتاب المدرسي المقرر المعتمد',
-              tangibleMedia: plan.section1?.learningResources?.tangibleMedia || 'وسائط ومحسوسات تعليمية',
-              digitalReadiness: existingResources
-                ? `${existingResources} | المصادر المرفوعة للوحدة: ${resNamesList}`
-                : `المصادر المرفوعة للوحدة: ${resNamesList}`,
+        let p = plan;
+        if (resNamesList) {
+          const existingResources = p.section1?.learningResources?.digitalReadiness || '';
+          p = {
+            ...p,
+            section1: {
+              ...p.section1,
+              learningResources: {
+                ...p.section1?.learningResources,
+                textbook: p.section1?.learningResources?.textbook || 'الكتاب المدرسي المقرر المعتمد',
+                tangibleMedia: p.section1?.learningResources?.tangibleMedia || 'وسائط ومحسوسات تعليمية',
+                digitalReadiness: existingResources
+                  ? `${existingResources} | المصادر المرفوعة للوحدة: ${resNamesList}`
+                  : `المصادر المرفوعة للوحدة: ${resNamesList}`,
+              },
             },
-          },
+          };
+        }
+        // Ensure executive model data is prepared and templateType is assigned
+        const withExec = ensureExecutiveData(p);
+        return {
+          ...withExec,
+          templateType: selectedTemplateType,
         };
       });
 
@@ -477,7 +487,91 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
 
     let allLessonsHtml = '';
     generatedPlans.forEach((plan, idx) => {
-      allLessonsHtml += `
+      const exec = plan.executiveData;
+      if (selectedTemplateType === 'executive' && exec) {
+        allLessonsHtml += `
+        <div style="page-break-before: ${idx > 0 ? 'always' : 'auto'}; margin-bottom: 30px;">
+          <h2 style="color: #065f46; border-bottom: 2px solid #059669; padding-bottom: 6px; text-align: center;">
+            نموذج خطة تحضير درس - الدرس (${toArabicDigits(idx + 1)}): ${plan.header.lessonTitle}
+          </h2>
+          <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 15px;">
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold; width: 25%;">المبحث:</td>
+              <td style="width: 25%;">${plan.header.subject}</td>
+              <td style="background-color: #f1f5f9; font-weight: bold; width: 25%;">الصف:</td>
+              <td style="width: 25%;">${plan.header.grade}</td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">عنوان الدرس / الوحدة:</td>
+              <td>${plan.header.lessonTitle} (${unitTitle})</td>
+              <td style="background-color: #f1f5f9; font-weight: bold;">عدد الحصص:</td>
+              <td>${toArabicDigits(plan.header.totalPeriods)} حصص</td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">الفترة الزمنية:</td>
+              <td colspan="3">
+                من: ${exec.timeframeDetails.startDay} (${exec.timeframeDetails.startDate}) ${exec.timeframeDetails.startYear}
+                إلى: ${exec.timeframeDetails.endDay} (${exec.timeframeDetails.endDate}) ${exec.timeframeDetails.endYear}
+              </td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">كفايات التعلّم:</td>
+              <td colspan="3">${exec.learningCompetencies}</td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">القيم والأخلاق المراد تعزيزها:</td>
+              <td colspan="3">${exec.valuesAndEthics}</td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">خصائص الطلبة والبيئة:</td>
+              <td colspan="3">
+                • <strong>تحليل خصائص الطلبة:</strong> ${exec.studentCharacteristicsAnalysis}<br>
+                • <strong>تحليل البيئة المحيطة:</strong> ${exec.environmentalAnalysis}
+              </td>
+            </tr>
+            <tr>
+              <td style="background-color: #f1f5f9; font-weight: bold;">أهداف ذكية (SMART):</td>
+              <td colspan="3">
+                ${exec.smartObjectives.map((o, i) => `${toArabicDigits(i + 1)}. ${o}`).join('<br>')}
+              </td>
+            </tr>
+          </table>
+
+          <h3 style="color: #0f172a; border-bottom: 1px solid #94a3b8; padding-bottom: 4px;">تفاصيل خطة التنفيذ التنفيذية للدرس:</h3>
+          <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 15px;">
+            <tr style="background-color: #065f46; color: white;">
+              <th style="width: 15%;">الأهداف</th>
+              <th style="width: 45%;">الإجراءات والأنشطة</th>
+              <th style="width: 15%;">التقويم</th>
+              <th style="width: 15%;">المصادر والأدوات</th>
+              <th style="width: 10%;">الزمن</th>
+            </tr>
+            ${exec.executiveStages.map((st) => `
+              <tr>
+                <td><strong>${st.stageName}</strong><br><small>${st.goals}</small></td>
+                <td>
+                  ${st.procedures.mainDescription}
+                  ${st.id === 1 && st.procedures.resourceName ? `<br><strong>المصدر:</strong> ${st.procedures.resourceName}` : ''}
+                  ${st.id === 3 && st.procedures.grasps ? `<br><strong>مهمة GRASPS:</strong> ${st.procedures.grasps.goal} (${st.procedures.grasps.performance})` : ''}
+                  ${st.id === 4 && st.procedures.howWorksheetUsed ? `<br><strong>استخدام الورقة:</strong> ${st.procedures.howWorksheetUsed}` : ''}
+                </td>
+                <td>${st.assessment}</td>
+                <td>${st.resourcesAndTools}</td>
+                <td>${toArabicDigits(st.durationMinutes)} د</td>
+              </tr>
+            `).join('')}
+          </table>
+
+          <h3 style="color: #0f172a;">ملاحظات وتأملات المعلم حول الدرس:</h3>
+          <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: right;">
+            <tr><td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">نقاط القوة:</td><td>${exec.teacherReflection.strengths}</td></tr>
+            <tr><td style="font-weight: bold; background-color: #f1f5f9;">جوانب تحتاج إلى تحسين:</td><td>${exec.teacherReflection.improvementsNeeded}</td></tr>
+            <tr><td style="font-weight: bold; background-color: #f1f5f9;">مقترحات للدروس القادمة:</td><td>${exec.teacherReflection.futureSuggestions}</td></tr>
+          </table>
+        </div>
+        `;
+      } else {
+        allLessonsHtml += `
         <div style="page-break-before: ${idx > 0 ? 'always' : 'auto'}; margin-bottom: 30px;">
           <h2 style="color: #1e3a8a; border-bottom: 2px solid #3b82f6; padding-bottom: 6px;">
             الدرس (${toArabicDigits(idx + 1)}): ${plan.header.lessonTitle}
@@ -514,7 +608,8 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
               .join('')}
           </table>
         </div>
-      `;
+        `;
+      }
     });
 
     const fullHtml = `
@@ -625,6 +720,63 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
                     <span>بيانات الوحدة التعليمية والمبحث:</span>
                   </h4>
                   <span className="text-[11px] text-slate-500 font-medium">الخطوة ١ من ٢: إعداد المحتوى</span>
+                </div>
+
+                {/* نموذج التحضير المعتمد للوحدة (النموذجان: الرئيسي والتكيفي) */}
+                <div className="bg-emerald-50/70 border-2 border-emerald-500/50 rounded-xl p-3.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">⭐</span>
+                      <label className="text-xs font-black text-emerald-950">
+                        نموذج تحضير دروس الوحدة المعتمد:
+                      </label>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                      {selectedTemplateType === 'executive' ? 'النموذج الرئيسي الافتراضي' : 'النموذج الثاني البديل'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTemplateType('executive')}
+                      className={`p-2.5 rounded-xl border text-right transition-all flex items-start gap-2.5 cursor-pointer ${
+                        selectedTemplateType === 'executive'
+                          ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${selectedTemplateType === 'executive' ? 'bg-amber-400 text-slate-950 font-black' : 'border border-slate-400'}`}>
+                        {selectedTemplateType === 'executive' ? '✓' : ''}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black">⭐ النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</div>
+                        <div className={`text-[10px] mt-0.5 ${selectedTemplateType === 'executive' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                          أهداف SMART، الكفايات، القيم، المراحل الخمس مع شروط المصادر والـ GRASPS والغلق وتأملات المعلم
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTemplateType('adaptive')}
+                      className={`p-2.5 rounded-xl border text-right transition-all flex items-start gap-2.5 cursor-pointer ${
+                        selectedTemplateType === 'adaptive'
+                          ? 'bg-blue-700 text-white border-blue-800 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${selectedTemplateType === 'adaptive' ? 'bg-amber-400 text-slate-950 font-black' : 'border border-slate-400'}`}>
+                        {selectedTemplateType === 'adaptive' ? '✓' : ''}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black">📋 النموذج الثاني (التخطيط التكيفي الموسع)</div>
+                        <div className={`text-[10px] mt-0.5 ${selectedTemplateType === 'adaptive' ? 'text-blue-100' : 'text-slate-500'}`}>
+                          النموذج السداسي: التخطيط التكيفي، سير الحصة الرباعي، والتقويم الموسع وبيئة التعلم والتوقيعات
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Subject & Grade & Semester */}
@@ -1091,7 +1243,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
                       تم بنجاح توليد تحضير وحدة: «{unitTitle}»
                     </h4>
                     <p className="text-xs text-emerald-800 mt-0.5">
-                      تتضمن {toArabicDigits(generatedPlans.length)} خطط درس نموذجية متكاملة وجاهزة للاعتماد
+                      تتضمن {toArabicDigits(generatedPlans.length)} خطط درس نموذجية متكاملة وفق «{selectedTemplateType === 'executive' ? 'النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)' : 'النموذج الثاني (التخطيط التكيفي الموسع)'}»
                     </p>
                   </div>
                 </div>

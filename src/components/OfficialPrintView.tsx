@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
-import { Printer, ArrowRight, Download, Loader2, CheckCircle2, FileText, FileCode } from 'lucide-react';
+import { Printer, ArrowRight, Download, Loader2, CheckCircle2, FileText, FileCode, Sparkles } from 'lucide-react';
 import { toArabicDigits, formatDateDMY } from '../utils/arabicNumerals';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import { exportToWord, exportToHtml } from '../utils/exportUtils';
+import { ensureExecutiveData } from '../utils/executivePlanDefaults';
+import { ExecutivePrintDocument } from './ExecutivePrintDocument';
 
 interface OfficialPrintViewProps {
   plan: LessonPlan;
@@ -12,6 +14,10 @@ interface OfficialPrintViewProps {
 }
 
 export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBack }) => {
+  const planWithExec = ensureExecutiveData(plan);
+  const [printTemplate, setPrintTemplate] = useState<'executive' | 'adaptive'>(
+    (plan.templateType as 'executive' | 'adaptive') || 'executive'
+  );
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportProgress, setExportProgress] = useState<string>('');
@@ -29,7 +35,8 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
       const sanitizedTitle = (plan.header.lessonTitle || 'خطة_درس')
         .replace(/[/\\?%*:|"<>]/g, '-')
         .trim();
-      const fileName = `${sanitizedTitle}_نموذج_رسمي.pdf`;
+      const templateSuffix = printTemplate === 'executive' ? 'النموذج_الرئيسي' : 'النموذج_التكيفي';
+      const fileName = `${sanitizedTitle}_${templateSuffix}.pdf`;
 
       await exportLessonPlanToPdf(documentContainerRef.current, {
         fileName,
@@ -52,7 +59,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
   return (
     <div dir="rtl" className="min-h-screen bg-slate-200/80 p-2 sm:p-5 md:p-8 text-right font-['Cairo',sans-serif]">
       {/* Top action toolbar (hidden on print) */}
-      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 bg-white p-3.5 sm:p-4 rounded-2xl shadow-md border border-slate-300 no-print">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 bg-white p-3.5 sm:p-4 rounded-2xl shadow-md border border-slate-300 no-print space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <button
             onClick={onBack}
@@ -93,7 +100,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
 
             {/* Quick Word Export */}
             <button
-              onClick={() => exportToWord(plan)}
+              onClick={() => exportToWord({ ...planWithExec, templateType: printTemplate })}
               className="px-3 sm:px-3.5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               title="تصدير الخطة كملف Microsoft Word"
             >
@@ -103,7 +110,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
 
             {/* Quick HTML Export */}
             <button
-              onClick={() => exportToHtml(plan)}
+              onClick={() => exportToHtml({ ...planWithExec, templateType: printTemplate })}
               className="col-span-2 sm:col-span-1 px-3 sm:px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               title="تصدير كصفحة ويب HTML"
             >
@@ -113,14 +120,49 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           </div>
         </div>
 
+        {/* Template Switcher in Print Toolbar */}
+        <div className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-slate-800">نموذج الطباعة والتصدير المعتمد:</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
+              {printTemplate === 'executive' ? '⭐ النموذج الرئيسي (الرسمي المعتمد)' : '📋 النموذج الثاني (التكيفي)'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setPrintTemplate('executive')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                printTemplate === 'executive'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ⭐ النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrintTemplate('adaptive')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                printTemplate === 'adaptive'
+                  ? 'bg-blue-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📋 النموذج الثاني (التخطيط التكيفي الموسع)
+            </button>
+          </div>
+        </div>
+
         {/* Mobile helper notice */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <span>💡 للمعاينة المثالية: تدعم المنظومة الجوال والتابلت وشاشات الكمبيوتر.</span>
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span>💡 للمعاينة المثالية: تدعم المنظومة الجوال والتابلت وشاشات الكمبيوتر والطباعة A4 بدون هوامش مفقودة.</span>
           <span className="font-semibold text-emerald-800 hidden sm:inline">إعداد وتصميم: أ. عبد الرحمن دويكات</span>
         </div>
 
         {isExportingPdf && (
-          <div className="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+          <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
             <span>{exportProgress}</span>
           </div>
@@ -133,7 +175,11 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
         dir="rtl"
         className="max-w-4xl mx-auto space-y-6 sm:space-y-8 print:space-y-0 official-document-wrapper text-right overflow-x-auto"
       >
-        {/* ================= PAGE 1 ================= */}
+        {printTemplate === 'executive' ? (
+          <ExecutivePrintDocument plan={planWithExec} />
+        ) : (
+          <>
+            {/* ================= PAGE 1 ================= */}
         <div className="official-print-page bg-white border-2 border-black p-6 md:p-9 shadow-xl relative min-h-[1050px] flex flex-col justify-between">
           <div>
             {/* Top Header */}
@@ -650,6 +696,8 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
             <span>الصفحة ٤ من ٤</span>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
