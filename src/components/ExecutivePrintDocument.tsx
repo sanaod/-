@@ -15,6 +15,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
   const stage3 = data.executiveStages.find((s) => s.id === 3) || data.executiveStages[2];
   const stage4 = data.executiveStages.find((s) => s.id === 4) || data.executiveStages[3];
   const stage5 = data.executiveStages.find((s) => s.id === 5) || data.executiveStages[4];
+  const sigs = plan.section6Signatures;
 
   return (
     <div className="space-y-6 sm:space-y-8 print:space-y-0 official-document-wrapper text-right">
@@ -76,7 +77,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
                   <div className="col-span-10 grid grid-cols-3 gap-2">
                     <span><strong>اليوم:</strong> {data.timeframeDetails.startDay}</span>
                     <span><strong>التاريخ:</strong> {data.timeframeDetails.startDate}</span>
-                    <span><strong>السنة:</strong> {data.timeframeDetails.startYear}</span>
+                    <span><strong>الفصل الدراسي:</strong> {data.timeframeDetails.startSemester || h.semester || (data.timeframeDetails.startYear?.includes('الفصل') ? data.timeframeDetails.startYear : null) || 'الفصل الدراسي الأول'}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-12 p-1.5 items-center">
@@ -84,7 +85,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
                   <div className="col-span-10 grid grid-cols-3 gap-2">
                     <span><strong>اليوم:</strong> {data.timeframeDetails.endDay}</span>
                     <span><strong>التاريخ:</strong> {data.timeframeDetails.endDate}</span>
-                    <span><strong>السنة:</strong> {data.timeframeDetails.endYear}</span>
+                    <span><strong>الفصل الدراسي:</strong> {data.timeframeDetails.endSemester || h.semester || (data.timeframeDetails.endYear?.includes('الفصل') ? data.timeframeDetails.endYear : null) || 'الفصل الدراسي الأول'}</span>
                   </div>
                 </div>
               </div>
@@ -433,17 +434,47 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Official Signatures Row */}
           <div className="border border-black mt-8 text-xs">
             <div className="grid grid-cols-3 divide-x divide-x-reverse divide-black text-center">
-              <div className="p-3 space-y-3">
-                <span className="font-bold block">توقيع المعلم/ة:</span>
-                <span className="text-slate-600 block">{h.teacherName || '....................'}</span>
+              <div className="p-3 space-y-2">
+                <span className="font-bold block text-slate-900">إعداد وتوقيع المعلم/ة:</span>
+                <span className="text-slate-800 font-semibold block">
+                  {sigs?.teacher?.name || h.teacherName || '....................'}
+                </span>
+                <span className="text-[10px] text-slate-600 block">
+                  التاريخ: {toArabicDigits(sigs?.teacher?.date || h.date || '..../..../........')}
+                </span>
+                {sigs?.teacher?.notes && (
+                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                    <span className="font-bold block">ملاحظات:</span> {sigs.teacher.notes}
+                  </p>
+                )}
               </div>
-              <div className="p-3 space-y-3">
-                <span className="font-bold block">مدير/ة المدرسة:</span>
-                <span className="text-slate-600 block">....................</span>
+              <div className="p-3 space-y-2">
+                <span className="font-bold block text-slate-900">اعتماد مدير/ة المدرسة (الختم الرسمي):</span>
+                <span className="text-slate-800 font-semibold block">
+                  {sigs?.schoolPrincipal?.name || h.principalName || '....................'}
+                </span>
+                <span className="text-[10px] text-slate-600 block">
+                  التاريخ: {toArabicDigits(sigs?.schoolPrincipal?.date || h.date || '..../..../........')}
+                </span>
+                {sigs?.schoolPrincipal?.directives && (
+                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                    <span className="font-bold block">التوجيهات:</span> {sigs.schoolPrincipal.directives}
+                  </p>
+                )}
               </div>
-              <div className="p-3 space-y-3">
-                <span className="font-bold block">المشرف/ة التربوي/ة:</span>
-                <span className="text-slate-600 block">....................</span>
+              <div className="p-3 space-y-2">
+                <span className="font-bold block text-slate-900">اعتماد المشرف/ة التربوي/ة:</span>
+                <span className="text-slate-800 font-semibold block">
+                  {sigs?.educationalSupervisor?.name || h.supervisorName || '....................'}
+                </span>
+                <span className="text-[10px] text-slate-600 block">
+                  التاريخ: {toArabicDigits(sigs?.educationalSupervisor?.date || h.date || '..../..../........')}
+                </span>
+                {sigs?.educationalSupervisor?.directives && (
+                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                    <span className="font-bold block">التوجيهات:</span> {sigs.educationalSupervisor.directives}
+                  </p>
+                )}
               </div>
             </div>
           </div>

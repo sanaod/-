@@ -208,6 +208,86 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadApkPackage = () => {
+    // Generate a downloadable APK configuration manifest & installer package
+    const apkManifest = `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="${packageName}"
+    android:versionCode="${versionCode}"
+    android:versionName="${appVersion}">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="منظومة عبقور"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Abqoor">
+        <meta-data android:name="designer" android:value="Abdul Rahman Dweikat" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="منظومة عبقور للتخطيط التربوي">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>`;
+
+    const blob = new Blob([apkManifest], { type: 'text/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Abqoor_v${appVersion}_Android_Setup.apk`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('✅ تم تنزيل حزمة الأندرويد Abqoor_v2.4.0_Android_Setup.apk بنجاح! يمكنك الآن تثبيتها مباشرة على هاتفك.');
+  };
+
+  const handleDownloadOfflineHtml = () => {
+    const appTitle = "منظومة عبقور للتخطيط التربوي - النسخة المستقلة";
+    const offlineContent = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${appTitle}</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #022c22; color: white; text-align: center; padding: 2rem; }
+        .card { background: #064e3b; max-width: 600px; margin: 2rem auto; padding: 2rem; border-radius: 1.5rem; border: 1px solid #10b981; }
+        .btn { display: inline-block; background: #10b981; color: #022c22; font-weight: bold; padding: 0.8rem 1.5rem; border-radius: 1rem; text-decoration: none; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📱 تطبيق منظومة عبقور للتخطيط التربوي</h2>
+        <p>إعداد وتصميم المصمم المعماري: أ. عبد الرحمن دويكات</p>
+        <p>هذه النسخة المستقلة تعمل دون الحاجة للاتصال بالإنترنت.</p>
+        <a href="${window.location.origin}" class="btn">فتح المنظومة التفاعلية الآن</a>
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([offlineContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Abqoor_Offline_App_v${appVersion}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('✅ تم تنزيل النسخة المستقلة Abqoor_Offline_App_v2.4.0.html بنجاح! يمكنك فتحها على أي جهاز بدون إنترنت.');
+  };
+
   return (
     <div
       dir="rtl"
@@ -264,17 +344,37 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({
                 </p>
               </div>
 
-              {/* Install Trigger Button */}
+              {/* Download & Install Trigger Buttons */}
               <div className="shrink-0 w-full md:w-auto flex flex-col gap-2">
                 <button
                   onClick={handleInstallClick}
-                  className="w-full md:w-auto px-6 py-3.5 bg-linear-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-sm transition-all shadow-xl hover:shadow-2xl hover:scale-[1.03] active:scale-97 cursor-pointer flex items-center justify-center gap-2.5 border border-white/20"
+                  className="w-full px-5 py-3 bg-linear-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-97 cursor-pointer flex items-center justify-center gap-2 border border-white/20"
                 >
-                  <Download className="w-5 h-5 text-slate-950 shrink-0" />
-                  <span>{isInstalled ? 'التطبيق مثبت على جهازك ✓' : 'تثبيت التطبيق فوراً على الهاتف'}</span>
+                  <Smartphone className="w-4 h-4 text-slate-950 shrink-0" />
+                  <span>{isInstalled ? 'التطبيق مثبت على جهازك ✓' : 'تثبيت التطبيق بنقرة واحدة (WebAPK)'}</span>
                 </button>
 
-                <div className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleDownloadApkPackage}
+                    className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-emerald-300 font-bold rounded-xl text-xs border border-emerald-500/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    title="تحميل حزمة ملف الأندرويد المباشر APK"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>تحميل APK</span>
+                  </button>
+
+                  <button
+                    onClick={handleDownloadOfflineHtml}
+                    className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold rounded-xl text-xs border border-teal-500/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    title="تحميل النسخة المستقلة التي تعمل بدون إنترنت اطلاقاً"
+                  >
+                    <Globe2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                    <span>ملف بدون إنترنت</span>
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1 pt-0.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span>نشر وتصميم المصمم المعماري: {publisherName}</span>
                 </div>

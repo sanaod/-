@@ -44,7 +44,7 @@ import {
   FileUp,
 } from 'lucide-react';
 import { SemesterPlanDocument, SemesterPlanRow } from '../types/semesterPlan';
-import { LessonPlan } from '../types/lessonPlan';
+import { LessonPlan, EDUCATIONAL_STAGES, STANDARD_GRADES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import {
   ALL_SEMESTER_PLANS,
@@ -87,21 +87,6 @@ const AVAILABLE_SUBJECTS = [
   'التربية الإسلامية',
   'الدراسات الاجتماعية',
   'اللغة الإنجليزية',
-];
-
-const STANDARD_GRADES = [
-  'الصف الأول الأساسي',
-  'الصف الثاني الأساسي',
-  'الصف الثالث الأساسي',
-  'الصف الرابع الأساسي',
-  'الصف الخامس الأساسي',
-  'الصف السادس الأساسي',
-  'الصف السابع الأساسي',
-  'الصف الثامن الأساسي',
-  'الصف التاسع الأساسي',
-  'الصف العاشر الأساسي',
-  'الحادي عشر (علمي/أدبي)',
-  'الثاني عشر (التوجيهي)',
 ];
 
 const OER_RESOURCE_PRESETS = [
@@ -1008,16 +993,20 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">الصف الدراسي</label>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">الصف الدراسي (كافة المراحل)</label>
                 <select
                   value={aiGrade}
                   onChange={(e) => setAiGrade(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-cyan-500"
                 >
-                  {STANDARD_GRADES.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
+                  {EDUCATIONAL_STAGES.map((stg) => (
+                    <optgroup key={stg.id} label={`--- ${stg.name} ---`}>
+                      {stg.grades.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

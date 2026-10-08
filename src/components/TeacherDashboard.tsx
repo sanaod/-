@@ -593,10 +593,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return map;
   }, [plans]);
 
-  // Extract unique grade levels, ensuring الصف الأول and الصف الثاني are always available
+  // Extract unique grade levels across all plans
   const gradeList = useMemo(() => {
-    const defaultGrades = ['الصف الأول', 'الصف الثاني'];
-    const set = new Set<string>(defaultGrades);
+    const set = new Set<string>();
     plans.forEach((p) => {
       const g = p.header.grade?.trim();
       if (g) {
@@ -616,22 +615,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return map;
   }, [plans]);
 
-  // Count plans per grade
+  // Count plans per grade across all educational stages
   const gradeCounts = useMemo(() => {
-    const map: Record<string, number> = {
-      'الصف الأول': 0,
-      'الصف الثاني': 0,
-    };
+    const map: Record<string, number> = {};
     plans.forEach((p) => {
       const g = p.header.grade?.trim();
       if (g) {
         map[g] = (map[g] || 0) + 1;
-        if (g.includes('الأول') && g !== 'الصف الأول') {
-          map['الصف الأول'] = (map['الصف الأول'] || 0) + 1;
-        }
-        if (g.includes('الثاني') && g !== 'الصف الثاني') {
-          map['الصف الثاني'] = (map['الصف الثاني'] || 0) + 1;
-        }
       }
     });
     return map;
@@ -651,11 +641,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         selectedStageFilter === 'all' || stage.key === selectedStageFilter;
       const matchGrade =
         selectedGradeFilter === 'all' ||
-        (selectedGradeFilter === 'الصف الأول'
-          ? plan.header.grade.includes('الأول')
-          : selectedGradeFilter === 'الصف الثاني'
-          ? plan.header.grade.includes('الثاني')
-          : plan.header.grade.toLowerCase().includes(selectedGradeFilter.toLowerCase()));
+        plan.header.grade.toLowerCase().includes(selectedGradeFilter.toLowerCase());
       const matchSearch =
         searchQuery.trim() === '' ||
         plan.header.lessonTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||

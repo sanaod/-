@@ -14,9 +14,10 @@ import {
   Plus,
   Wand2,
 } from 'lucide-react';
-import { EducationalResource, LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
+import { EducationalResource, LessonPlan, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { ensureExecutiveData } from '../utils/executivePlanDefaults';
+import { EducationalStagePickerModal } from './EducationalStagePickerModal';
 
 interface AiGeneratorModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
   );
 
   const [activeResource, setActiveResource] = useState<EducationalResource | null>(null);
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [autoUpdatedNotice, setAutoUpdatedNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -355,38 +357,39 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
                   <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
                   <span>الصف والشعبة *</span>
                 </label>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setGrade('الصف الأول')}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                      grade.includes('الأول')
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    الصف الأول
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGrade('الصف الثاني')}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                      grade.includes('الثاني')
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    الصف الثاني
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsStageModalOpen(true)}
+                  className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                  title="استعراض واختيار الصف لكافة المراحل التعليمية"
+                >
+                  <GraduationCap className="w-3 h-3 text-emerald-700" />
+                  <span>كافة المراحل 🎓</span>
+                </button>
               </div>
+
+              {/* Quick stage selector tags */}
+              <div className="flex items-center gap-1 mb-1.5 overflow-x-auto pb-0.5 scrollbar-thin text-[10px]">
+                {EDUCATIONAL_STAGES.map((stg) => (
+                  <button
+                    key={stg.id}
+                    type="button"
+                    onClick={() => setIsStageModalOpen(true)}
+                    className={`px-1.5 py-0.5 rounded border font-semibold whitespace-nowrap transition-colors ${stg.badgeColor} hover:opacity-90`}
+                    title={`انقر لاختيار صف من ${stg.name}`}
+                  >
+                    {stg.shortName}
+                  </button>
+                ))}
+              </div>
+
               <input
                 type="text"
                 required
                 list="ai-grade-datalist"
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                placeholder="اختر أو اكتب الصف (مثال: الصف الأول / أ)"
+                placeholder="الصف لجميع المراحل (اختر أو اكتب، مثال: العاشر، التوجيهي، الثالث...)"
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-right font-semibold"
               />
               <datalist id="ai-grade-datalist">
@@ -590,6 +593,15 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
           </div>
         </form>
       </div>
+
+      {/* Educational Stages Picker Modal */}
+      <EducationalStagePickerModal
+        isOpen={isStageModalOpen}
+        onClose={() => setIsStageModalOpen(false)}
+        selectedGrade={grade}
+        onSelectGrade={(g) => setGrade(g)}
+        title="تحديد الصف لجميع المراحل الدراسية (المولد الذكي)"
+      />
     </div>
   );
 };

@@ -17,8 +17,9 @@ import {
   CalendarRange,
   Flag,
   Loader2,
+  GraduationCap,
 } from 'lucide-react';
-import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
+import { LessonPlan, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
 import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
@@ -30,6 +31,8 @@ import {
   getNextTeachingDays,
   PALESTINIAN_MINISTRY_HOLIDAYS,
 } from '../utils/palestinianCalendar';
+import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
+import { EducationalStagePickerModal } from './EducationalStagePickerModal';
 
 interface BlankTemplateModalProps {
   isOpen: boolean;
@@ -59,6 +62,9 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState<string>('');
   const [periodsCount, setPeriodsCount] = useState<number>(2);
+  const [isAgendaOpen, setIsAgendaOpen] = useState<boolean>(false);
+  const [agendaTarget, setAgendaTarget] = useState<'start' | 'end'>('start');
+  const [isStageModalOpen, setIsStageModalOpen] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -771,35 +777,36 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-bold text-slate-700">الصف الدراسي *</label>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setGrade('الصف الأول')}
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                            grade === 'الصف الأول' || grade === 'الصف الأول الأساسي'
-                              ? 'bg-emerald-700 text-white'
-                              : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                          }`}
-                        >
-                          الصف الأول
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGrade('الصف الثاني')}
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                            grade === 'الصف الثاني' || grade === 'الصف الثاني الأساسي'
-                              ? 'bg-emerald-700 text-white'
-                              : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                          }`}
-                        >
-                          الصف الثاني
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsStageModalOpen(true)}
+                        className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                        title="استعراض واختيار الصف لكافة المراحل التعليمية"
+                      >
+                        <GraduationCap className="w-3 h-3 text-emerald-700" />
+                        <span>كافة المراحل 🎓</span>
+                      </button>
                     </div>
+
+                    {/* Quick stage selector tags */}
+                    <div className="flex items-center gap-1 mb-1.5 overflow-x-auto pb-0.5 scrollbar-thin text-[10px]">
+                      {EDUCATIONAL_STAGES.map((stg) => (
+                        <button
+                          key={stg.id}
+                          type="button"
+                          onClick={() => setIsStageModalOpen(true)}
+                          className={`px-1.5 py-0.5 rounded border font-semibold whitespace-nowrap transition-colors ${stg.badgeColor} hover:opacity-90`}
+                          title={`انقر لاختيار صف من ${stg.name}`}
+                        >
+                          {stg.shortName}
+                        </button>
+                      ))}
+                    </div>
+
                     <input
                       type="text"
                       list="blank-grade-datalist"
-                      placeholder="اختر أو اكتب الصف (مثال: الصف الأول، الصف الثاني...)"
+                      placeholder="اختر أو اكتب الصف لجميع المراحل (مثال: الثالث، السابع، العلمي، التوجيهي...)"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
                       className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium"
@@ -850,7 +857,20 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5">من تاريخ (البداية):</label>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="text-[11px] font-bold text-slate-700">من تاريخ (البداية):</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAgendaTarget('start');
+                            setIsAgendaOpen(true);
+                          }}
+                          className="text-[10px] text-emerald-800 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+                          title="فتح أجندة العام المدرسي لتغيير تاريخ البداية"
+                        >
+                          <span>🗓️ أجندة العام</span>
+                        </button>
+                      </div>
                       <input
                         type="date"
                         value={startDate}
@@ -870,7 +890,20 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5">إلى تاريخ (النهاية):</label>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="text-[11px] font-bold text-slate-700">إلى تاريخ (النهاية):</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAgendaTarget('end');
+                            setIsAgendaOpen(true);
+                          }}
+                          className="text-[10px] text-amber-800 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+                          title="فتح أجندة العام المدرسي لتغيير تاريخ النهاية"
+                        >
+                          <span>🗓️ أجندة العام</span>
+                        </button>
+                      </div>
                       <input
                         type="date"
                         value={endDate}
@@ -973,6 +1006,35 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
           )}
         </div>
       </div>
+
+      <AcademicYearAgendaModal
+        isOpen={isAgendaOpen}
+        onClose={() => setIsAgendaOpen(false)}
+        initialTargetField={agendaTarget}
+        currentStartDate={startDate}
+        currentEndDate={endDate}
+        totalPeriods={periodsCount}
+        onSelectDate={(target, iso) => {
+          if (target === 'start') {
+            setStartDate(iso);
+          } else {
+            setEndDate(iso);
+          }
+        }}
+        onSelectRange={(startIso, endIso) => {
+          setStartDate(startIso);
+          setEndDate(endIso);
+        }}
+      />
+
+      {/* Educational Stages Picker Modal */}
+      <EducationalStagePickerModal
+        isOpen={isStageModalOpen}
+        onClose={() => setIsStageModalOpen(false)}
+        selectedGrade={grade}
+        onSelectGrade={(g) => setGrade(g)}
+        title="تحديد الصف لجميع المراحل الدراسية (الاستمارة المفرغة)"
+      />
     </div>
   );
 };

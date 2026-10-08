@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LessonHeader, STANDARD_GRADES } from '../types/lessonPlan';
-import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag } from 'lucide-react';
+import { LessonHeader, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
+import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag, GraduationCap, ChevronDown } from 'lucide-react';
 import { toArabicDigits, formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import {
   analyzeTeachingCalendar,
@@ -10,6 +10,7 @@ import {
   parseDateSafely,
 } from '../utils/palestinianCalendar';
 import { getCurrentAcademicYear } from '../utils/academicYear';
+import { EducationalStagePickerModal } from './EducationalStagePickerModal';
 
 interface LessonHeaderCardProps {
   header: LessonHeader;
@@ -17,6 +18,7 @@ interface LessonHeaderCardProps {
   onOpenUnitPlanModal?: () => void;
   onOpenSemesterPlanModal?: () => void;
   onOpenResourcesModal?: () => void;
+  onOpenAiModal?: () => void;
   resourcesCount?: number;
 }
 
@@ -26,9 +28,11 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
   onOpenUnitPlanModal,
   onOpenSemesterPlanModal,
   onOpenResourcesModal,
+  onOpenAiModal,
   resourcesCount,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false);
 
   const handleChange = (field: keyof LessonHeader, val: any) => {
     onChange({
@@ -140,7 +144,19 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {onOpenAiModal && (
+            <button
+              type="button"
+              onClick={onOpenAiModal}
+              title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
+              className="px-3.5 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer border border-amber-300 group"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
+              <span>توليد التحضير (AI)</span>
+            </button>
+          )}
+
           {onOpenResourcesModal && (
             <button
               type="button"
@@ -222,32 +238,37 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="font-bold text-slate-700">الصف والشعبة</label>
+                <label className="font-bold text-slate-700 flex items-center gap-1">
+                  <span>الصف والشعبة</span>
+                </label>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => handleChange('grade', 'الصف الأول')}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                      header.grade === 'الصف الأول' || header.grade === 'الصف الأول الأساسي'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                    }`}
+                    onClick={() => setIsStageModalOpen(true)}
+                    className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                    title="استعراض واختيار الصف لجميع المراحل الدراسية (رياض أطفال، أساسية دنيا، أساسية عليا، وثانوية وتوجيهي)"
                   >
-                    الصف الأول
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChange('grade', 'الصف الثاني')}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                      header.grade === 'الصف الثاني' || header.grade === 'الصف الثاني الأساسي'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    الصف الثاني
+                    <GraduationCap className="w-3 h-3 text-emerald-700" />
+                    <span>كافة المراحل 🎓</span>
                   </button>
                 </div>
               </div>
+
+              {/* Quick stage selector tags */}
+              <div className="flex items-center gap-1 mb-1.5 overflow-x-auto pb-0.5 scrollbar-thin text-[10px]">
+                {EDUCATIONAL_STAGES.map((stg) => (
+                  <button
+                    key={stg.id}
+                    type="button"
+                    onClick={() => setIsStageModalOpen(true)}
+                    className={`px-1.5 py-0.5 rounded border font-semibold whitespace-nowrap transition-colors ${stg.badgeColor} hover:opacity-90`}
+                    title={`انقر لاختيار صف من ${stg.name}`}
+                  >
+                    {stg.shortName}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <input
@@ -255,7 +276,7 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                     list="header-grade-datalist"
                     value={header.grade}
                     onChange={(e) => handleChange('grade', e.target.value)}
-                    placeholder="الصف (اختر أو اكتب)"
+                    placeholder="الصف (اختر أو اكتب لجميع المراحل)"
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-right font-medium focus:ring-1 focus:ring-emerald-500"
                   />
                   <datalist id="header-grade-datalist">
@@ -268,7 +289,7 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                   type="text"
                   value={header.section}
                   onChange={(e) => handleChange('section', e.target.value)}
-                  placeholder="الشعبة"
+                  placeholder="الشعبة (مثال: أ / ب)"
                   className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-right"
                 />
               </div>
@@ -543,6 +564,15 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Educational Stages Picker Modal */}
+      <EducationalStagePickerModal
+        isOpen={isStageModalOpen}
+        onClose={() => setIsStageModalOpen(false)}
+        selectedGrade={header.grade}
+        onSelectGrade={(gradeName) => handleChange('grade', gradeName)}
+        title="تحديد الصف لجميع المراحل الدراسية في استمارة التحضير"
+      />
     </div>
   );
 };

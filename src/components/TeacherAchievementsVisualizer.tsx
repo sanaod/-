@@ -74,6 +74,15 @@ export const STAGE_CONFIG: Record<
   string,
   { key: string; label: string; shortLabel: string; order: number; color: string; bgBadge: string; borderBadge: string }
 > = {
+  early_childhood: {
+    key: 'early_childhood',
+    label: 'مرحلة رياض الأطفال والطفولة المبكرة',
+    shortLabel: 'رياض الأطفال',
+    order: 0,
+    color: '#d97706',
+    bgBadge: 'bg-amber-50 text-amber-800',
+    borderBadge: 'border-amber-300',
+  },
   primary_lower: {
     key: 'primary_lower',
     label: 'المرحلة الأساسية الدنيا (الصفوف ١-٤)',
@@ -106,9 +115,9 @@ export const STAGE_CONFIG: Record<
     label: 'مراحل ومستويات أخرى / عام',
     shortLabel: 'مراحل أخرى',
     order: 4,
-    color: '#d97706',
-    bgBadge: 'bg-amber-50 text-amber-800',
-    borderBadge: 'border-amber-300',
+    color: '#64748b',
+    bgBadge: 'bg-slate-50 text-slate-800',
+    borderBadge: 'border-slate-300',
   },
 };
 
@@ -123,6 +132,15 @@ export function getStageFromGrade(gradeStr: string): {
   borderBadge: string;
 } {
   const g = (gradeStr || '').toLowerCase();
+  if (
+    g.includes('روضة') ||
+    g.includes('تمهيدي') ||
+    g.includes('بستان') ||
+    g.includes('طفولة') ||
+    g.includes('تهيئة')
+  ) {
+    return STAGE_CONFIG.early_childhood;
+  }
   if (
     g.includes('أول') ||
     g.includes('ثاني') ||

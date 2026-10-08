@@ -37,7 +37,7 @@ import {
   ListFilter,
   CheckSquare,
 } from 'lucide-react';
-import { LessonPlan } from '../types/lessonPlan';
+import { LessonPlan, EDUCATIONAL_STAGES, STANDARD_GRADES } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { getHijriDate, formatDualCalendarDate } from '../utils/hijriCalendar';
 import {
@@ -1068,7 +1068,7 @@ export const EducationalAssessmentSimulatorModal: React.FC<
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       المادة الدراسية:
@@ -1079,6 +1079,27 @@ export const EducationalAssessmentSimulatorModal: React.FC<
                       onChange={(e) => setFormSubject(e.target.value)}
                       className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-emerald-500"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      الصف الدراسي (كافة المراحل):
+                    </label>
+                    <select
+                      value={formGrade}
+                      onChange={(e) => setFormGrade(e.target.value)}
+                      className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-emerald-500"
+                    >
+                      {EDUCATIONAL_STAGES.map((stg) => (
+                        <optgroup key={stg.id} label={`--- ${stg.name} ---`}>
+                          {stg.grades.map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

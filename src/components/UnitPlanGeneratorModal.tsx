@@ -36,7 +36,7 @@ import {
   BookmarkPlus,
   Globe,
 } from 'lucide-react';
-import { LessonPlan, STANDARD_GRADES } from '../types/lessonPlan';
+import { LessonPlan, STANDARD_GRADES, EDUCATIONAL_STAGES, EducationalResource } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { ensureExecutiveData } from '../utils/executivePlanDefaults';
 
@@ -64,6 +64,8 @@ interface UnitPlanGeneratorModalProps {
   defaultDirectorate?: string;
   defaultSubject?: string;
   defaultGrade?: string;
+  resources?: EducationalResource[];
+  onOpenResourcesModal?: () => void;
 }
 
 const SAMPLE_UNIT_PRESETS: Record<string, { unitTitle: string; lessons: string[] }[]> = {
@@ -147,6 +149,8 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
   defaultDirectorate = 'مديرية التربية والتعليم - نابلس',
   defaultSubject = 'الرياضيات',
   defaultGrade = 'الصف الثالث الأساسي',
+  resources = [],
+  onOpenResourcesModal,
 }) => {
   // Step navigation: 'config' | 'generating' | 'results'
   const [step, setStep] = useState<'config' | 'generating' | 'results'>('config');
@@ -510,8 +514,8 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
             <tr>
               <td style="background-color: #f1f5f9; font-weight: bold;">الفترة الزمنية:</td>
               <td colspan="3">
-                من: ${exec.timeframeDetails.startDay} (${exec.timeframeDetails.startDate}) ${exec.timeframeDetails.startYear}
-                إلى: ${exec.timeframeDetails.endDay} (${exec.timeframeDetails.endDate}) ${exec.timeframeDetails.endYear}
+                من: ${exec.timeframeDetails.startDay} (${exec.timeframeDetails.startDate}) [${exec.timeframeDetails.startSemester || exec.timeframeDetails.startYear || 'الفصل الدراسي الأول'}]
+                إلى: ${exec.timeframeDetails.endDay} (${exec.timeframeDetails.endDate}) [${exec.timeframeDetails.endSemester || exec.timeframeDetails.endYear || 'الفصل الدراسي الأول'}]
               </td>
             </tr>
             <tr>
@@ -712,6 +716,72 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
           {/* STAGE 1: CONFIGURATION */}
           {step === 'config' && (
             <div className="space-y-6">
+              {/* Attached Resources Multi-Sync Strip from Resource Bank */}
+              {resources && resources.length > 0 && (
+                <div className="bg-linear-to-r from-emerald-50 via-teal-50/80 to-emerald-100/60 border-2 border-emerald-300 p-4 rounded-2xl space-y-3 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs relative">
+                        <Layers className="w-5 h-5 text-emerald-100" />
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-amber-950 font-black rounded-full flex items-center justify-center text-[10px] shadow-xs border border-white">
+                          +
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-emerald-950 flex items-center gap-2">
+                          <span>بنك المصادر والمناهج المرفقة للوحدة:</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-emerald-800 text-white font-black shadow-2xs">
+                            {toArabicDigits(resources.length)} مصادر
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-800/90 mt-0.5">
+                          اختر مصدراً لمزامنة المبحث والصف وعنوان الوحدة تلقائياً من بنك المصادر
+                        </p>
+                      </div>
+                    </div>
+
+                    {onOpenResourcesModal && (
+                      <button
+                        type="button"
+                        onClick={onOpenResourcesModal}
+                        className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shrink-0 transition-all shadow-xs hover:shadow-md hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer ring-1 ring-emerald-500/30"
+                      >
+                        <Plus className="w-4 h-4 text-emerald-200" />
+                        <span>إدارة بنك المصادر</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="pt-2.5 border-t border-emerald-200">
+                    <span className="block text-[11px] font-bold text-emerald-900 mb-1.5 flex items-center gap-1">
+                      <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
+                      اختر من بنك المصادر لتعبئة بيانات الوحدة:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {resources.map((res) => {
+                        return (
+                          <button
+                            key={res.id}
+                            type="button"
+                            onClick={() => {
+                              if (res.inferredSubject) setSubject(res.inferredSubject);
+                              if (res.inferredGrade) setGrade(res.inferredGrade);
+                              let t = res.inferredLessonTitle || res.title;
+                              t = t.replace(/^(كتاب|ورقة عمل|عرض تقديمي|تسجيل صوتي|فيديو تعليمي|اختبار تقويمي|جدول بيانات|وسيلة بصرية|دليل المعلم|مستند|رابط تعليمي|معايير ونتاجات|ملاحظات تحضير)[\s:–-]*[^\-]+- /i, '').trim();
+                              if (t) setUnitTitle(`الوحدة: ${t}`);
+                              setCustomNotes(`الاستناد التام إلى المصدر المرفق من بنك المصادر: "${res.title}".`);
+                            }}
+                            className="text-[11px] px-3 py-1.5 rounded-xl border transition-all text-right bg-white hover:bg-emerald-100 text-emerald-950 border-emerald-300 font-medium cursor-pointer"
+                          >
+                            {res.title}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Unit Info Card */}
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -799,16 +869,20 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">الصف الدراسي:</label>
+                    <label className="block font-bold text-slate-700 mb-1">الصف الدراسي (كافة المراحل):</label>
                     <select
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
                       className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     >
-                      {STANDARD_GRADES.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
+                      {EDUCATIONAL_STAGES.map((stg) => (
+                        <optgroup key={stg.id} label={`--- ${stg.name} ---`}>
+                          {stg.grades.map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>

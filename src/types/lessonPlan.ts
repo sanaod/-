@@ -4,6 +4,8 @@ export interface LessonHeader {
   school: string;
   directorate: string;
   teacherName: string;
+  principalName?: string;
+  supervisorName?: string;
   subject: string;
   grade: string;
   section: string;
@@ -204,10 +206,13 @@ export interface ExecutivePlanData {
   timeframeDetails: {
     startDay: string;
     startDate: string;
-    startYear: string;
+    startYear?: string;
+    startSemester?: string; // الفصل الدراسي: e.g. "الفصل الدراسي الأول"
     endDay: string;
     endDate: string;
-    endYear: string;
+    endYear?: string;
+    endSemester?: string;   // الفصل الدراسي: e.g. "الفصل الدراسي الأول"
+    autoUpdateDate?: boolean; // خيار تحديث التاريخ تلقائياً
   };
   learningCompetencies: string;           // كفايات التعلّم: المهارات والمعارف الأساسية الخاصة بالمبحث
   valuesAndEthics: string;                // القيم والأخلاق المراد تعزيزها: المواطنة، التعاون، الأمانة، المهارات الحياتية
@@ -237,17 +242,105 @@ export interface LessonPlan {
   attachedResources?: EducationalResource[];
 }
 
-export const STANDARD_GRADES = [
-  'الصف الأول',
-  'الصف الثاني',
+export interface EducationalStageGroup {
+  id: string;
+  name: string;
+  shortName: string;
+  badgeColor: string;
+  grades: string[];
+}
+
+export const EDUCATIONAL_STAGES: EducationalStageGroup[] = [
+  {
+    id: 'early_childhood',
+    name: 'مرحلة رياض الأطفال والطفولة المبكرة',
+    shortName: 'رياض الأطفال',
+    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+    grades: [
+      'الروضة (تمهيدي)',
+      'الروضة (بستان)',
+      'التهيئة المبكرة (الطفولة المبكرة)',
+    ],
+  },
+  {
+    id: 'primary_lower',
+    name: 'المرحلة الأساسية الدنيا (الصفوف ١ - ٤)',
+    shortName: 'الأساسية الدنيا (١-٤)',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    grades: [
+      'الصف الأول الأساسي',
+      'الصف الثاني الأساسي',
+      'الصف الثالث الأساسي',
+      'الصف الرابع الأساسي',
+    ],
+  },
+  {
+    id: 'primary_upper',
+    name: 'المرحلة الأساسية العليا (الصفوف ٥ - ٩)',
+    shortName: 'الأساسية العليا (٥-٩)',
+    badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+    grades: [
+      'الصف الخامس الأساسي',
+      'الصف السادس الأساسي',
+      'الصف السابع الأساسي',
+      'الصف الثامن الأساسي',
+      'الصف التاسع الأساسي',
+    ],
+  },
+  {
+    id: 'secondary',
+    name: 'المرحلة الثانوية (الصفوف ١٠ - ١٢ وتوجيهي)',
+    shortName: 'الثانوية (١٠-١٢)',
+    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+    grades: [
+      'الصف العاشر الأساسي',
+      'الصف الحادي عشر (العلمي)',
+      'الصف الحادي عشر (الأدبي)',
+      'الصف الحادي عشر (الريادة والأعمال)',
+      'الصف الحادي عشر (التكنولوجي والمهني)',
+      'الصف الثاني عشر (التوجيهي - العلمي)',
+      'الصف الثاني عشر (التوجيهي - الأدبي)',
+      'الصف الثاني عشر (التوجيهي - الريادة والأعمال)',
+      'الصف الثاني عشر (التوجيهي - التكنولوجي والمهني)',
+      'الصف الثاني عشر (التوجيهي - الشرعي)',
+    ],
+  },
+];
+
+export const STANDARD_GRADES: string[] = [
+  // رياض الأطفال
+  'الروضة (تمهيدي)',
+  'الروضة (بستان)',
+  // الأساسية الدنيا
   'الصف الأول الأساسي',
   'الصف الثاني الأساسي',
   'الصف الثالث الأساسي',
+  'الصف الرابع الأساسي',
+  // الأساسية العليا
+  'الصف الخامس الأساسي',
+  'الصف السادس الأساسي',
+  'الصف السابع الأساسي',
+  'الصف الثامن الأساسي',
+  'الصف التاسع الأساسي',
+  // الثانوية والتوجيهي
+  'الصف العاشر الأساسي',
+  'الصف الحادي عشر (العلمي)',
+  'الصف الحادي عشر (الأدبي)',
+  'الصف الحادي عشر (الريادة والأعمال)',
+  'الصف الحادي عشر (التكنولوجي والمهني)',
+  'الصف الثاني عشر (التوجيهي - العلمي)',
+  'الصف الثاني عشر (التوجيهي - الأدبي)',
+  'الصف الثاني عشر (التوجيهي - الريادة والأعمال)',
+  'الصف الثاني عشر (التوجيهي - التكنولوجي والمهني)',
+  'الصف الثاني عشر (التوجيهي - الشرعي)',
+  // أسماء شائعة ومختصرة للتوافق مع الخطط السابقة
+  'الصف الأول',
+  'الصف الثاني',
   'الرابع الأساسي',
   'الخامس الأساسي',
   'السادس الأساسي',
   'السابع الأساسي',
   'الثامن الأساسي',
   'التاسع الأساسي',
-  'العاشر الأساسي',
 ];
+

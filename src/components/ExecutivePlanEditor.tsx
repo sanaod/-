@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LessonPlan,
   ExecutivePlanData,
   ExecutiveStage,
+  STANDARD_GRADES,
+  EDUCATIONAL_STAGES,
 } from '../types/lessonPlan';
 import {
   Sparkles,
@@ -17,6 +19,7 @@ import {
   Plus,
   Trash2,
   Calendar,
+  CalendarDays,
   FileCheck2,
   CheckSquare,
   Square,
@@ -27,14 +30,27 @@ import {
   BookmarkCheck,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
+  GraduationCap,
 } from 'lucide-react';
-import { toArabicDigits } from '../utils/arabicNumerals';
+import { toArabicDigits, formatDateDMY } from '../utils/arabicNumerals';
+import {
+  getNextTeachingDays,
+  PALESTINIAN_MINISTRY_HOLIDAYS,
+  formatDateToIso,
+} from '../utils/palestinianCalendar';
+import { parseDateParts } from '../utils/executivePlanDefaults';
+import { getCurrentSemesterName } from '../utils/academicYear';
+import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
+import { EducationalStagePickerModal } from './EducationalStagePickerModal';
+import { Section6SignaturesCard } from './Section6SignaturesCard';
 
 interface ExecutivePlanEditorProps {
   plan: LessonPlan;
   onChange: (updatedPlan: LessonPlan) => void;
   onOpenUnitPlanModal?: () => void;
   onOpenResourcesModal?: () => void;
+  onOpenAiModal?: () => void;
 }
 
 export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
@@ -42,6 +58,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   onChange,
   onOpenUnitPlanModal,
   onOpenResourcesModal,
+  onOpenAiModal,
 }) => {
   const data: ExecutivePlanData = plan.executiveData!;
 
@@ -63,6 +80,200 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   // Quick state for collapsing sections if user wants
   const [activeStageTab, setActiveStageTab] = useState<number | 'all'>('all');
 
+  const startDatePickerRef = useRef<HTMLInputElement>(null);
+  const endDatePickerRef = useRef<HTMLInputElement>(null);
+
+  // Apply today's date automatically
+  const applyTodayDateAutomatically = () => {
+    const today = new Date();
+    const todayIso = today.toISOString().split('T')[0];
+    const sParts = parseDateParts(todayIso);
+
+    const totalPeriods = Math.max(1, Number(plan.header.totalPeriods) || 2);
+    const nextTeaching = getNextTeachingDays(todayIso, totalPeriods, PALESTINIAN_MINISTRY_HOLIDAYS);
+    const eParts = parseDateParts(nextTeaching.endDate);
+
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      startDay: sParts.day,
+      startDate: sParts.date,
+      startSemester: sParts.semester,
+      startYear: sParts.year,
+      endDay: eParts.day,
+      endDate: eParts.date,
+      endSemester: eParts.semester,
+      endYear: eParts.year,
+      autoUpdateDate: true,
+    };
+
+    onChange({
+      ...plan,
+      header: {
+        ...plan.header,
+        date: sParts.date,
+        startDate: todayIso,
+        endDate: nextTeaching.endDate,
+        semester: sParts.semester,
+      },
+      executiveData: {
+        ...data,
+        timeframeDetails: updatedTimeframe,
+      },
+    });
+  };
+
+  // Run auto-update if requested or on initial load if dates or semester are missing or legacy default
+  useEffect(() => {
+    if (
+      data.timeframeDetails.autoUpdateDate !== false &&
+      (!data.timeframeDetails.startDate ||
+        !data.timeframeDetails.startSemester ||
+        data.timeframeDetails.startDate.includes('...') ||
+        data.timeframeDetails.startDate === '15/10/2026')
+    ) {
+      applyTodayDateAutomatically();
+    }
+  }, []);
+
+  const handleStartDatePickerChange = (isoDate: string) => {
+    if (!isoDate) return;
+    const sParts = parseDateParts(isoDate);
+    const totalPeriods = Math.max(1, Number(plan.header.totalPeriods) || 2);
+    const nextTeaching = getNextTeachingDays(isoDate, totalPeriods, PALESTINIAN_MINISTRY_HOLIDAYS);
+    const eParts = parseDateParts(nextTeaching.endDate);
+
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      startDay: sParts.day,
+      startDate: sParts.date,
+      startSemester: sParts.semester,
+      startYear: sParts.year,
+      endDay: eParts.day,
+      endDate: eParts.date,
+      endSemester: eParts.semester,
+      endYear: eParts.year,
+    };
+
+    onChange({
+      ...plan,
+      header: {
+        ...plan.header,
+        startDate: isoDate,
+        endDate: nextTeaching.endDate,
+        date: sParts.date,
+        semester: sParts.semester,
+      },
+      executiveData: {
+        ...data,
+        timeframeDetails: updatedTimeframe,
+      },
+    });
+  };
+
+  const handleEndDatePickerChange = (isoDate: string) => {
+    if (!isoDate) return;
+    const eParts = parseDateParts(isoDate);
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      endDay: eParts.day,
+      endDate: eParts.date,
+      endSemester: eParts.semester,
+      endYear: eParts.year,
+    };
+
+    onChange({
+      ...plan,
+      header: {
+        ...plan.header,
+        endDate: isoDate,
+      },
+      executiveData: {
+        ...data,
+        timeframeDetails: updatedTimeframe,
+      },
+    });
+  };
+
+  const handleStartDateTextChange = (text: string) => {
+    const sParts = parseDateParts(text);
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      startDate: text,
+      startDay: sParts.day || data.timeframeDetails.startDay,
+      startSemester: sParts.semester || data.timeframeDetails.startSemester || 'الفصل الدراسي الأول',
+      startYear: sParts.year || data.timeframeDetails.startYear,
+    };
+    handleUpdate({
+      ...data,
+      timeframeDetails: updatedTimeframe,
+    });
+  };
+
+  const handleEndDateTextChange = (text: string) => {
+    const eParts = parseDateParts(text);
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      endDate: text,
+      endDay: eParts.day || data.timeframeDetails.endDay,
+      endSemester: eParts.semester || data.timeframeDetails.endSemester || 'الفصل الدراسي الأول',
+      endYear: eParts.year || data.timeframeDetails.endYear,
+    };
+    handleUpdate({
+      ...data,
+      timeframeDetails: updatedTimeframe,
+    });
+  };
+
+  // Academic Year Agenda Modal State & Handlers
+  const [isAgendaModalOpen, setIsAgendaModalOpen] = useState(false);
+  const [agendaTargetField, setAgendaTargetField] = useState<'start' | 'end'>('start');
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
+
+  const openAgendaModal = (target: 'start' | 'end') => {
+    setAgendaTargetField(target);
+    setIsAgendaModalOpen(true);
+  };
+
+  const handleAgendaSelectDate = (target: 'start' | 'end', isoDate: string) => {
+    if (target === 'start') {
+      handleStartDatePickerChange(isoDate);
+    } else {
+      handleEndDatePickerChange(isoDate);
+    }
+  };
+
+  const handleAgendaSelectRange = (startIso: string, endIso: string) => {
+    const sParts = parseDateParts(startIso);
+    const eParts = parseDateParts(endIso);
+    const updatedTimeframe = {
+      ...data.timeframeDetails,
+      startDay: sParts.day,
+      startDate: sParts.date,
+      startSemester: sParts.semester,
+      startYear: sParts.year,
+      endDay: eParts.day,
+      endDate: eParts.date,
+      endSemester: eParts.semester,
+      endYear: eParts.year,
+      autoUpdateDate: true,
+    };
+
+    onChange({
+      ...plan,
+      header: {
+        ...plan.header,
+        startDate: startIso,
+        endDate: endIso,
+        date: sParts.date,
+        semester: sParts.semester,
+      },
+      executiveData: {
+        ...data,
+        timeframeDetails: updatedTimeframe,
+      },
+    });
+  };
+
   return (
     <div className="space-y-6 text-slate-800">
       {/* 1. Official Header Card: المؤسسة والبيانات العامة والترويسة الرسمية */}
@@ -79,12 +290,23 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
               <h2 className="text-lg sm:text-xl font-black">نموذج خطة تحضير درس (البيانات العامة وكفايات التعلّم)</h2>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {onOpenAiModal && (
+              <button
+                type="button"
+                onClick={onOpenAiModal}
+                title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
+                className="px-3.5 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer border border-amber-300 group"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
+                <span>توليد التحضير (AI)</span>
+              </button>
+            )}
             {onOpenUnitPlanModal && (
               <button
                 type="button"
                 onClick={onOpenUnitPlanModal}
-                className="px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>تحضير الوحدة الكاملة</span>
@@ -113,9 +335,21 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">الصف:</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-600">الصف الدراسي:</label>
+                <button
+                  type="button"
+                  onClick={() => setIsGradeModalOpen(true)}
+                  className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                  title="استعراض واختيار الصف لكافة المراحل التعليمية"
+                >
+                  <GraduationCap className="w-3 h-3 text-emerald-700" />
+                  <span>كافة المراحل 🎓</span>
+                </button>
+              </div>
               <input
                 type="text"
+                list="executive-grade-datalist"
                 value={plan.header.grade}
                 onChange={(e) =>
                   onChange({
@@ -123,13 +357,31 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                     header: { ...plan.header, grade: e.target.value },
                   })
                 }
-                placeholder="مثال: الثالث الأساسي"
+                placeholder="الصف لجميع المراحل (اختر أو اكتب)"
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
+              <datalist id="executive-grade-datalist">
+                {STANDARD_GRADES.map((g) => (
+                  <option key={g} value={g} />
+                ))}
+              </datalist>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">عنوان الدرس / الوحدة:</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-600">عنوان الدرس / الوحدة:</label>
+                {onOpenAiModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenAiModal}
+                    className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                    title="توليد وتعبئة خطة الدرس بالذكاء الاصطناعي"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-700" />
+                    <span>توليد التحضير 🪄</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={plan.header.lessonTitle}
@@ -166,17 +418,47 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             </div>
           </div>
 
-          {/* Timeframe Detailed Period (من: اليوم/التاريخ/السنة - إلى: اليوم/التاريخ/السنة) */}
+          {/* Timeframe Detailed Period (من: اليوم/التاريخ/الفصل الدراسي - إلى: اليوم/التاريخ/الفصل الدراسي) */}
           <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs mb-3">
-              <Calendar className="w-4 h-4 text-emerald-700" />
-              <span>الفترة الزمنية (توزيع الحصص والتواريخ):</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-2 border-b border-emerald-200/60">
+              <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
+                <Calendar className="w-4 h-4 text-emerald-700" />
+                <span>الفترة الزمنية وتوزيع الحصص والتواريخ:</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span>تحديث التاريخ تلقائياً مفعل</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => openAgendaModal('start')}
+                  title="فتح أجندة العام والتقويم المدرسي المعتمد لتغيير وتحديد تواريخ الدرس"
+                  className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer border border-amber-400"
+                >
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span>🗓️ أجندة العام المدرسي</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={applyTodayDateAutomatically}
+                  title="تحديث فوري لتواريخ اليوم الحالي وأيام الأسبوع والفصل الدراسي"
+                  className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>⚡ تحديث لتاريخ اليوم تلقائياً</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* من */}
-              <div className="bg-white p-3 rounded-lg border border-emerald-100 space-y-2">
-                <div className="text-xs font-black text-emerald-800">من:</div>
+              <div className="bg-white p-3 rounded-lg border border-emerald-100 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-emerald-800">من (بداية الدرس):</span>
+                  <span className="text-[10px] text-slate-500 font-medium">اليوم / التاريخ / الفصل الدراسي</span>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-0.5">اليوم</label>
@@ -190,45 +472,87 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         })
                       }
                       placeholder="الأحد"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
+                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">التاريخ</label>
-                    <input
-                      type="text"
-                      value={data.timeframeDetails.startDate}
-                      onChange={(e) =>
-                        handleUpdate({
-                          ...data,
-                          timeframeDetails: { ...data.timeframeDetails, startDate: e.target.value },
-                        })
-                      }
-                      placeholder="15/10/2026"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
-                    />
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-between">
+                      <span>التاريخ</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openAgendaModal('start')}
+                          className="px-1.5 py-0.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded text-[10px] font-bold transition-colors cursor-pointer border border-emerald-300"
+                          title="فتح أجندة العام لتغيير تاريخ البداية"
+                        >
+                          🗓️ أجندة العام
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startDatePickerRef.current?.showPicker ? startDatePickerRef.current.showPicker() : startDatePickerRef.current?.focus()}
+                          className="text-emerald-700 hover:text-emerald-900 cursor-pointer text-xs"
+                          title="اختيار من التقويم السريع"
+                        >
+                          📅
+                        </button>
+                      </div>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={data.timeframeDetails.startDate}
+                        onChange={(e) => handleStartDateTextChange(e.target.value)}
+                        placeholder="DD/MM/YYYY"
+                        className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
+                      />
+                      <input
+                        ref={startDatePickerRef}
+                        type="date"
+                        className="sr-only"
+                        onChange={(e) => handleStartDatePickerChange(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">السنة</label>
-                    <input
-                      type="text"
-                      value={data.timeframeDetails.startYear}
-                      onChange={(e) =>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">الفصل الدراسي</label>
+                    <select
+                      value={data.timeframeDetails.startSemester || plan.header.semester || 'الفصل الدراسي الأول'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const updatedTf = {
+                          ...data.timeframeDetails,
+                          startSemester: val,
+                          startYear: val,
+                        };
                         handleUpdate({
                           ...data,
-                          timeframeDetails: { ...data.timeframeDetails, startYear: e.target.value },
-                        })
-                      }
-                      placeholder="2026م"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
-                    />
+                          timeframeDetails: updatedTf,
+                        });
+                        onChange({
+                          ...plan,
+                          header: { ...plan.header, semester: val },
+                          executiveData: {
+                            ...data,
+                            timeframeDetails: updatedTf,
+                          },
+                        });
+                      }}
+                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="الفصل الدراسي الأول">الفصل الدراسي الأول</option>
+                      <option value="الفصل الدراسي الثاني">الفصل الدراسي الثاني</option>
+                      <option value="الفصل الصيفي">الفصل الصيفي</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
               {/* إلى */}
-              <div className="bg-white p-3 rounded-lg border border-emerald-100 space-y-2">
-                <div className="text-xs font-black text-emerald-800">إلى:</div>
+              <div className="bg-white p-3 rounded-lg border border-emerald-100 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-emerald-800">إلى (نهاية الدرس):</span>
+                  <span className="text-[10px] text-slate-500 font-medium">اليوم / التاريخ / الفصل الدراسي</span>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-0.5">اليوم</label>
@@ -242,38 +566,76 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         })
                       }
                       placeholder="الخميس"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
+                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">التاريخ</label>
-                    <input
-                      type="text"
-                      value={data.timeframeDetails.endDate}
-                      onChange={(e) =>
-                        handleUpdate({
-                          ...data,
-                          timeframeDetails: { ...data.timeframeDetails, endDate: e.target.value },
-                        })
-                      }
-                      placeholder="19/10/2026"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
-                    />
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-between">
+                      <span>التاريخ</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openAgendaModal('end')}
+                          className="px-1.5 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded text-[10px] font-bold transition-colors cursor-pointer border border-amber-300"
+                          title="فتح أجندة العام لتغيير تاريخ النهاية"
+                        >
+                          🗓️ أجندة العام
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => endDatePickerRef.current?.showPicker ? endDatePickerRef.current.showPicker() : endDatePickerRef.current?.focus()}
+                          className="text-emerald-700 hover:text-emerald-900 cursor-pointer text-xs"
+                          title="اختيار من التقويم السريع"
+                        >
+                          📅
+                        </button>
+                      </div>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={data.timeframeDetails.endDate}
+                        onChange={(e) => handleEndDateTextChange(e.target.value)}
+                        placeholder="DD/MM/YYYY"
+                        className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
+                      />
+                      <input
+                        ref={endDatePickerRef}
+                        type="date"
+                        className="sr-only"
+                        onChange={(e) => handleEndDatePickerChange(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">السنة</label>
-                    <input
-                      type="text"
-                      value={data.timeframeDetails.endYear}
-                      onChange={(e) =>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">الفصل الدراسي</label>
+                    <select
+                      value={data.timeframeDetails.endSemester || plan.header.semester || 'الفصل الدراسي الأول'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const updatedTf = {
+                          ...data.timeframeDetails,
+                          endSemester: val,
+                          endYear: val,
+                        };
                         handleUpdate({
                           ...data,
-                          timeframeDetails: { ...data.timeframeDetails, endYear: e.target.value },
-                        })
-                      }
-                      placeholder="2026م"
-                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium"
-                    />
+                          timeframeDetails: updatedTf,
+                        });
+                        onChange({
+                          ...plan,
+                          executiveData: {
+                            ...data,
+                            timeframeDetails: updatedTf,
+                          },
+                        });
+                      }}
+                      className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="الفصل الدراسي الأول">الفصل الدراسي الأول</option>
+                      <option value="الفصل الدراسي الثاني">الفصل الدراسي الثاني</option>
+                      <option value="الفصل الصيفي">الفصل الصيفي</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -444,8 +806,19 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             </div>
           </div>
 
-          {/* Filter / Nav tabs for stages */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+          {/* Filter / Nav tabs for stages & AI generation */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 flex-wrap">
+            {onOpenAiModal && (
+              <button
+                type="button"
+                onClick={onOpenAiModal}
+                className="px-2.5 py-1 rounded-lg text-xs font-black bg-linear-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 transition-all flex items-center gap-1.5 shrink-0 shadow-2xs border border-amber-300 cursor-pointer"
+                title="توليد أنشطة وإجراءات التحضير بالذكاء الاصطناعي"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <span>توليد التحضير (AI)</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveStageTab('all')}
@@ -1033,6 +1406,70 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 4. التوقيع والاعتماد الرسمي (كما في النموذج الثاني) */}
+      <Section6SignaturesCard
+        data={
+          plan.section6Signatures || {
+            teacher: {
+              name: plan.header.teacherName || '',
+              date: plan.header.date || plan.header.startDate || '',
+              notes: '',
+            },
+            schoolPrincipal: {
+              name: plan.header.principalName || '',
+              date: plan.header.date || plan.header.startDate || '',
+              directives: '',
+            },
+            educationalSupervisor: {
+              name: plan.header.supervisorName || '',
+              date: plan.header.date || plan.header.startDate || '',
+              directives: '',
+            },
+          }
+        }
+        onChange={(signatures) => {
+          onChange({
+            ...plan,
+            section6Signatures: signatures,
+          });
+        }}
+        title="رابعاً: التوقيع والاعتماد الرسمي"
+        subtitle="اعتمادات المعلم المنفذ، الإدارة المدرسية، والإشراف التربوي المعتمد"
+        stepNumber="٤"
+        headerDefaults={{
+          teacherName: plan.header.teacherName,
+          principalName: plan.header.principalName,
+          supervisorName: plan.header.supervisorName,
+          date: plan.header.date || plan.header.startDate,
+        }}
+      />
+
+      {/* مودال أجندة العام الدراسي لتغيير التاريخ في خانتي التاريخ */}
+      <AcademicYearAgendaModal
+        isOpen={isAgendaModalOpen}
+        onClose={() => setIsAgendaModalOpen(false)}
+        initialTargetField={agendaTargetField}
+        currentStartDate={data.timeframeDetails.startDate}
+        currentEndDate={data.timeframeDetails.endDate}
+        totalPeriods={Math.max(1, Number(plan.header.totalPeriods) || 2)}
+        onSelectDate={handleAgendaSelectDate}
+        onSelectRange={handleAgendaSelectRange}
+      />
+
+      {/* مودال اختيار الصف لكافة المراحل التعليمية */}
+      <EducationalStagePickerModal
+        isOpen={isGradeModalOpen}
+        onClose={() => setIsGradeModalOpen(false)}
+        selectedGrade={plan.header.grade}
+        onSelectGrade={(gradeName) =>
+          onChange({
+            ...plan,
+            header: { ...plan.header, grade: gradeName },
+          })
+        }
+        title="تحديد الصف لكافة المراحل الدراسية (الخطة التنفيذية)"
+      />
     </div>
   );
 };

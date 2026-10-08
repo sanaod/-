@@ -88,8 +88,8 @@ export function exportToWord(plan: LessonPlan) {
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">الفترة الزمنية:</td>
       <td colspan="3">
-        <strong>من:</strong> اليوم (${d.timeframeDetails.startDay}) التاريخ (${d.timeframeDetails.startDate}) السنة (${d.timeframeDetails.startYear}) &nbsp;|&nbsp;
-        <strong>إلى:</strong> اليوم (${d.timeframeDetails.endDay}) التاريخ (${d.timeframeDetails.endDate}) السنة (${d.timeframeDetails.endYear})
+        <strong>من:</strong> اليوم (${d.timeframeDetails.startDay}) التاريخ (${d.timeframeDetails.startDate}) الفصل الدراسي (${d.timeframeDetails.startSemester || d.timeframeDetails.startYear || plan.header.semester || 'الفصل الدراسي الأول'}) &nbsp;|&nbsp;
+        <strong>إلى:</strong> اليوم (${d.timeframeDetails.endDay}) التاريخ (${d.timeframeDetails.endDate}) الفصل الدراسي (${d.timeframeDetails.endSemester || d.timeframeDetails.endYear || plan.header.semester || 'الفصل الدراسي الأول'})
       </td>
     </tr>
     <tr>

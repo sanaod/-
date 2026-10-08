@@ -81,6 +81,7 @@ import { SemesterPlanModal } from './components/SemesterPlanModal';
 import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
 import { AcademicYearMilestonesModal } from './components/AcademicYearMilestonesModal';
 import { AndroidAppModal } from './components/AndroidAppModal';
+import { AppDownloadFloatingBanner } from './components/AppDownloadFloatingBanner';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -691,7 +692,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0 flex-wrap">
                 <button
                   type="button"
                   onClick={() => {
@@ -722,6 +723,16 @@ export default function App() {
                   <span>📋</span>
                   <span>النموذج الثاني (التخطيط التكيفي الموسع)</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAiModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 shadow-xs transition-all cursor-pointer border border-amber-300 group"
+                  title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-slate-950 group-hover:rotate-12 transition-transform" />
+                  <span>توليد التحضير (AI)</span>
+                </button>
               </div>
             </div>
 
@@ -732,6 +743,7 @@ export default function App() {
                 onChange={updateCurrentPlan}
                 onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                onOpenAiModal={() => setIsAiModalOpen(true)}
               />
             ) : (
               <>
@@ -742,6 +754,7 @@ export default function App() {
                   onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                   onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
                   onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                  onOpenAiModal={() => setIsAiModalOpen(true)}
                   resourcesCount={resources.length}
                 />
 
@@ -842,6 +855,8 @@ export default function App() {
         defaultDirectorate={currentPlan.header.directorate}
         defaultSubject={currentPlan.header.subject}
         defaultGrade={currentPlan.header.grade}
+        resources={resources}
+        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
       />
 
       <ResourcesManagerModal
@@ -1121,6 +1136,11 @@ export default function App() {
 
       {/* Floating WhatsApp Contact Button */}
       <FloatingWhatsAppButton />
+
+      {/* Floating App Download Banner */}
+      <AppDownloadFloatingBanner
+        onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
+      />
     </div>
   );
 }

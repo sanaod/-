@@ -5,6 +5,7 @@ import {
   PlanTemplateType,
 } from '../types/lessonPlan';
 import { formatDateDMY } from './arabicNumerals';
+import { getCurrentSemesterName } from './academicYear';
 
 export function getArabicDayOfWeek(dateStr?: string): string {
   try {
@@ -20,19 +21,42 @@ export function getArabicDayOfWeek(dateStr?: string): string {
 
 export function parseDateParts(dateStr?: string) {
   const now = new Date();
-  if (!dateStr) {
-    return {
-      day: 'الأحد',
-      date: formatDateDMY(now.toISOString().split('T')[0]),
-      year: `${now.getFullYear()}م`,
-    };
+  let targetDate = now;
+
+  if (dateStr && typeof dateStr === 'string') {
+    // Normalize Arabic numerals to Western for date parsing
+    const normalized = dateStr
+      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
+      .trim();
+
+    if (normalized.includes('-')) {
+      const parsed = new Date(normalized);
+      if (!isNaN(parsed.getTime())) targetDate = parsed;
+    } else if (normalized.includes('/')) {
+      const parts = normalized.split('/').map((p) => parseInt(p, 10));
+      if (parts.length === 3) {
+        // If year is first (YYYY/MM/DD)
+        if (parts[0] > 1900) {
+          const parsed = new Date(parts[0], parts[1] - 1, parts[2]);
+          if (!isNaN(parsed.getTime())) targetDate = parsed;
+        } else {
+          // DD/MM/YYYY
+          const parsed = new Date(parts[2], parts[1] - 1, parts[0]);
+          if (!isNaN(parsed.getTime())) targetDate = parsed;
+        }
+      }
+    }
   }
-  const parts = dateStr.split('-');
-  const y = parts[0] || `${now.getFullYear()}`;
+
+  const iso = targetDate.toISOString().split('T')[0];
+  const semester = getCurrentSemesterName(targetDate);
+
   return {
-    day: getArabicDayOfWeek(dateStr),
-    date: formatDateDMY(dateStr),
-    year: `${y}م`,
+    day: getArabicDayOfWeek(iso),
+    date: formatDateDMY(iso),
+    year: `${targetDate.getFullYear()}م`,
+    semester,
+    isoDate: iso,
   };
 }
 
@@ -130,9 +154,12 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
       startDay: startParts.day,
       startDate: startParts.date,
       startYear: startParts.year,
+      startSemester: header?.semester || startParts.semester,
       endDay: endParts.day,
       endDate: endParts.date,
       endYear: endParts.year,
+      endSemester: header?.semester || endParts.semester,
+      autoUpdateDate: true,
     },
     learningCompetencies: competenciesText,
     valuesAndEthics:
@@ -237,6 +264,26 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
  */
 export function ensureExecutiveData(plan: LessonPlan): LessonPlan {
   if (plan.executiveData && plan.executiveData.executiveStages?.length === 5) {
+    const tf = plan.executiveData.timeframeDetails;
+    const defaultSemester = plan.header.semester || getCurrentSemesterName();
+    const needsSemesterFix = !tf?.startSemester || !tf?.endSemester;
+
+    if (needsSemesterFix && tf) {
+      return {
+        ...plan,
+        templateType: plan.templateType || 'executive',
+        executiveData: {
+          ...plan.executiveData,
+          timeframeDetails: {
+            ...tf,
+            startSemester: tf.startSemester || defaultSemester,
+            endSemester: tf.endSemester || defaultSemester,
+            autoUpdateDate: tf.autoUpdateDate !== undefined ? tf.autoUpdateDate : true,
+          },
+        },
+      };
+    }
+
     return {
       ...plan,
       templateType: plan.templateType || 'executive',

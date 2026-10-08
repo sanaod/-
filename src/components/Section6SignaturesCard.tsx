@@ -1,50 +1,107 @@
 import React, { useState } from 'react';
 import { Section6Signatures } from '../types/lessonPlan';
-import { FileCheck, Stamp, Award, Edit3, Check } from 'lucide-react';
+import { FileCheck, Stamp, Award, Edit3, Check, RefreshCw } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface Section6SignaturesCardProps {
   data: Section6Signatures;
   onChange: (data: Section6Signatures) => void;
+  title?: string;
+  subtitle?: string;
+  stepNumber?: string | number;
+  headerDefaults?: {
+    teacherName?: string;
+    principalName?: string;
+    supervisorName?: string;
+    date?: string;
+  };
 }
 
-export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({ data, onChange }) => {
+export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
+  data,
+  onChange,
+  title = 'سادساً: التوقيع والاعتماد الرسمي',
+  subtitle = 'اعتمادات المعلم، الإدارة المدرسية، والإشراف التربوي',
+  stepNumber,
+  headerDefaults,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
+
+  const handleSyncWithHeader = () => {
+    if (!headerDefaults) return;
+    onChange({
+      teacher: {
+        ...data.teacher,
+        name: data.teacher.name || headerDefaults.teacherName || '',
+        date: data.teacher.date || headerDefaults.date || '',
+      },
+      schoolPrincipal: {
+        ...data.schoolPrincipal,
+        name: data.schoolPrincipal.name || headerDefaults.principalName || '',
+        date: data.schoolPrincipal.date || headerDefaults.date || '',
+      },
+      educationalSupervisor: {
+        ...data.educationalSupervisor,
+        name: data.educationalSupervisor.name || headerDefaults.supervisorName || '',
+        date: data.educationalSupervisor.date || headerDefaults.date || '',
+      },
+    });
+  };
 
   return (
     <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden text-right">
       {/* Header */}
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-600 rounded-xl text-white shadow-xs">
-            <FileCheck className="w-5 h-5" />
-          </div>
+          {stepNumber ? (
+            <div className="w-10 h-10 rounded-xl bg-emerald-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-lg">
+              {stepNumber}
+            </div>
+          ) : (
+            <div className="p-2 bg-emerald-600 rounded-xl text-white shadow-xs">
+              <FileCheck className="w-5 h-5" />
+            </div>
+          )}
           <div>
             <h3 className="text-base md:text-lg font-bold font-['Tajawal']">
-              سادساً: التوقيع والاعتماد الرسمي
+              {title}
             </h3>
             <p className="text-xs text-slate-300">
-              اعتمادات المعلم، الإدارة المدرسية، والإشراف التربوي
+              {subtitle}
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors"
-        >
-          {isEditing ? (
-            <>
-              <Check className="w-4 h-4 text-emerald-300" />
-              حفظ
-            </>
-          ) : (
-            <>
-              <Edit3 className="w-4 h-4" />
-              تعديل الاعتمادات
-            </>
+        <div className="flex items-center gap-2">
+          {isEditing && headerDefaults && (
+            <button
+              type="button"
+              onClick={handleSyncWithHeader}
+              className="px-3 py-1.5 bg-emerald-700/60 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="مزامنة الأسماء تلقائياً من ترويسة الدرس"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>مزامنة مع الترويسة</span>
+            </button>
           )}
-        </button>
+
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            {isEditing ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                حفظ
+              </>
+            ) : (
+              <>
+                <Edit3 className="w-4 h-4" />
+                تعديل الاعتمادات
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="p-3.5 sm:p-5">
