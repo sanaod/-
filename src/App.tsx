@@ -447,6 +447,13 @@ export default function App() {
             onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
             onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
             onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+            onOpenExecutivePlan={() => {
+              const blank = getBlankLessonPlan();
+              const newPlan = ensureExecutiveData({ ...blank, templateType: 'executive' });
+              setPlans((prev) => [newPlan, ...prev]);
+              setActivePlanId(newPlan.id);
+              setViewMode('editor');
+            }}
           />
         </main>
       ) : (

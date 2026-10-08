@@ -93,6 +93,7 @@ interface TeacherDashboardProps {
   onOpenAbacusModal?: () => void;
   onOpenBackupRestore?: () => void;
   onOpenAssessmentSimulatorModal?: () => void;
+  onOpenExecutivePlan?: () => void;
 }
 
 // Subject color mappings
@@ -372,6 +373,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenAbacusModal,
   onOpenBackupRestore,
   onOpenAssessmentSimulatorModal,
+  onOpenExecutivePlan,
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
@@ -1137,6 +1139,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
               <span>تحضير درس جديد بالـ AI</span>
             </button>
+
+            {onOpenExecutivePlan && (
+              <button
+                onClick={onOpenExecutivePlan}
+                className="px-4 py-2 bg-linear-to-r from-emerald-800 via-teal-800 to-slate-900 hover:from-emerald-900 hover:to-slate-950 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs hover:shadow-sm active:scale-97 cursor-pointer border border-amber-300/40"
+                title="إنشاء خطة جديدة بالنموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)"
+              >
+                <span className="text-amber-300">⭐</span>
+                <span>النموذج الرئيسي (الخطة التنفيذية)</span>
+              </button>
+            )}
 
             {onOpenUnitPlanModal && (
               <button

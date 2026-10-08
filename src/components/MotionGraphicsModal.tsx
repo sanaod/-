@@ -74,6 +74,58 @@ export const MotionGraphicsModal: React.FC<MotionGraphicsModalProps> = ({
     return savedPlans.find((p) => p.id === selectedPlanId) || activePlan;
   }, [selectedPlanId, savedPlans, activePlan]);
 
+  const [activeTab, setActiveTab] = useState<'scenes' | 'chat'>('scenes');
+  interface ChatMessage {
+    id: string;
+    sender: 'user' | 'ai';
+    text: string;
+    timestamp: string;
+  }
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg-init',
+      sender: 'ai',
+      text: `أهلاً بك يا معلمنا الفاضل في لوحة دردسة تصميم الفيديو الذكي (صور وصوت). أنا مساعدك الإبداعي لتصميم موشن جرافيك درس "${currentPlan.header?.lessonTitle || currentPlan.title}". اسألني لتوليد وصف الصور لكل مشهد، أو هندسة الصوت والموسيقى التصويرية، أو تحسين سيناريو الفصحى!`,
+      timestamp: 'الآن',
+    },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  const handleSendChatMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userText = chatInput.trim();
+    const newMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: userText,
+      timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setChatMessages((prev) => [...prev, newMsg]);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    setTimeout(() => {
+      let aiReply = `أشكرك على استفسارك. بالنسبة لدرس "${currentPlan.header?.lessonTitle || ''}", أقترح إضافة صور بصرية رقمية عالية الدقة تمثل المفاهيم المركزية للدرس، مع خلفية صوتية تعليمية هادئة ونبرة تعليق صوتي فصيحة ومعبرة.`;
+      if (userText.includes('صورة') || userText.includes('صور') || userText.includes('بصري')) {
+        aiReply = `🎨 **مقترحات الصور البصرية لكل مشهد (Image Prompts):**\n1. مشهد الاستهلال: رسم رقمي 3D ملون يوضح عنوان الدرس مع عناصر تفاعلية.\n2. مشهد العرض: مخطط بياني ورسوم توضيحية رقمية متحركة تبين الكفايات التكاملية.\n3. التطبيق العملي: لقطات تحاكي التجربة أو المهمة بحسب بيئة الطالب الفلسطيني.`;
+      } else if (userText.includes('صوت') || userText.includes('موسيقى') || userText.includes('مؤثرات') || userText.includes('audio')) {
+        aiReply = `🎵 **هندسة الصوت والموسيقى (Audio & Voiceover):**\n- التعليق الصوتي: لغة عربية فصحى فصيحة (MSA) بنبرة حماسية ومشجعة.\n- المؤثرات الصوتية: أصوات تنبيه إيجابية عند الإجابة الصحيحة، وموسيقى خلفية هادئة تحفز التركيز دون تشتيت.`;
+      }
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: aiReply,
+        timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setChatMessages((prev) => [...prev, aiMsg]);
+      setIsChatLoading(false);
+    }, 900);
+  };
+
   // Generate 4 motion graphics scenes in strict Modern Standard Arabic (اللغة العربية الفصحى الفصيحة)
   const motionScenes: MotionScene[] = useMemo(() => {
     const title = currentPlan.header?.lessonTitle || currentPlan.title || 'درس تعليمي';
@@ -430,7 +482,124 @@ export const MotionGraphicsModal: React.FC<MotionGraphicsModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-4 sm:p-6 space-y-6 overflow-y-auto max-h-[80vh]">
-          {/* Animated Storyboard Preview Player Box */}
+          {/* Tab Switcher: Scenes vs Video Design Chat */}
+          <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab('scenes')}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeTab === 'scenes'
+                  ? 'bg-purple-700 text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              <Clapperboard className="w-4 h-4" />
+              <span>مشاهد الموشن جرافيك والسيناريو</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('chat')}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeTab === 'chat'
+                  ? 'bg-purple-700 text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>💬 لوحة دردسة تصميم الفيديو (صور وصوت)</span>
+            </button>
+          </div>
+
+          {activeTab === 'chat' && (
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center font-black">
+                    🤖
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 font-['Tajawal']">
+                      مساعد تصميم فيديو الموشن جرافيك (صور وصوت)
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      اسأل الذكاء الاصطناعي لاقتراح الصور البصرية لكل مشهد، وهندسة الصوت والمؤثرات، وتعديل التعليق الصوتي
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Prompt Chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  '🎨 اقترح صوراً بصرية لكل مشهد',
+                  '🎵 اقترح الخلفية الصوتية والمؤثرات',
+                  '🎙️ تحسين نبرة التعليق الصوتي بالفصحى',
+                  '💡 كيف أجعل المشهد الأول أكثر تشويقاً؟',
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setChatInput(chip.replace(/^[^\s]+\s/, ''))}
+                    className="text-[11px] px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold border border-purple-200 transition-colors cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* Messages Container */}
+              <div className="h-80 overflow-y-auto space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
+                        msg.sender === 'user'
+                          ? 'bg-purple-700 text-white rounded-br-xs'
+                          : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap font-medium">{msg.text}</div>
+                      <span className={`block text-[9px] mt-1.5 ${msg.sender === 'user' ? 'text-purple-200 text-left' : 'text-slate-400 text-right'}`}>
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="flex items-center gap-2 text-xs text-purple-700 bg-purple-50 p-3 rounded-2xl w-fit animate-pulse">
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                    <span>المساعد الذكي يجهز اقتراحات الفيديو (صور وصوت)...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input Form */}
+              <form onSubmit={handleSendChatMessage} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="اكتب طلبك لتصميم الفيديو (مثل: اقترح صوراً للمشهد الثاني، أو هندسة الصوت)..."
+                  className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-right focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isChatLoading || !chatInput.trim()}
+                  className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 disabled:opacity-50 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer shrink-0"
+                >
+                  إرسال 🚀
+                </button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'scenes' && (
+            <>
+              {/* Animated Storyboard Preview Player Box */}
           <div className="bg-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -729,7 +898,9 @@ export const MotionGraphicsModal: React.FC<MotionGraphicsModalProps> = ({
               <span>طباعة السيناريو</span>
             </button>
           </div>
-        </div>
+        </>
+      )}
+      </div>
       </div>
     </div>
   );
