@@ -20,6 +20,13 @@
 }
 
 @layer utilities {
+  /* Dashboard auto-fit grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.625rem;
+  }
+
   /* Safe area padding utilities for notched mobile phones and tablets */
   .pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
