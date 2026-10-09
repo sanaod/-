@@ -688,106 +688,72 @@ export const ResourcesManagerModal: React.FC<ResourcesManagerModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
-                  {resources.map((res) => {
-                    const iconConfig = typeConfig[res.type] || typeConfig.textbook;
-                    const Icon = iconConfig.icon;
-                    const isApplied = appliedResourceId === res.id;
-                    return (
-                      <div
-                        key={res.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs hover:border-emerald-300 transition-all space-y-2.5"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className={`p-1.5 rounded-lg border ${iconConfig.bg} ${iconConfig.color}`}>
-                              <Icon className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <h5 className="text-xs font-bold text-slate-900 line-clamp-1">
-                                {res.title}
-                              </h5>
-                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
-                                <span className={`px-1.5 py-0.2 rounded-md font-bold ${iconConfig.bg} ${iconConfig.color}`}>
+                  <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                    <table className="w-full text-xs text-right border-collapse">
+                      <thead className="bg-slate-100 text-slate-700">
+                        <tr>
+                          <th className="p-3 font-bold border-b">النوع</th>
+                          <th className="p-3 font-bold border-b">العنوان</th>
+                          <th className="p-3 font-bold border-b">التفاصيل</th>
+                          <th className="p-3 font-bold border-b text-center">إجراءات</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {resources.map((res) => {
+                          const iconConfig = typeConfig[res.type] || typeConfig.textbook;
+                          const Icon = iconConfig.icon;
+                          const isApplied = appliedResourceId === res.id;
+                          return (
+                            <tr key={res.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3">
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold ${iconConfig.bg} ${iconConfig.color}`}>
+                                  <Icon className="w-3.5 h-3.5" />
                                   {iconConfig.badge}
                                 </span>
-                                {res.fileExt && (
-                                  <span className="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.2 rounded-md uppercase">
-                                    .{res.fileExt}
-                                  </span>
+                              </td>
+                              <td className="p-3 font-bold text-slate-900">{res.title}</td>
+                              <td className="p-3 text-slate-600 max-w-[200px] truncate">{res.content}</td>
+                              <td className="p-3 flex items-center justify-center gap-2">
+                                {onApplyToCurrentPlan && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApplyToCurrentPlanClick(res)}
+                                    className={`p-1.5 rounded-lg font-bold transition-all ${
+                                      isApplied
+                                        ? 'bg-emerald-600 text-white shadow-xs'
+                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                    }`}
+                                    title="تحديث عناوين الخطة الحالية به"
+                                  >
+                                    {isApplied ? <Check className="w-4 h-4" /> : <Wand2 className="w-4 h-4" />}
+                                  </button>
                                 )}
-                                {res.fileSize && (
-                                  <span className="text-slate-400">({res.fileSize})</span>
-                                )}
-                                {res.inferredSubject && (
-                                  <span className="bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.2 rounded-md border border-emerald-200">
-                                    {res.inferredSubject}
-                                  </span>
-                                )}
-                                {res.inferredGrade && (
-                                  <span className="text-slate-400">• {res.inferredGrade}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteResource(res.id)}
-                            title="حذف المصدر"
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Thumbnail preview for images */}
-                        {res.fileDataUrl && res.type === 'image' && (
-                          <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100 flex justify-center">
-                            <img
-                              src={res.fileDataUrl}
-                              alt={res.title}
-                              className="max-h-24 rounded-lg object-contain"
-                            />
-                          </div>
-                        )}
-
-                        <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-xl border border-slate-100 leading-relaxed">
-                          {res.content}
-                        </p>
-
-                        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-100 text-[11px]">
-                          {/* Apply directly to current open plan */}
-                          {onApplyToCurrentPlan && (
-                            <button
-                              type="button"
-                              onClick={() => handleApplyToCurrentPlanClick(res)}
-                              className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition-all ${
-                                isApplied
-                                  ? 'bg-emerald-600 text-white shadow-xs'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200'
-                              }`}
-                              title="تحديث عناوين الخطة المفتوحة حالياً لتتوافق مع هذا المصدر"
-                            >
-                              {isApplied ? <Check className="w-3 h-3" /> : <Wand2 className="w-3 h-3" />}
-                              <span>{isApplied ? 'تم تحديث الخطة المفتوحة!' : 'تحديث عناوين الخطة الحالية به'}</span>
-                            </button>
-                          )}
-
-                          {/* Generate with AI */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onClose();
-                              onGenerateWithResources(res);
-                            }}
-                            className="font-bold text-teal-800 hover:text-teal-950 flex items-center gap-1 hover:underline"
-                          >
-                            <Sparkles className="w-3 h-3 text-teal-600" />
-                            توليد خطة جديدة بهذا المصدر ➜
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onClose();
+                                    onGenerateWithResources(res);
+                                  }}
+                                  className="p-1.5 text-teal-700 hover:text-teal-950 hover:bg-teal-50 rounded-lg transition-colors"
+                                  title="توليد خطة جديدة"
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onDeleteResource(res.id)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                  title="حذف المصدر"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
