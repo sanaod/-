@@ -4,6 +4,9 @@ import {
   Printer,
   Calculator,
   BookOpen,
+  Sunrise,
+  FileCheck,
+  Target,
   Download,
   Upload,
   RotateCcw,
@@ -116,6 +119,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAllIconsDropdownOpen, setIsAllIconsDropdownOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(currentPlan, null, 2));
@@ -165,12 +170,365 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-2 sm:py-3 min-h-[4.5rem] sm:min-h-[5.5rem] gap-3">
           
-          {/* Logo, Title & Ministry Context (Home Link) */}
-          <div
-            onClick={onSelectBlankPlan || onNewBlankPlan}
-            className="flex items-center gap-3 sm:gap-4 shrink-0 cursor-pointer group select-none"
-            title="الصفحة الرئيسية للمنظومة: استمارة التحضير المفرغة المعتمدة"
-          >
+          {/* Right Side: Sidebar Toggle, All Icons Dropdown Menu & Logo/Title */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Sidebar Toggle Button (زر الشريط الجانبي المخفي للأدوات السريعة) */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 sm:px-3 sm:py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all border border-emerald-300 shrink-0"
+              title="فتح الشريط الجانبي للأدوات السريعة"
+            >
+              <Menu className="w-5 h-5 text-emerald-700" />
+              <span className="hidden md:inline">القائمة الجانبية</span>
+            </button>
+
+            {/* All Icons Dropdown Menu Button (قائمة جميع الأيقونات) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsAllIconsDropdownOpen(!isAllIconsDropdownOpen)}
+                className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-900 hover:from-emerald-900 hover:to-teal-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all border border-emerald-400/60 ring-2 ring-emerald-500/20 shrink-0"
+                title="قائمة منسدلة تحتوي على جميع أيقونات وأدوات المنظومة التربوية"
+              >
+                <Boxes className="w-4 h-4 text-amber-300 shrink-0 animate-pulse" />
+                <span className="hidden sm:inline">قائمة جميع الأيقونات ⚡</span>
+                <span className="sm:hidden">الأيقونات ⚡</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isAllIconsDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu Panel */}
+              {isAllIconsDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-2xs"
+                    onClick={() => setIsAllIconsDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-3 w-80 sm:w-96 md:w-[460px] max-h-[82vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border-2 border-emerald-300 z-50 p-4 font-['Cairo',sans-serif] text-right space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-800 font-black">
+                          <Boxes className="w-5 h-5 text-emerald-700" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900">دليل وقائمة أيقونات وأدوات المنظومة</h3>
+                          <p className="text-[11px] text-slate-500 font-semibold">وصول مباشر لكافة أقسام وأدوات المعلم</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsAllIconsDropdownOpen(false)}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Section 1: AI & Planning */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-[11px] font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>التخطيط والذكاء الاصطناعي (AI Planning)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAiGenerator(); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <Sparkles className="w-4 h-4 text-amber-500" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">تحضير درس بالـ AI</div>
+                            <div className="text-[10px] text-slate-500 truncate">خطة متكاملة للأقسام الـ 6</div>
+                          </div>
+                        </button>
+                        {onOpenUnitPlanModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenUnitPlanModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-800 hover:text-blue-900 transition-all text-xs font-bold border border-slate-200 hover:border-blue-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Boxes className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">تحضير وحدة كاملة</div>
+                              <div className="text-[10px] text-slate-500 truncate">وحدة دراسية متكاملة</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenSemesterPlanModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenSemesterPlanModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <CalendarRange className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">الخطة الفصلية وتوزيع الحصص</div>
+                              <div className="text-[10px] text-slate-500 truncate">دليل التقويم الفلسطيني</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenAcademicMilestonesModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAcademicMilestonesModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Sunrise className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">محطات العام الدراسي</div>
+                              <div className="text-[10px] text-slate-500 truncate">افتتاح، فصول، ختام</div>
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Section 2: Assessment & Worksheets */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-[11px] font-black text-blue-800 bg-blue-50 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                        <FileCheck className="w-3.5 h-3.5 text-blue-600" />
+                        <span>التقويم وأوراق العمل (Assessment & Worksheets)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {onOpenWorksheetModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenWorksheetModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <FileCheck className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">أوراق عمل تفاعلية AI</div>
+                              <div className="text-[10px] text-slate-500 truncate">أنشطة وتمارين متمايزة</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenAssessmentSimulatorModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAssessmentSimulatorModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-800 hover:text-blue-900 transition-all text-xs font-bold border border-slate-200 hover:border-blue-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Calculator className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">محاكي التقويم التربوي</div>
+                              <div className="text-[10px] text-slate-500 truncate">توزيع درجات واختبارات</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenAuthenticTaskModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAuthenticTaskModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-800 hover:text-purple-900 transition-all text-xs font-bold border border-slate-200 hover:border-purple-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Target className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">المهام الأدائية الأصيلة</div>
+                              <div className="text-[10px] text-slate-500 truncate">مهام حياتية واقعية</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenRubricModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenRubricModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition-all text-xs font-bold border border-slate-200 hover:border-amber-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Award className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">روبريك وتقييم أدائي</div>
+                              <div className="text-[10px] text-slate-500 truncate">سلالم تقدير معيارية</div>
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Section 3: Classroom Management & Resources */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-[11px] font-black text-teal-800 bg-teal-50 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-teal-600" />
+                        <span>المصادر والإدارة الصفية (Resources & Management)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onChangeView?.('dashboard'); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <LayoutDashboard className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">لوحة تحكم المعلم</div>
+                            <div className="text-[10px] text-slate-500 truncate">إدارة الخطط والمجلدات</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onOpenResourcesModal(); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <Layers className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">بنك المصادر والمناهج</div>
+                            <div className="text-[10px] text-slate-500 truncate">إدارة الملفات والمصادر ({resourcesCount})</div>
+                          </div>
+                        </button>
+                        {onOpenMotionGraphicsModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenMotionGraphicsModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-800 hover:text-purple-900 transition-all text-xs font-bold border border-slate-200 hover:border-purple-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Clapperboard className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">فيديو موشن جرافيك 🎬</div>
+                              <div className="text-[10px] text-slate-500 truncate">توليد فيديو تعليمي</div>
+                            </div>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAbacusModal(); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition-all text-xs font-bold border border-slate-200 hover:border-amber-300 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <Calculator className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">أداة المعداد التربوي</div>
+                            <div className="text-[10px] text-slate-500 truncate">محاكي الحساب والرياضيات</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Print, Export & System Tools */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-[11px] font-black text-slate-800 bg-slate-100 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                        <Printer className="w-3.5 h-3.5 text-slate-700" />
+                        <span>الطباعة، التصدير وأدوات النظام (System & Export)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onOpenPrintView(); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 hover:text-slate-950 transition-all text-xs font-bold border border-slate-200 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <Printer className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">معاينة وطباعة A4</div>
+                            <div className="text-[10px] text-slate-500 truncate">طباعة رسمية نظيفة</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => { setIsAllIconsDropdownOpen(false); onOpenExportModal(); }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-800 hover:text-blue-900 transition-all text-xs font-bold border border-slate-200 hover:border-blue-300 text-right group cursor-pointer"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <FileDown className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">تصدير Word و PDF</div>
+                            <div className="text-[10px] text-slate-500 truncate">تصدير الملفات الرسمية</div>
+                          </div>
+                        </button>
+                        {onOpenShareModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenShareModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Share2 className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">مشاركة الخطة للزملاء</div>
+                              <div className="text-[10px] text-slate-500 truncate">Web Share API</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenBackupRestoreModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenBackupRestoreModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Database className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">نسخ احتياطي واستيراد</div>
+                              <div className="text-[10px] text-slate-500 truncate">حفظ واستعادة الخطط (JSON)</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenQrModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenQrModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <QrCode className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">رمز QR المنظومة 📱</div>
+                              <div className="text-[10px] text-slate-500 truncate">توليد رمز الاستجابة السريعة</div>
+                            </div>
+                          </button>
+                        )}
+                        {onOpenAndroidAppModal && (
+                          <button
+                            onClick={() => { setIsAllIconsDropdownOpen(false); onOpenAndroidAppModal(); }}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Smartphone className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-black">تنزيل تطبيق أندرويد 📱</div>
+                              <div className="text-[10px] text-slate-500 truncate">Google Play / APK / PWA</div>
+                            </div>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (onSelectBlankPlan) onSelectBlankPlan();
+                            else if (onNewBlankPlan) onNewBlankPlan();
+                            setIsAllIconsDropdownOpen(false);
+                          }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition-all text-xs font-bold border border-slate-200 hover:border-amber-300 text-right group cursor-pointer sm:col-span-2"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <FileEdit className="w-4 h-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-black">استمارة التحضير المفرغة المعتمدة 📌</div>
+                            <div className="text-[10px] text-slate-500 truncate">النموذج الوزاري الفارغ الجديد</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Logo, Title & Ministry Context (Home Link) */}
+            <div
+              onClick={onSelectBlankPlan || onNewBlankPlan}
+              className="flex items-center gap-3 sm:gap-4 shrink-0 cursor-pointer group select-none"
+              title="الصفحة الرئيسية للمنظومة: استمارة التحضير المفرغة المعتمدة"
+            >
             <div className="relative group shrink-0">
               <div className="absolute -inset-1 rounded-full bg-linear-to-tr from-amber-400 via-emerald-500 to-teal-400 opacity-80 blur-xs group-hover:opacity-100 transition duration-300"></div>
               <img
@@ -290,6 +648,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 )}
               </div>
             </div>
+          </div>
           </div>
 
           {/* Quick Icons Stack Beside System Name (أيقونات الوصول السريع المكدسة والمنظمة بجانب اسم المنظومة) */}
@@ -1126,6 +1485,229 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
           </div>
         )}
+
+      {/* Hidden Sidebar Drawer (الشريط الجانبي المخفي للأدوات السريعة) */}
+      {isSidebarOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          {/* Slide-over Drawer from Right (RTL) */}
+          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-96 bg-white shadow-2xl border-l border-slate-200 flex flex-col font-['Cairo',sans-serif] text-right animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-l from-emerald-900 to-teal-900 text-white flex items-center justify-between border-b border-emerald-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-amber-300 font-black shadow-inner">
+                  <Menu className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">الشريط الجانبي السريع</h3>
+                  <p className="text-xs text-emerald-200 font-medium">منظومة عبقور للتخطيط التربوي</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                title="إغلاق الشريط الجانبي"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content / Links */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Quick Navigation Section */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>روابط التخطيط والذكاء الاصطناعي</span>
+                </h4>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => { setIsSidebarOpen(false); onOpenAiGenerator(); }}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                  >
+                    <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-black truncate">تحضير درس بالذكاء الاصطناعي</div>
+                      <div className="text-[10px] text-slate-500 truncate">الأقسام الـ 6 كاملة</div>
+                    </div>
+                  </button>
+                  {onOpenUnitPlanModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenUnitPlanModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-800 hover:text-blue-900 transition-all text-xs font-bold border border-slate-200 hover:border-blue-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Boxes className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">تحضير وحدة دراسية كاملة</div>
+                        <div className="text-[10px] text-slate-500 truncate">خطط الوحدات والدروس المرتبطة</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenSemesterPlanModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenSemesterPlanModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <CalendarRange className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">الخطة الفصلية وتوزيع الحصص</div>
+                        <div className="text-[10px] text-slate-500 truncate">دليل التقويم والتوزيع الزمني</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenAcademicMilestonesModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenAcademicMilestonesModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Sunrise className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">محطات العام الدراسي</div>
+                        <div className="text-[10px] text-slate-500 truncate">افتتاح، فصول، اختبارات واحتفالات</div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Assessment & Worksheets Section */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black text-blue-800 bg-blue-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-blue-600" />
+                  <span>التقويم وأوراق العمل والمهام</span>
+                </h4>
+                <div className="space-y-1">
+                  {onOpenWorksheetModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenWorksheetModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <FileCheck className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">أوراق عمل تفاعلية AI</div>
+                        <div className="text-[10px] text-slate-500 truncate">تمارين متمايزة وتوليد أسئلة</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenAssessmentSimulatorModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenAssessmentSimulatorModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Calculator className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">محاكي منظومة الاختبارات</div>
+                        <div className="text-[10px] text-slate-500 truncate">بناء واختبار أسئلة الامتحانات</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenAcademicMilestonesModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenAcademicMilestonesModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-800 hover:text-purple-900 transition-all text-xs font-bold border border-slate-200 hover:border-purple-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Target className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">المهام الأدائية وأدوات القياس</div>
+                        <div className="text-[10px] text-slate-500 truncate">روبريك التقييم ومعايير الأداء</div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Classroom & System Tools */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <LayoutDashboard className="w-4 h-4 text-amber-600" />
+                  <span>المصادر وأدوات الإدارة</span>
+                </h4>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => { setIsSidebarOpen(false); if (onChangeView) onChangeView('dashboard'); }}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition-all text-xs font-bold border border-slate-200 hover:border-amber-300 text-right group cursor-pointer"
+                  >
+                    <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <LayoutDashboard className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-black truncate">لوحة تحكم المعلم</div>
+                      <div className="text-[10px] text-slate-500 truncate">إدارة الخطط والبحث السريع</div>
+                    </div>
+                  </button>
+                  {onOpenMotionGraphicsModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenMotionGraphicsModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-800 hover:text-rose-900 transition-all text-xs font-bold border border-slate-200 hover:border-rose-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Clapperboard className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">فيديو موشن جرافيك للدرس</div>
+                        <div className="text-[10px] text-slate-500 truncate">شرح تفاعلي ومشاهد تعليمية</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenQrModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenQrModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <QrCode className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">رمز الاستجابة السريعة QR</div>
+                        <div className="text-[10px] text-slate-500 truncate">مشاركة الرابط مع الطلاب والأهالي</div>
+                      </div>
+                    </button>
+                  )}
+                  {onOpenAndroidAppModal && (
+                    <button
+                      onClick={() => { setIsSidebarOpen(false); onOpenAndroidAppModal(); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
+                    >
+                      <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Smartphone className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black truncate">تطبيق أندرويد المستقل (APK)</div>
+                        <div className="text-[10px] text-slate-500 truncate">تحميل تطبيق المنظومة على الجوال</div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer of Sidebar */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">
+              <p className="text-[11px] text-slate-500 font-bold">
+                منظومة عبقور التربوية © 2026 • جميع الحقوق محفوظة
+              </p>
+            </div>
+          </div>
+        </>
+      )}
 
       <input
         type="file"
