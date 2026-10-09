@@ -88,6 +88,25 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   // Quick state for collapsing sections if user wants
   const [activeStageTab, setActiveStageTab] = useState<number | 'all'>('all');
 
+  // Ensure all stages are rendered when triggering print browser action
+  useEffect(() => {
+    let previousTab = activeStageTab;
+    const handleBeforePrint = () => {
+      previousTab = activeStageTab;
+      setActiveStageTab('all');
+    };
+    const handleAfterPrint = () => {
+      setActiveStageTab(previousTab);
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [activeStageTab]);
+
   const startDatePickerRef = useRef<HTMLInputElement>(null);
   const endDatePickerRef = useRef<HTMLInputElement>(null);
 

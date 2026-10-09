@@ -418,6 +418,25 @@ export default function App() {
     { id: 'sec6', label: '٦. الاعتماد والتوقيع', icon: FileCheck },
   ];
 
+  // Ensure all tabs and sections are fully rendered during print browser action
+  useEffect(() => {
+    let prevTab = activeTab;
+    const handleBeforePrint = () => {
+      prevTab = activeTab;
+      setActiveTab('all');
+    };
+    const handleAfterPrint = () => {
+      setActiveTab(prevTab);
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [activeTab]);
+
   return (
     <div dir="rtl" className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-['Cairo',sans-serif] text-right pb-16 md:pb-0 overflow-x-hidden">
       {/* Top Navbar */}
@@ -503,7 +522,7 @@ export default function App() {
       ) : (
         <>
           {/* Hero Pedagogical Context & Categorized Quick Action Hub */}
-          <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md">
+          <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md no-print">
             <div className="max-w-7xl mx-auto space-y-5">
               
               {/* Top Row: Abqoor Prominent Logo, Plan Title, Ministry Badges & Primary Output CTAs */}
@@ -624,6 +643,15 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => window.print()}
+                    className="px-3.5 py-2 bg-emerald-800/90 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
+                    title="طباعة فورية للمحرر الحالي بتنسيق رسمي معتمد أبيض وأسود خالٍ من الأزرار والعناصر الزائدة"
+                  >
+                    <Printer className="w-4 h-4 text-amber-300 shrink-0" />
+                    <span>طباعة المحرر 🖨️</span>
+                  </button>
+
+                  <button
                     onClick={() => setIsExportModalOpen(true)}
                     className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="تصدير الخطة بصيغ Word و HTML و JSON"
@@ -686,7 +714,7 @@ export default function App() {
           </section>
 
           {/* Sub-nav Category Tabs */}
-          <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-2xs">
+          <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-2xs no-print">
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between overflow-x-auto py-2 sm:py-2.5 scrollbar-none touch-pan-x gap-2">
                 <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -762,9 +790,39 @@ export default function App() {
           </div>
 
           {/* Main Content Body */}
-          <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+          <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 lesson-editor-root print-friendly-lesson-editor">
+            {/* Official Print-Only Submission Header (يظهر حصرياً عند طباعة المحرر للاعتماد الرسمي) */}
+            <div className="hidden print:block official-editor-print-header">
+              <div className="flex items-center justify-between border-b-2 border-black pb-3 text-black">
+                <div className="text-right text-xs font-bold leading-relaxed space-y-0.5">
+                  <div>دولة فلسطين 🇵🇸</div>
+                  <div>وزارة التربية والتعليم العالي</div>
+                  <div>مديرية التربية والتعليم: {currentPlan.header.directorate || '...............'}</div>
+                  <div>مدرسة: {currentPlan.header.school || '...............'}</div>
+                </div>
+                <div className="text-center px-4">
+                  <div className="text-[10px] font-black border border-black px-2 py-0.5 rounded inline-block mb-1">
+                    الاستمارة المعتمدة للتخطيط التربوي وتحضير الدروس
+                  </div>
+                  <h1 className="text-base font-black text-black">
+                    {currentPlan.header.lessonTitle || currentPlan.title}
+                  </h1>
+                  <div className="text-xs font-bold text-black mt-0.5">
+                    المبحث: {currentPlan.header.subject || '—'} • الصف: {currentPlan.header.grade || '—'}
+                  </div>
+                </div>
+                <div className="text-left text-xs font-bold leading-relaxed space-y-0.5">
+                  <div>اسم المعلم/ة: {currentPlan.header.teacherName || '...............'}</div>
+                  <div>العام الدراسي: 2025 / 2026م</div>
+                  <div>الفصل الدراسي: {currentPlan.header.semester || 'الأول'}</div>
+                  <div>الفترة الزمنية: {currentPlan.header.timeframe || currentPlan.header.date || '—'}</div>
+                  <div>عدد الحصص: {toArabicDigits(currentPlan.header.totalPeriods || 2)} حصص</div>
+                </div>
+              </div>
+            </div>
+
             {/* Template Model Switcher (النموذجان: الرئيسي والتكيفي) */}
-            <div className="bg-white border-2 border-emerald-500/50 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-white border-2 border-emerald-500/50 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-700 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Sparkles className="w-5 h-5 text-amber-300" />
@@ -836,6 +894,16 @@ export default function App() {
                 >
                   <Share2 className="w-3.5 h-3.5 text-emerald-200 group-hover:scale-110 transition-transform" />
                   <span>مشاركة الخطة 📱</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all cursor-pointer border border-slate-700 group"
+                  title="طباعة الخطة مباشرة بتنسيق رسمي نظيف (أبيض وأسود) خالٍ من الأزرار والعناصر الزائدة"
+                >
+                  <Printer className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+                  <span>طباعة المحرر (Print-Friendly) 🖨️</span>
                 </button>
               </div>
             </div>

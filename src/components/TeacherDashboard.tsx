@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import {
@@ -392,6 +392,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchScope, setSearchScope] = useState<SearchScope>('all');
+  const [showAllSearchResults, setShowAllSearchResults] = useState<boolean>(false);
+
+  useEffect(() => {
+    setShowAllSearchResults(false);
+  }, [searchQuery]);
   const [chartMetric, setChartMetric] = useState<'plans' | 'periods'>('plans');
   const [hoveredPhaseIndex, setHoveredPhaseIndex] = useState<number | null>(null);
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
@@ -1535,57 +1540,232 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           ))}
         </div>
 
-        {/* Live Search Result Alert / Feedback Bar */}
+        {/* Live Search Result Alert / Feedback Bar & Instant Access Gallery */}
         {searchQuery.trim() !== '' && (
-          <div
-            className={`p-3 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border transition-all ${
-              filteredPlans.length > 0
-                ? 'bg-emerald-50/90 text-emerald-950 border-emerald-200 shadow-2xs'
-                : 'bg-amber-50 text-amber-950 border-amber-200 shadow-2xs'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              {filteredPlans.length > 0 ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              )}
-              <div>
-                <span className="font-bold">
-                  {filteredPlans.length > 0
-                    ? `تم العثور على (${toArabicDigits(filteredPlans.length)}) خطة تطابق «${searchQuery}»`
-                    : `لم يتم العثور على أي خطة تطابق «${searchQuery}»`}
-                </span>
-                <span className="text-slate-600 mr-1.5 font-medium">
-                  {searchScope === 'lessonTitle'
-                    ? 'في اسم الدرس'
-                    : searchScope === 'subject'
-                    ? 'في المادة الدراسية'
-                    : searchScope === 'grade'
-                    ? 'في الصف الدراسي'
-                    : 'في كافة الحقول'}
-                </span>
+          <div className="space-y-3 pt-1">
+            <div
+              className={`p-3 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border transition-all ${
+                filteredPlans.length > 0
+                  ? 'bg-emerald-50/90 text-emerald-950 border-emerald-200 shadow-2xs'
+                  : 'bg-amber-50 text-amber-950 border-amber-200 shadow-2xs'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {filteredPlans.length > 0 ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                )}
+                <div>
+                  <span className="font-bold">
+                    {filteredPlans.length > 0
+                      ? `تم العثور على (${toArabicDigits(filteredPlans.length)}) خطة تطابق «${searchQuery}»`
+                      : `لم يتم العثور على أي خطة تطابق «${searchQuery}»`}
+                  </span>
+                  <span className="text-slate-600 mr-1.5 font-medium">
+                    {searchScope === 'lessonTitle'
+                      ? 'في اسم الدرس'
+                      : searchScope === 'subject'
+                      ? 'في المادة الدراسية'
+                      : searchScope === 'grade'
+                      ? 'في الصف الدراسي'
+                      : 'في كافة الحقول'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                {filteredPlans.length > 0 && (
+                  <a
+                    href="#indexed-folders-section"
+                    className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                  >
+                    <span>الانتقال للسجل المفهرس</span>
+                    <ArrowDown className="w-3 h-3" />
+                  </a>
+                )}
+                {filteredPlans.length === 0 && searchScope !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchScope('all')}
+                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                  >
+                    البحث في كافة الحقول بدلاً من ذلك
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-300 transition-colors cursor-pointer"
+                >
+                  مسح البحث
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              {filteredPlans.length === 0 && searchScope !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => setSearchScope('all')}
-                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
-                >
-                  البحث في كافة الحقول بدلاً من ذلك
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-300 transition-colors cursor-pointer"
-              >
-                مسح البحث
-              </button>
-            </div>
+            {/* Direct Instant Access Results Grid */}
+            {filteredPlans.length > 0 ? (
+              <div className="bg-slate-50/80 border border-emerald-200/80 rounded-2xl p-3 sm:p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 font-['Tajawal'] flex items-center gap-1.5">
+                      <span>الوصول المباشر للخطط المطابقة:</span>
+                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        {toArabicDigits(filteredPlans.length)} نتيجة
+                      </span>
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                    انقر على أي خطة لفتحها وتعديلها فوراً في المحرر أو معاينتها
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {(showAllSearchResults ? filteredPlans : filteredPlans.slice(0, 6)).map((plan) => {
+                    const subjStyle = getSubjectStyle(plan.header.subject);
+                    const isActive = plan.id === activePlanId;
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`bg-white rounded-xl p-3 border transition-all hover:shadow-md flex flex-col justify-between ${
+                          isActive
+                            ? 'border-emerald-500 ring-2 ring-emerald-200 shadow-xs'
+                            : 'border-slate-200 hover:border-emerald-300'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <span
+                              className={`text-[11px] font-black px-2 py-0.5 rounded-md border ${subjStyle.lightBg}`}
+                            >
+                              <HighlightMatch text={plan.header.subject} query={searchQuery} />
+                            </span>
+                            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                              <HighlightMatch text={plan.header.grade} query={searchQuery} />
+                              {plan.header.section && ` (${plan.header.section})`}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h5 className="text-xs sm:text-sm font-black text-slate-900 hover:text-emerald-700 transition-colors font-['Tajawal'] line-clamp-1">
+                              <HighlightMatch
+                                text={plan.header.lessonTitle || plan.title}
+                                query={searchQuery}
+                              />
+                            </h5>
+                            {plan.header.unitTitle && (
+                              <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                الوحدة: <HighlightMatch text={plan.header.unitTitle} query={searchQuery} />
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                            {plan.header.teacherName && (
+                              <span className="truncate">
+                                المعلم: <HighlightMatch text={plan.header.teacherName} query={searchQuery} />
+                              </span>
+                            )}
+                            <span className="tabular-nums">
+                              {toArabicDigits(plan.header.totalPeriods || 1)} حصة
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1.5 pt-3 mt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onSelectPlan(plan.id);
+                              onOpenEditor();
+                            }}
+                            className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                            title="فتح الخطة في محرر الدروس"
+                          >
+                            <FileEdit className="w-3.5 h-3.5" />
+                            <span>فتح وتعديل</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => onOpenPrintView(plan.id)}
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            title="معاينة وطباعة رسمية"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+
+                          {onOpenShareModal && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenShareModal(plan.id)}
+                              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                              title="مشاركة الخطة"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {onOpenWorksheetModal && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenWorksheetModal(plan.id)}
+                              className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-bold transition-colors cursor-pointer border border-amber-200"
+                              title="توليد ورقة عمل"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {filteredPlans.length > 6 && (
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllSearchResults(!showAllSearchResults)}
+                      className="px-4 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      {showAllSearchResults
+                        ? 'عرض أقل (إظهار أول ٦ خطط فقط)'
+                        : `عرض باقي النتائج المطابقة (${toArabicDigits(filteredPlans.length - 6)} خطة إضافية)`}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-4 text-center space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-amber-950">
+                  لا توجد خطط تطابق «{searchQuery}» في {searchScope === 'lessonTitle' ? 'اسم الدرس' : searchScope === 'subject' ? 'المادة' : searchScope === 'grade' ? 'الصف' : 'كافة الحقول'}.
+                </p>
+                <p className="text-xs text-slate-600">
+                  جرّب كتابة كلمة مفتاحية مختلفة، أو اختر نطاق "كافة الحقول"، أو اختر من اقتراحات البحث بالأعلى.
+                </p>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  {searchScope !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchScope('all')}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                    >
+                      توسيع البحث إلى كافة الحقول
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 cursor-pointer"
+                  >
+                    مسح نص البحث
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -2586,7 +2766,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       </div>
 
       {/* Indexed Folders System: By Subject and By Teacher */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+      <div id="indexed-folders-section" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
         {/* Section Header with View Modes and Summary Counters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>

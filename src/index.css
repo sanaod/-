@@ -58,5 +58,269 @@
       max-width: 100% !important;
       margin: 0 !important;
     }
+
+    /* ==========================================================================
+       🖨️ LESSON EDITOR PRINT-FRIENDLY SUBMISSION LAYOUT
+       Forces clean, white-background, black-text look for all input fields when
+       the user triggers a print browser action, ensuring lesson plans are ready
+       for official submission without extra UI clutter.
+       ========================================================================== */
+    @page {
+      size: A4 portrait;
+      margin: 10mm 10mm 12mm 10mm;
+    }
+
+    html, body {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: 'Cairo', 'Tajawal', sans-serif !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Global Hide for Non-Print Elements */
+    header,
+    nav,
+    aside,
+    footer,
+    .no-print,
+    .no-print *,
+    .pinned-sections-dock,
+    .floating-contact-btn {
+      display: none !important;
+    }
+
+    /* Lesson Editor Container */
+    .lesson-editor-root,
+    .print-friendly-lesson-editor {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      box-shadow: none !important;
+    }
+
+    /* Remove UI clutter: buttons, action icons, tooltips, tags */
+    .lesson-editor-root button,
+    .lesson-editor-root [role="button"],
+    .lesson-editor-root .pin-section-btn,
+    .print-friendly-lesson-editor button,
+    .print-friendly-lesson-editor [role="button"],
+    .print-friendly-lesson-editor .pin-section-btn {
+      display: none !important;
+    }
+
+    /* 1. FORCING CLEAN, WHITE-BACKGROUND, BLACK-TEXT FOR ALL INPUT FIELDS */
+    .lesson-editor-root input:not([type="checkbox"]):not([type="radio"]),
+    .lesson-editor-root textarea,
+    .lesson-editor-root select,
+    .print-friendly-lesson-editor input:not([type="checkbox"]):not([type="radio"]),
+    .print-friendly-lesson-editor textarea,
+    .print-friendly-lesson-editor select {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+      border: 1px solid #000000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      outline: none !important;
+      opacity: 1 !important;
+      border-radius: 3px !important;
+      font-size: 10.5pt !important;
+      line-height: 1.45 !important;
+      font-weight: 600 !important;
+      font-family: 'Cairo', 'Tajawal', sans-serif !important;
+      padding: 4px 8px !important;
+      box-sizing: border-box !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Auto-expand textareas so typed content is never clipped with a scrollbar */
+    .lesson-editor-root textarea,
+    .print-friendly-lesson-editor textarea {
+      resize: none !important;
+      overflow: visible !important;
+      height: auto !important;
+      min-height: 40px !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+    }
+
+    /* Hide placeholder hints during print so empty inputs stay clean for pen remarks */
+    .lesson-editor-root input::placeholder,
+    .lesson-editor-root textarea::placeholder,
+    .print-friendly-lesson-editor input::placeholder,
+    .print-friendly-lesson-editor textarea::placeholder {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      opacity: 0 !important;
+    }
+
+    /* Custom Checkboxes: Clean Black & White check marks */
+    .lesson-editor-root input[type="checkbox"],
+    .print-friendly-lesson-editor input[type="checkbox"] {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      width: 14px !important;
+      height: 14px !important;
+      border: 1.5px solid #000000 !important;
+      border-radius: 2px !important;
+      background-color: #ffffff !important;
+      display: inline-block !important;
+      position: relative !important;
+      vertical-align: middle !important;
+      margin-left: 5px !important;
+      cursor: default !important;
+    }
+    .lesson-editor-root input[type="checkbox"]:checked,
+    .print-friendly-lesson-editor input[type="checkbox"]:checked {
+      background-color: #000000 !important;
+    }
+    .lesson-editor-root input[type="checkbox"]:checked::after,
+    .print-friendly-lesson-editor input[type="checkbox"]:checked::after {
+      content: '✓';
+      color: #ffffff !important;
+      font-size: 11px !important;
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+    }
+
+    /* Select elements */
+    .lesson-editor-root select,
+    .print-friendly-lesson-editor select {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      background-image: none !important;
+      padding-right: 8px !important;
+    }
+
+    /* 2. CARD WRAPPERS & SECTIONS: Clean monochrome / official submission look */
+    .lesson-editor-root [class*="bg-white"],
+    .lesson-editor-root [class*="bg-slate-"],
+    .lesson-editor-root [class*="bg-emerald-"],
+    .lesson-editor-root [class*="bg-teal-"],
+    .lesson-editor-root [class*="bg-sky-"],
+    .lesson-editor-root [class*="bg-amber-"],
+    .lesson-editor-root [class*="bg-rose-"],
+    .lesson-editor-root [class*="bg-blue-"],
+    .print-friendly-lesson-editor [class*="bg-"] {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      border-color: #000000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    /* Section Card Top Header Bars */
+    .lesson-editor-root [class*="bg-linear-"],
+    .lesson-editor-root [class*="from-slate-900"],
+    .lesson-editor-root [class*="from-emerald-950"],
+    .lesson-editor-root [class*="from-emerald-900"],
+    .print-friendly-lesson-editor [class*="bg-linear-"] {
+      background: #f8fafc !important;
+      color: #000000 !important;
+      border: 1px solid #000000 !important;
+      border-bottom: 2px solid #000000 !important;
+      box-shadow: none !important;
+      padding: 8px 12px !important;
+    }
+
+    .lesson-editor-root [class*="bg-linear-"] *,
+    .lesson-editor-root [class*="from-slate-900"] *,
+    .lesson-editor-root [class*="from-emerald-950"] *,
+    .print-friendly-lesson-editor [class*="bg-linear-"] * {
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+    }
+
+    /* Card Containers & Section Boxes */
+    .lesson-editor-root .rounded-2xl,
+    .lesson-editor-root .rounded-xl,
+    .lesson-editor-root .rounded-lg,
+    .print-friendly-lesson-editor .rounded-2xl,
+    .print-friendly-lesson-editor .rounded-xl {
+      border: 1px solid #000000 !important;
+      border-radius: 4px !important;
+      box-shadow: none !important;
+      margin-bottom: 12px !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* Hide Decorative icons */
+    .lesson-editor-root svg,
+    .print-friendly-lesson-editor svg {
+      display: none !important;
+    }
+
+    /* Ensure tables have clean official black borders */
+    .lesson-editor-root table,
+    .print-friendly-lesson-editor table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      margin-top: 8px !important;
+      margin-bottom: 8px !important;
+    }
+    .lesson-editor-root th,
+    .lesson-editor-root td,
+    .print-friendly-lesson-editor th,
+    .print-friendly-lesson-editor td {
+      border: 1px solid #000000 !important;
+      color: #000000 !important;
+      background: #ffffff !important;
+      padding: 5px 8px !important;
+    }
+    .lesson-editor-root th,
+    .print-friendly-lesson-editor th {
+      background-color: #f1f5f9 !important;
+      font-weight: 800 !important;
+    }
+
+    /* Typography & Labels */
+    .lesson-editor-root label,
+    .print-friendly-lesson-editor label {
+      color: #000000 !important;
+      font-weight: 700 !important;
+      font-size: 9pt !important;
+      display: block !important;
+      margin-bottom: 2px !important;
+    }
+    .lesson-editor-root h1,
+    .lesson-editor-root h2,
+    .lesson-editor-root h3,
+    .lesson-editor-root h4,
+    .lesson-editor-root p,
+    .lesson-editor-root span,
+    .print-friendly-lesson-editor h1,
+    .print-friendly-lesson-editor h2,
+    .print-friendly-lesson-editor h3,
+    .print-friendly-lesson-editor h4,
+    .print-friendly-lesson-editor p,
+    .print-friendly-lesson-editor span {
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+      text-shadow: none !important;
+    }
+
+    /* Official Printable Document Header at Top of Print */
+    .official-editor-print-header {
+      display: block !important;
+      border-bottom: 2px solid #000000 !important;
+      padding-bottom: 8px !important;
+      margin-bottom: 14px !important;
+    }
   }
 }

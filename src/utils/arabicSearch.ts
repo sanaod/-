@@ -99,6 +99,7 @@ export function matchesPlanSearch(
   plan: {
     header: {
       lessonTitle?: string;
+      unitTitle?: string;
       subject?: string;
       grade?: string;
       teacherName?: string;
@@ -111,13 +112,14 @@ export function matchesPlanSearch(
   if (!query || query.trim() === '') return true;
 
   const lessonTitle = plan.header.lessonTitle || plan.title || '';
+  const unitTitle = plan.header.unitTitle || '';
   const subject = plan.header.subject || '';
   const grade = plan.header.grade || '';
   const teacher = plan.header.teacherName || '';
 
   switch (scope) {
     case 'lessonTitle':
-      return arabicTextMatches(lessonTitle, query);
+      return arabicTextMatches(lessonTitle, query) || arabicTextMatches(unitTitle, query);
 
     case 'subject':
       return arabicTextMatches(subject, query);
@@ -129,6 +131,7 @@ export function matchesPlanSearch(
     default:
       return (
         arabicTextMatches(lessonTitle, query) ||
+        arabicTextMatches(unitTitle, query) ||
         arabicTextMatches(subject, query) ||
         arabicTextMatches(grade, query) ||
         arabicTextMatches(teacher, query)
