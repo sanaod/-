@@ -68,7 +68,15 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   pinnedSections = [],
   onTogglePinSection,
 }) => {
-  const data: ExecutivePlanData = plan.executiveData!;
+  const data: ExecutivePlanData = plan.executiveData || {
+    executiveStages: [],
+    smartObjectives: [],
+    learningCompetencies: '',
+    valuesAndEthics: '',
+    studentCharacteristicsAnalysis: '',
+    environmentalAnalysis: '',
+    timeframeDetails: {} as any,
+  };
 
   const handleUpdate = (updatedData: ExecutivePlanData) => {
     onChange({
@@ -304,12 +312,14 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
 
   useEffect(() => {
-    setSaveStatus('saving');
-    const timer = setTimeout(() => {
-      setSaveStatus('saved');
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [plan]);
+    if (saveStatus === 'saved') {
+      setSaveStatus('saving');
+      const timer = setTimeout(() => {
+        setSaveStatus('saved');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [plan.header, plan.executiveData]);
 
   return (
     <div className="space-y-6 text-slate-800">
