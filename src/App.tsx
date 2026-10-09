@@ -76,12 +76,14 @@ import {
   Database,
   Upload,
   FileUp,
+  Share2,
 } from 'lucide-react';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
 import { AcademicYearMilestonesModal } from './components/AcademicYearMilestonesModal';
 import { AndroidAppModal } from './components/AndroidAppModal';
 import { AppDownloadFloatingBanner } from './components/AppDownloadFloatingBanner';
+import { SharePlanModal, FloatingShareButton } from './components/SharePlanModal';
 
 const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
@@ -192,6 +194,7 @@ export default function App() {
   const [isParentCardModalOpen, setIsParentCardModalOpen] = useState(false);
   const [isResourcesModalOpen, setIsResourcesModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isMotionGraphicsModalOpen, setIsMotionGraphicsModalOpen] = useState(false);
@@ -366,6 +369,7 @@ export default function App() {
       <OfficialPrintView
         plan={currentPlan}
         onBack={() => setViewMode('editor')}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
       />
     );
   }
@@ -402,6 +406,7 @@ export default function App() {
         onImportPlan={handleImportPlan}
         currentPlan={currentPlan}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
         onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
         onNewBlankPlan={handleCreateNewBlankPlan}
         onSelectBlankPlan={handleSelectBlankPlan}
@@ -439,6 +444,10 @@ export default function App() {
             onOpenPrintView={(planId) => {
               if (planId) setActivePlanId(planId);
               setViewMode('official-print');
+            }}
+            onOpenShareModal={(planId) => {
+              if (planId) setActivePlanId(planId);
+              setIsShareModalOpen(true);
             }}
             onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
             onDeletePlan={handleDeletePlan}
@@ -589,6 +598,15 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
+                    title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                  >
+                    <Share2 className="w-4 h-4 text-emerald-200 shrink-0" />
+                    <span>مشاركة الخطة 📱</span>
+                  </button>
+
+                  <button
                     onClick={() => setIsBackupRestoreModalOpen(true)}
                     className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
                     title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
@@ -622,6 +640,7 @@ export default function App() {
                 totalPlansCount={plans.length}
                 onOpenPrintView={() => setViewMode('official-print')}
                 onOpenExportModal={() => setIsExportModalOpen(true)}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
                 onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
                 onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
                 onOpenQrModal={() => setIsQrModalOpen(true)}
@@ -740,6 +759,16 @@ export default function App() {
                   <Sparkles className="w-3.5 h-3.5 text-slate-950 group-hover:rotate-12 transition-transform" />
                   <span>توليد التحضير (AI)</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-xs transition-all cursor-pointer border border-emerald-400/30 group"
+                  title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-emerald-200 group-hover:scale-110 transition-transform" />
+                  <span>مشاركة الخطة 📱</span>
+                </button>
               </div>
             </div>
 
@@ -751,6 +780,7 @@ export default function App() {
                 onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
                 onOpenAiModal={() => setIsAiModalOpen(true)}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
               />
             ) : (
               <>
@@ -762,6 +792,7 @@ export default function App() {
                   onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
                   onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
                   onOpenAiModal={() => setIsAiModalOpen(true)}
+                  onOpenShareModal={() => setIsShareModalOpen(true)}
                   resourcesCount={resources.length}
                 />
 
@@ -976,11 +1007,22 @@ export default function App() {
         onClose={() => setIsExportModalOpen(false)}
         plan={currentPlan}
         onOpenPdfPrint={() => setViewMode('official-print')}
+        onOpenShareModal={() => {
+          setIsExportModalOpen(false);
+          setIsShareModalOpen(true);
+        }}
         allPlans={plans}
         onOpenBackupRestore={() => {
           setIsExportModalOpen(false);
           setIsBackupRestoreModalOpen(true);
         }}
+      />
+
+      {/* Share Lesson Plan Modal (Web Share API & Messaging Apps) */}
+      <SharePlanModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        plan={currentPlan}
       />
 
       <BackupRestoreModal
@@ -1026,6 +1068,11 @@ export default function App() {
           setIsPlansViewerModalOpen(false);
           if (planId) setActivePlanId(planId);
           setViewMode('official-print');
+        }}
+        onOpenShareModal={(planId) => {
+          setIsPlansViewerModalOpen(false);
+          if (planId) setActivePlanId(planId);
+          setIsShareModalOpen(true);
         }}
         onOpenNewBlank={() => {
           setIsPlansViewerModalOpen(false);
@@ -1143,6 +1190,9 @@ export default function App() {
 
       {/* Floating WhatsApp Contact Button */}
       <FloatingWhatsAppButton />
+
+      {/* Floating Quick Share Button (Web Share API) */}
+      <FloatingShareButton onClick={() => setIsShareModalOpen(true)} />
 
       {/* Floating App Download Banner */}
       <AppDownloadFloatingBanner

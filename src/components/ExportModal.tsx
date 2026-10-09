@@ -19,6 +19,7 @@ import { toArabicDigits } from '../utils/arabicNumerals';
 import { exportToWord, exportToHtml, exportToMarkdown, exportToPdfDirect } from '../utils/exportUtils';
 import { exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
 import { exportAllPlansToJson } from '../utils/backupRestore';
+import { sharePlanViaWebShare } from '../utils/shareUtils';
 import { Database } from 'lucide-react';
 
 interface ExportModalProps {
@@ -28,6 +29,7 @@ interface ExportModalProps {
   onOpenPdfPrint: () => void;
   allPlans?: LessonPlan[];
   onOpenBackupRestore?: () => void;
+  onOpenShareModal?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -37,6 +39,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onOpenPdfPrint,
   allPlans,
   onOpenBackupRestore,
+  onOpenShareModal,
 }) => {
   const [copied, setCopied] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -152,6 +155,40 @@ ${plan.section3Assessment.graspsTask.fullDescription}
           </div>
 
           <div className="grid grid-cols-1 gap-3">
+            {/* 0. Web Share API & Messaging Apps */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenShareModal) {
+                  onClose();
+                  onOpenShareModal();
+                } else {
+                  sharePlanViaWebShare(plan);
+                }
+              }}
+              className="p-4 rounded-2xl border-2 border-emerald-400 hover:border-emerald-600 bg-linear-to-r from-emerald-50 via-teal-50 to-emerald-100/60 hover:from-emerald-100 hover:to-teal-100 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs cursor-pointer ring-1 ring-emerald-500/20"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-linear-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                  <Share2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black text-slate-900 group-hover:text-emerald-950 transition-colors">
+                      مشاركة الخطة مع الزملاء (Web Share API)
+                    </h4>
+                    <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.2 rounded-full font-black">
+                      واتساب وتطبيقات المراسلة 📱
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    إرسال فوري للخطة عبر واتساب وتيليجرام وتطبيقات الهاتف دون الحاجة لتنزيل ملفات
+                  </p>
+                </div>
+              </div>
+              <Share2 className="w-5 h-5 text-emerald-700 shrink-0 group-hover:rotate-12 transition-transform" />
+            </button>
+
             {/* 1. Word (.doc / .docx) */}
             <button
               type="button"

@@ -1,19 +1,22 @@
 import React, { useRef, useState } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
-import { Printer, ArrowRight, Download, Loader2, CheckCircle2, FileText, FileCode, Sparkles } from 'lucide-react';
+import { Printer, ArrowRight, Download, Loader2, CheckCircle2, FileText, FileCode, Sparkles, Share2 } from 'lucide-react';
 import { toArabicDigits, formatDateDMY } from '../utils/arabicNumerals';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import { exportToWord, exportToHtml } from '../utils/exportUtils';
 import { ensureExecutiveData } from '../utils/executivePlanDefaults';
+import { isWebShareSupported, sharePlanViaWebShare } from '../utils/shareUtils';
 import { ExecutivePrintDocument } from './ExecutivePrintDocument';
+import { SharePlanModal } from './SharePlanModal';
 
 interface OfficialPrintViewProps {
   plan: LessonPlan;
   onBack: () => void;
+  onOpenShareModal?: () => void;
 }
 
-export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBack }) => {
+export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBack, onOpenShareModal }) => {
   const planWithExec = ensureExecutiveData(plan);
   const [printTemplate, setPrintTemplate] = useState<'executive' | 'adaptive'>(
     (plan.templateType as 'executive' | 'adaptive') || 'executive'
@@ -21,6 +24,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportProgress, setExportProgress] = useState<string>('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const handlePrintBrowser = () => {
     window.print();
@@ -116,6 +120,27 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
             >
               <FileCode className="w-4 h-4 text-emerald-200 shrink-0" />
               <span>HTML ويب</span>
+            </button>
+
+            {/* Quick Share via Web Share API */}
+            <button
+              onClick={async () => {
+                if (onOpenShareModal) {
+                  onOpenShareModal();
+                } else if (isWebShareSupported()) {
+                  const res = await sharePlanViaWebShare(planWithExec);
+                  if (!res.success && !res.cancelled) {
+                    setIsShareModalOpen(true);
+                  }
+                } else {
+                  setIsShareModalOpen(true);
+                }
+              }}
+              className="col-span-2 sm:col-span-1 px-3 sm:px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer border border-emerald-400/30"
+              title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+            >
+              <Share2 className="w-4 h-4 text-emerald-100 shrink-0" />
+              <span>مشاركة 📱</span>
             </button>
           </div>
         </div>
@@ -699,6 +724,13 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
         </>
         )}
       </div>
+
+      {/* Share Plan Modal with Web Share API and messaging apps */}
+      <SharePlanModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        plan={planWithExec}
+      />
     </div>
   );
 };

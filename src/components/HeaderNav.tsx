@@ -34,6 +34,7 @@ import {
   Database,
   QrCode,
   Clapperboard,
+  Share2,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -59,6 +60,7 @@ interface HeaderNavProps {
   onImportPlan: (plan: LessonPlan) => void;
   currentPlan: LessonPlan;
   onOpenExportModal: () => void;
+  onOpenShareModal?: () => void;
   onOpenBlankTemplateModal?: () => void;
   onNewBlankPlan?: () => void;
   onSelectBlankPlan?: () => void;
@@ -95,6 +97,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onImportPlan,
   currentPlan,
   onOpenExportModal,
+  onOpenShareModal,
   onOpenBlankTemplateModal,
   onNewBlankPlan,
   onSelectBlankPlan,
@@ -332,6 +335,18 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <FileDown className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                 <span className="hidden xl:inline text-[11px]">تصدير</span>
               </button>
+
+              {/* Quick Share via Web Share API */}
+              {onOpenShareModal && (
+                <button
+                  onClick={onOpenShareModal}
+                  title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                  className="p-1.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
+                >
+                  <Share2 className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                  <span className="hidden xl:inline text-[11px]">مشاركة</span>
+                </button>
+              )}
 
               {/* Quick Backup/Restore */}
               {onOpenBackupRestoreModal && (
@@ -1025,6 +1040,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <FileDown className="w-3.5 h-3.5 text-blue-200" />
                   <span>تصدير Word/HTML</span>
                 </button>
+
+                {onOpenShareModal && (
+                  <button
+                    onClick={() => {
+                      onOpenShareModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="p-2.5 bg-linear-to-r from-emerald-600 to-teal-700 text-white rounded-xl flex items-center justify-center gap-1.5 col-span-2 shadow-2xs font-black"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-emerald-200" />
+                    <span>مشاركة الخطة مع الزملاء (Web Share 📱)</span>
+                  </button>
+                )}
               </div>
             </div>
 

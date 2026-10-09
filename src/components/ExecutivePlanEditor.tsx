@@ -32,6 +32,7 @@ import {
   ChevronUp,
   RefreshCw,
   GraduationCap,
+  Share2,
 } from 'lucide-react';
 import { toArabicDigits, formatDateDMY } from '../utils/arabicNumerals';
 import {
@@ -51,6 +52,7 @@ interface ExecutivePlanEditorProps {
   onOpenUnitPlanModal?: () => void;
   onOpenResourcesModal?: () => void;
   onOpenAiModal?: () => void;
+  onOpenShareModal?: () => void;
 }
 
 export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
@@ -59,6 +61,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   onOpenUnitPlanModal,
   onOpenResourcesModal,
   onOpenAiModal,
+  onOpenShareModal,
 }) => {
   const data: ExecutivePlanData = plan.executiveData!;
 
@@ -310,6 +313,17 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>تحضير الوحدة الكاملة</span>
+              </button>
+            )}
+            {onOpenShareModal && (
+              <button
+                type="button"
+                onClick={onOpenShareModal}
+                title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                className="px-3.5 py-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-xs border border-emerald-400/40 cursor-pointer active:scale-95"
+              >
+                <Share2 className="w-4 h-4 text-emerald-200" />
+                <span>مشاركة الخطة 📱</span>
               </button>
             )}
           </div>

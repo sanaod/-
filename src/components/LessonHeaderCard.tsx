@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LessonHeader, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
-import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag, GraduationCap, ChevronDown } from 'lucide-react';
+import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag, GraduationCap, ChevronDown, Share2 } from 'lucide-react';
 import { toArabicDigits, formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import {
   analyzeTeachingCalendar,
@@ -19,6 +19,7 @@ interface LessonHeaderCardProps {
   onOpenSemesterPlanModal?: () => void;
   onOpenResourcesModal?: () => void;
   onOpenAiModal?: () => void;
+  onOpenShareModal?: () => void;
   resourcesCount?: number;
 }
 
@@ -29,6 +30,7 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
   onOpenSemesterPlanModal,
   onOpenResourcesModal,
   onOpenAiModal,
+  onOpenShareModal,
   resourcesCount,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -183,6 +185,18 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
             >
               <Boxes className="w-4 h-4 text-blue-200 group-hover:scale-110 transition-transform" />
               <span>تحضير وحدة كاملة (AI)</span>
+            </button>
+          )}
+
+          {onOpenShareModal && (
+            <button
+              type="button"
+              onClick={onOpenShareModal}
+              title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+              className="px-3.5 py-1.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs border border-emerald-400/40 cursor-pointer active:scale-95"
+            >
+              <Share2 className="w-4 h-4 text-emerald-200" />
+              <span>مشاركة الخطة 📱</span>
             </button>
           )}
 

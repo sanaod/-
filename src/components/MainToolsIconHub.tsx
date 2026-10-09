@@ -40,6 +40,7 @@ import {
   BookOpen,
   GraduationCap,
   Smartphone,
+  Share2,
 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 
@@ -67,6 +68,7 @@ export interface MainToolsIconHubProps {
   totalPlansCount?: number;
   onOpenPrintView: () => void;
   onOpenExportModal: () => void;
+  onOpenShareModal?: () => void;
   onOpenBackupRestoreModal: () => void;
   onOpenMotionGraphicsModal: () => void;
   onOpenQrModal: () => void;
@@ -113,6 +115,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   totalPlansCount = 1,
   onOpenPrintView,
   onOpenExportModal,
+  onOpenShareModal,
   onOpenBackupRestoreModal,
   onOpenMotionGraphicsModal,
   onOpenQrModal,
@@ -515,6 +518,22 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
       iconColor: 'text-blue-300',
       action: onOpenExportModal,
       keywords: ['تصدير', 'word', 'doc', 'json', 'تنزيل', 'حفظ'],
+    },
+    {
+      id: 'share-plan',
+      category: 'management',
+      title: 'مشاركة الخطة (Web Share)',
+      subtitle: 'إرسال مباشر للزملاء عبر واتساب وتطبيقات المراسلة',
+      badge: 'مشاركة 📱',
+      badgeType: 'success',
+      icon: Share2,
+      colorGradient: 'from-emerald-950/95 via-teal-950 to-slate-900',
+      borderColor: 'border-emerald-500/70',
+      hoverBorder: 'hover:border-emerald-400',
+      iconBg: 'bg-emerald-700/40 border-emerald-400/40',
+      iconColor: 'text-emerald-300',
+      action: onOpenShareModal || onOpenExportModal,
+      keywords: ['مشاركة', 'واتساب', 'تيليجرام', 'إرسال', 'share', 'whatsapp', 'زملاء'],
     },
     {
       id: 'backup-restore',

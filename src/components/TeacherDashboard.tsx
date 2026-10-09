@@ -58,6 +58,7 @@ import {
   Move,
   ArrowUp,
   ArrowDown,
+  Share2,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
@@ -86,6 +87,7 @@ interface TeacherDashboardProps {
   onOpenSemesterPlanModal?: () => void;
   onOpenWorksheetModal?: (planId?: string) => void;
   onOpenPrintView: (planId?: string) => void;
+  onOpenShareModal?: (planId?: string) => void;
   onOpenBlankTemplateModal?: () => void;
   onDeletePlan?: (planId: string) => void;
   onOpenResourcesModal?: () => void;
@@ -366,6 +368,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenSemesterPlanModal,
   onOpenWorksheetModal,
   onOpenPrintView,
+  onOpenShareModal,
   onOpenBlankTemplateModal,
   onDeletePlan,
   onOpenResourcesModal,
@@ -2781,6 +2784,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           >
                                             <Printer className="w-4 h-4" />
                                           </button>
+                                          {onOpenShareModal && (
+                                            <button
+                                              onClick={() => {
+                                                onSelectPlan(plan.id);
+                                                onOpenShareModal(plan.id);
+                                              }}
+                                              className="p-1.5 text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-200"
+                                              title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                                            >
+                                              <Share2 className="w-4 h-4" />
+                                            </button>
+                                          )}
                                           {onOpenAbacusModal && (
                                             <button
                                               onClick={() => {
@@ -3013,6 +3028,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           >
                                             <Printer className="w-4 h-4" />
                                           </button>
+                                          {onOpenShareModal && (
+                                            <button
+                                              onClick={() => {
+                                                onSelectPlan(plan.id);
+                                                onOpenShareModal(plan.id);
+                                              }}
+                                              className="p-1.5 text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-200"
+                                              title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                                            >
+                                              <Share2 className="w-4 h-4" />
+                                            </button>
+                                          )}
                                           {onOpenAbacusModal && (
                                             <button
                                               onClick={() => {
@@ -3138,6 +3165,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         >
                                           <Printer className="w-3.5 h-3.5" />
                                         </button>
+                                        {onOpenShareModal && (
+                                          <button
+                                            onClick={() => {
+                                              onSelectPlan(p.id);
+                                              onOpenShareModal(p.id);
+                                            }}
+                                            className="p-1 text-emerald-600 hover:text-emerald-800 rounded-lg hover:bg-emerald-50"
+                                            title="مشاركة الخطة (Web Share)"
+                                          >
+                                            <Share2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
                                         {onOpenAbacusModal && (
                                           <button
                                             onClick={() => {
@@ -3321,6 +3360,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               >
                                 <Printer className="w-4 h-4" />
                               </button>
+                              {onOpenShareModal && (
+                                <button
+                                  onClick={() => {
+                                    onSelectPlan(plan.id);
+                                    onOpenShareModal(plan.id);
+                                  }}
+                                  className="p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
+                                  title="مشاركة الخطة (Web Share)"
+                                >
+                                  <Share2 className="w-4 h-4" />
+                                </button>
+                              )}
                               {onOpenAbacusModal && (
                                 <button
                                   onClick={() => {

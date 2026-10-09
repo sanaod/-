@@ -19,6 +19,7 @@ import {
   Boxes,
   CalendarRange,
   Database,
+  Share2,
 } from 'lucide-react';
 
 interface PlansViewerModalProps {
@@ -30,6 +31,7 @@ interface PlansViewerModalProps {
   onRequestDeletePlan: (plan: LessonPlan) => void;
   onOpenEditor: () => void;
   onOpenPrintView: (planId: string) => void;
+  onOpenShareModal?: (planId: string) => void;
   onOpenNewBlank?: () => void;
   onOpenAiGenerator?: () => void;
   onOpenUnitPlanModal?: () => void;
@@ -47,6 +49,7 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
   onRequestDeletePlan,
   onOpenEditor,
   onOpenPrintView,
+  onOpenShareModal,
   onOpenNewBlank,
   onOpenAiGenerator,
   onOpenUnitPlanModal,
@@ -271,6 +274,20 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
                       >
                         <Printer className="w-4 h-4" />
                       </button>
+
+                      {onOpenShareModal && (
+                        <button
+                          onClick={() => {
+                            onSelectPlan(plan.id);
+                            onOpenShareModal(plan.id);
+                            onClose();
+                          }}
+                          className="p-1.5 text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-200"
+                          title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                      )}
 
                       {/* Explicit Delete Button when Plan has errors */}
                       <button
