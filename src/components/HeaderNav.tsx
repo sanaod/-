@@ -305,17 +305,22 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
 
-            {/* Direct QR Code Generator Button */}
-            {onOpenQrModal && (
-              <button
-                onClick={onOpenQrModal}
-                className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-teal-400/60"
-                title="تصميم وتوليد رمز الاستجابة السريعة (QR) للمنظومة"
-              >
-                <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-200 shrink-0" />
-                <span className="hidden md:inline">QR المنظومة 📱</span>
-              </button>
-            )}
+            {/* Active Plan Quick Badge (Desktop / Tablet) */}
+            <div className="hidden 2xl:flex items-center gap-2 bg-slate-100/90 hover:bg-slate-200/80 px-3 py-1.5 rounded-xl border border-slate-200 text-xs transition-colors">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+              <span className="font-bold text-slate-700">الدرس الحالي:</span>
+              <span className="font-extrabold text-slate-900 truncate max-w-[160px]">
+                {currentPlan.header?.lessonTitle || currentPlan.title || 'استمارة تحضير مفرغة'}
+              </span>
+              <span className="text-[10px] bg-white px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600 font-bold">
+                {currentPlan.header?.grade || 'الصف'}
+              </span>
+            </div>
+
+            {/* Direct WhatsApp Contact Button (Desktop / Tablet) */}
+            <div className="hidden sm:block">
+              <WhatsAppHeaderButton />
+            </div>
 
             {/* Motion Graphics Video Generator Button */}
             {onOpenMotionGraphicsModal && (
@@ -329,22 +334,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               </button>
             )}
 
-            {/* Direct WhatsApp Contact Button (Desktop / Tablet) */}
-            <div className="hidden sm:block">
-              <WhatsAppHeaderButton />
-            </div>
-
-            {/* Active Plan Quick Badge (Desktop / Tablet) */}
-            <div className="hidden 2xl:flex items-center gap-2 bg-slate-100/90 hover:bg-slate-200/80 px-3 py-1.5 rounded-xl border border-slate-200 text-xs transition-colors">
-              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-              <span className="font-bold text-slate-700">الدرس الحالي:</span>
-              <span className="font-extrabold text-slate-900 truncate max-w-[160px]">
-                {currentPlan.header?.lessonTitle || currentPlan.title || 'استمارة تحضير مفرغة'}
-              </span>
-              <span className="text-[10px] bg-white px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600 font-bold">
-                {currentPlan.header?.grade || 'الصف'}
-              </span>
-            </div>
+            {/* Direct QR Code Generator Button */}
+            {onOpenQrModal && (
+              <button
+                onClick={onOpenQrModal}
+                className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-teal-400/60"
+                title="تصميم وتوليد رمز الاستجابة السريعة (QR) للمنظومة"
+              >
+                <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-200 shrink-0" />
+                <span className="hidden md:inline">QR المنظومة 📱</span>
+              </button>
+            )}
 
             {/* Mobile WhatsApp Quick Icon */}
             <div className="sm:hidden">
