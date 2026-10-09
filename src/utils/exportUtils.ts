@@ -2,6 +2,7 @@ import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits, formatDateDMY } from './arabicNumerals';
 import { getCurrentAcademicYear } from './academicYear';
 import { exportLessonPlanToPdf } from './pdfExport';
+import { formatStageNameWithOrdinal } from './executivePlanDefaults';
 
 /**
  * Downloads a file to the user's browser.
@@ -69,7 +70,7 @@ export function exportToWord(plan: LessonPlan) {
 </style>
 </head>
 <body>
-  <h1>نموذج خطة تحضير درس</h1>
+  <h1>أولاً: نموذج خطة تحضير درس (البيانات العامة وكفايات التعلّم والأهداف)</h1>
   <div class="subtitle">النموذج التنفيذي المعتمد • وزارة التربية والتعليم</div>
 
   <table>
@@ -114,7 +115,7 @@ export function exportToWord(plan: LessonPlan) {
     ${d.smartObjectives.map((o, idx) => `${toArabicDigits(idx + 1)}. ${o}`).join('<br>')}
   </div>
 
-  <h2>تفاصيل خطة التنفيذ التنفيذية للدرس</h2>
+  <h2>ثانياً: تفاصيل خطة التنفيذ التنفيذية للدرس</h2>
   <table>
     <tr style="background-color: #064e3b; color: white;">
       <th style="width: 15%; color: white;">الأهداف</th>
@@ -125,7 +126,7 @@ export function exportToWord(plan: LessonPlan) {
     </tr>
     ${d.executiveStages.map((st) => `
       <tr>
-        <td><strong>${st.stageName}</strong><br><small>${st.goals}</small></td>
+        <td><strong>${formatStageNameWithOrdinal(st.stageName, st.id)}</strong><br><small>${st.goals}</small></td>
         <td>
           ${st.procedures.mainDescription}
           ${st.id === 1 && st.procedures.resourceName ? `<br><strong>المصدر:</strong> ${st.procedures.resourceName}` : ''}
@@ -140,23 +141,24 @@ export function exportToWord(plan: LessonPlan) {
     `).join('')}
   </table>
 
-  <h2>ملاحظات وتأملات المعلم حول الدرس</h2>
+  <h2>ثالثاً: ملاحظات وتأملات المعلم حول الدرس</h2>
   <table>
     <tr>
-      <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">نقاط القوة في تنفيذ الدرس:</td>
+      <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">أولاً: نقاط القوة في تنفيذ الدرس:</td>
       <td>${d.teacherReflection.strengths}</td>
     </tr>
     <tr>
-      <td style="font-weight: bold; background-color: #f1f5f9;">جوانب تحتاج إلى تحسين وتطوير:</td>
+      <td style="font-weight: bold; background-color: #f1f5f9;">ثانياً: جوانب تحتاج إلى تحسين وتطوير:</td>
       <td>${d.teacherReflection.improvementsNeeded}</td>
     </tr>
     <tr>
-      <td style="font-weight: bold; background-color: #f1f5f9;">مقترحات للدروس القادمة:</td>
+      <td style="font-weight: bold; background-color: #f1f5f9;">ثالثاً: مقترحات للدروس القادمة:</td>
       <td>${d.teacherReflection.futureSuggestions}</td>
     </tr>
   </table>
 
-  <table style="margin-top: 25pt; border: none;">
+  <h2>رابعاً: التوقيع والاعتماد الرسمي</h2>
+  <table style="margin-top: 15pt; border: none;">
     <tr style="border: none;">
       <td style="border: none; text-align: center;"><strong>توقيع المعلم/ة:</strong><br><br>${h.teacherName || '....................'}</td>
       <td style="border: none; text-align: center;"><strong>مدير/ة المدرسة:</strong><br><br>....................</td>

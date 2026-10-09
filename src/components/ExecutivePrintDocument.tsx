@@ -1,6 +1,7 @@
 import React from 'react';
 import { LessonPlan, ExecutivePlanData } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { formatStageNameWithOrdinal } from '../utils/executivePlanDefaults';
 
 interface ExecutivePrintDocumentProps {
   plan: LessonPlan;
@@ -25,7 +26,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Main Title */}
           <div className="text-center mb-5 pb-2 border-b-2 border-black">
             <h1 className="text-xl md:text-2xl font-black text-black font-['Tajawal'] tracking-wide">
-              نموذج خطة تحضير درس
+              أولاً: نموذج خطة تحضير درس (البيانات العامة وكفايات التعلّم والأهداف)
             </h1>
             <p className="text-xs text-slate-700 font-semibold mt-1">
               النموذج التنفيذي المعتمد • وزارة التربية والتعليم
@@ -167,7 +168,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Section Title */}
           <div className="text-center mb-4 pb-2 border-b-2 border-black">
             <h2 className="text-lg md:text-xl font-black text-black font-['Tajawal']">
-              تفاصيل خطة التنفيذ التنفيذية للدرس
+              ثانياً: تفاصيل خطة التنفيذ التنفيذية للدرس
             </h2>
             <p className="text-[11px] text-slate-700 font-bold mt-0.5">
               الجزء الأول: التهيئة وعرض الأهداف ومهمة التقويم الأصيل GRASPS
@@ -189,7 +190,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               {/* STAGE 1 */}
               <tr>
                 <td className="border-l border-black p-2.5 align-top font-bold bg-slate-50">
-                  <div className="text-emerald-950 font-black mb-1">{stage1.stageName}</div>
+                  <div className="text-emerald-950 font-black mb-1">{formatStageNameWithOrdinal(stage1.stageName, 1)}</div>
                   <div className="text-[11px] font-normal text-slate-700">{stage1.goals}</div>
                 </td>
                 <td className="border-l border-black p-2.5 align-top space-y-2 leading-relaxed">
@@ -222,7 +223,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               {/* STAGE 2 */}
               <tr>
                 <td className="border-l border-black p-2.5 align-top font-bold bg-slate-50">
-                  <div className="text-emerald-950 font-black mb-1">{stage2.stageName}</div>
+                  <div className="text-emerald-950 font-black mb-1">{formatStageNameWithOrdinal(stage2.stageName, 2)}</div>
                   <div className="text-[11px] font-normal text-slate-700">{stage2.goals}</div>
                 </td>
                 <td className="border-l border-black p-2.5 align-top space-y-2 leading-relaxed">
@@ -247,7 +248,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               {/* STAGE 3 */}
               <tr>
                 <td className="border-l border-black p-2.5 align-top font-bold bg-slate-50">
-                  <div className="text-emerald-950 font-black mb-1">{stage3.stageName}</div>
+                  <div className="text-emerald-950 font-black mb-1">{formatStageNameWithOrdinal(stage3.stageName, 3)}</div>
                   <div className="text-[11px] font-normal text-slate-700">{stage3.goals}</div>
                 </td>
                 <td className="border-l border-black p-2.5 align-top space-y-1.5 leading-relaxed">
@@ -295,7 +296,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Section Title */}
           <div className="text-center mb-4 pb-2 border-b-2 border-black">
             <h2 className="text-lg md:text-xl font-black text-black font-['Tajawal']">
-              تفاصيل خطة التنفيذ التنفيذية للدرس (تابع)
+              ثانياً: تفاصيل خطة التنفيذ التنفيذية للدرس (تابع)
             </h2>
             <p className="text-[11px] text-slate-700 font-bold mt-0.5">
               الجزء الثاني: ورقة العمل التفاعلية والغلق وتلخيص الدرس
@@ -317,7 +318,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               {/* STAGE 4 */}
               <tr>
                 <td className="border-l border-black p-3 align-top font-bold bg-slate-50">
-                  <div className="text-emerald-950 font-black mb-1">{stage4.stageName}</div>
+                  <div className="text-emerald-950 font-black mb-1">{formatStageNameWithOrdinal(stage4.stageName, 4)}</div>
                   <div className="text-[11px] font-normal text-slate-700">{stage4.goals}</div>
                 </td>
                 <td className="border-l border-black p-3 align-top space-y-2 leading-relaxed">
@@ -339,7 +340,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               {/* STAGE 5 */}
               <tr>
                 <td className="border-l border-black p-3 align-top font-bold bg-slate-50">
-                  <div className="text-emerald-950 font-black mb-1">{stage5.stageName}</div>
+                  <div className="text-emerald-950 font-black mb-1">{formatStageNameWithOrdinal(stage5.stageName, 5)}</div>
                   <div className="text-[11px] font-normal text-slate-700">{stage5.goals}</div>
                 </td>
                 <td className="border-l border-black p-3 align-top space-y-2.5 leading-relaxed">
@@ -388,7 +389,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Main Title */}
           <div className="text-center mb-6 pb-2 border-b-2 border-black">
             <h2 className="text-xl md:text-2xl font-black text-black font-['Tajawal'] tracking-wide">
-              ملاحظات وتأملات المعلم حول الدرس
+              ثالثاً: ملاحظات وتأملات المعلم حول الدرس
             </h2>
             <p className="text-xs text-slate-700 font-semibold mt-1">
               التقويم الذاتي والمجتمعات التعلمية المهنية (PLC)
@@ -398,7 +399,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Box 1: نقاط القوة في تنفيذ الدرس */}
           <div className="border-2 border-black mb-6">
             <div className="bg-slate-100 p-2.5 font-bold text-xs md:text-sm text-black border-b border-black">
-              نقاط القوة في تنفيذ الدرس:
+              أولاً: نقاط القوة في تنفيذ الدرس:
             </div>
             <div className="p-4 text-xs md:text-sm text-slate-900 leading-relaxed min-h-[140px]">
               {data.teacherReflection.strengths || (
@@ -410,7 +411,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Box 2: جوانب تحتاج إلى تحسين وتطوير */}
           <div className="border-2 border-black mb-6">
             <div className="bg-slate-100 p-2.5 font-bold text-xs md:text-sm text-black border-b border-black">
-              جوانب تحتاج إلى تحسين وتطوير:
+              ثانياً: جوانب تحتاج إلى تحسين وتطوير:
             </div>
             <div className="p-4 text-xs md:text-sm text-slate-900 leading-relaxed min-h-[140px]">
               {data.teacherReflection.improvementsNeeded || (
@@ -422,7 +423,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           {/* Box 3: مقترحات للدروس القادمة */}
           <div className="border-2 border-black mb-6">
             <div className="bg-slate-100 p-2.5 font-bold text-xs md:text-sm text-black border-b border-black">
-              مقترحات للدروس القادمة:
+              ثالثاً: مقترحات للدروس القادمة:
             </div>
             <div className="p-4 text-xs md:text-sm text-slate-900 leading-relaxed min-h-[140px]">
               {data.teacherReflection.futureSuggestions || (
@@ -432,49 +433,54 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
           </div>
 
           {/* Official Signatures Row */}
-          <div className="border border-black mt-8 text-xs">
-            <div className="grid grid-cols-3 divide-x divide-x-reverse divide-black text-center">
-              <div className="p-3 space-y-2">
-                <span className="font-bold block text-slate-900">إعداد وتوقيع المعلم/ة:</span>
-                <span className="text-slate-800 font-semibold block">
-                  {sigs?.teacher?.name || h.teacherName || '....................'}
-                </span>
-                <span className="text-[10px] text-slate-600 block">
-                  التاريخ: {toArabicDigits(sigs?.teacher?.date || h.date || '..../..../........')}
-                </span>
-                {sigs?.teacher?.notes && (
-                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
-                    <span className="font-bold block">ملاحظات:</span> {sigs.teacher.notes}
-                  </p>
-                )}
-              </div>
-              <div className="p-3 space-y-2">
-                <span className="font-bold block text-slate-900">اعتماد مدير/ة المدرسة (الختم الرسمي):</span>
-                <span className="text-slate-800 font-semibold block">
-                  {sigs?.schoolPrincipal?.name || h.principalName || '....................'}
-                </span>
-                <span className="text-[10px] text-slate-600 block">
-                  التاريخ: {toArabicDigits(sigs?.schoolPrincipal?.date || h.date || '..../..../........')}
-                </span>
-                {sigs?.schoolPrincipal?.directives && (
-                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
-                    <span className="font-bold block">التوجيهات:</span> {sigs.schoolPrincipal.directives}
-                  </p>
-                )}
-              </div>
-              <div className="p-3 space-y-2">
-                <span className="font-bold block text-slate-900">اعتماد المشرف/ة التربوي/ة:</span>
-                <span className="text-slate-800 font-semibold block">
-                  {sigs?.educationalSupervisor?.name || h.supervisorName || '....................'}
-                </span>
-                <span className="text-[10px] text-slate-600 block">
-                  التاريخ: {toArabicDigits(sigs?.educationalSupervisor?.date || h.date || '..../..../........')}
-                </span>
-                {sigs?.educationalSupervisor?.directives && (
-                  <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
-                    <span className="font-bold block">التوجيهات:</span> {sigs.educationalSupervisor.directives}
-                  </p>
-                )}
+          <div className="mt-8">
+            <div className="bg-slate-100 p-2 font-bold text-xs md:text-sm text-black border-t-2 border-x-2 border-black text-center">
+              رابعاً: التوقيع والاعتماد الرسمي
+            </div>
+            <div className="border border-black text-xs">
+              <div className="grid grid-cols-3 divide-x divide-x-reverse divide-black text-center">
+                <div className="p-3 space-y-2">
+                  <span className="font-bold block text-slate-900">إعداد وتوقيع المعلم/ة:</span>
+                  <span className="text-slate-800 font-semibold block">
+                    {sigs?.teacher?.name || h.teacherName || '....................'}
+                  </span>
+                  <span className="text-[10px] text-slate-600 block">
+                    التاريخ: {toArabicDigits(sigs?.teacher?.date || h.date || '..../..../........')}
+                  </span>
+                  {sigs?.teacher?.notes && (
+                    <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                      <span className="font-bold block">ملاحظات:</span> {sigs.teacher.notes}
+                    </p>
+                  )}
+                </div>
+                <div className="p-3 space-y-2">
+                  <span className="font-bold block text-slate-900">اعتماد مدير/ة المدرسة (الختم الرسمي):</span>
+                  <span className="text-slate-800 font-semibold block">
+                    {sigs?.schoolPrincipal?.name || h.principalName || '....................'}
+                  </span>
+                  <span className="text-[10px] text-slate-600 block">
+                    التاريخ: {toArabicDigits(sigs?.schoolPrincipal?.date || h.date || '..../..../........')}
+                  </span>
+                  {sigs?.schoolPrincipal?.directives && (
+                    <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                      <span className="font-bold block">التوجيهات:</span> {sigs.schoolPrincipal.directives}
+                    </p>
+                  )}
+                </div>
+                <div className="p-3 space-y-2">
+                  <span className="font-bold block text-slate-900">اعتماد المشرف/ة التربوي/ة:</span>
+                  <span className="text-slate-800 font-semibold block">
+                    {sigs?.educationalSupervisor?.name || h.supervisorName || '....................'}
+                  </span>
+                  <span className="text-[10px] text-slate-600 block">
+                    التاريخ: {toArabicDigits(sigs?.educationalSupervisor?.date || h.date || '..../..../........')}
+                  </span>
+                  {sigs?.educationalSupervisor?.directives && (
+                    <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1 mt-1 text-right">
+                      <span className="font-bold block">التوجيهات:</span> {sigs.educationalSupervisor.directives}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

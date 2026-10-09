@@ -39,7 +39,7 @@ import {
   PALESTINIAN_MINISTRY_HOLIDAYS,
   formatDateToIso,
 } from '../utils/palestinianCalendar';
-import { parseDateParts } from '../utils/executivePlanDefaults';
+import { parseDateParts, getStageOrdinal, formatStageNameWithOrdinal } from '../utils/executivePlanDefaults';
 import { getCurrentSemesterName } from '../utils/academicYear';
 import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
 import { EducationalStagePickerModal } from './EducationalStagePickerModal';
@@ -280,14 +280,14 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-lg">
-              ١
+            <div className="min-w-14 px-3 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
+              أولاً
             </div>
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-1">
                 ⭐ النموذج الرئيسي المعتمد (SMART + GRASPS)
               </div>
-              <h2 className="text-lg sm:text-xl font-black">نموذج خطة تحضير درس (البيانات العامة وكفايات التعلّم)</h2>
+              <h2 className="text-lg sm:text-xl font-black">أولاً: البيانات العامة وكفايات التعلّم والأهداف</h2>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -795,11 +795,11 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-linear-to-r from-slate-900 via-emerald-950 to-teal-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-lg">
-              ٢
+            <div className="min-w-14 px-3 h-10 rounded-xl bg-teal-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
+              ثانياً
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black">تفاصيل خطة التنفيذ التنفيذية للدرس</h2>
+              <h2 className="text-lg sm:text-xl font-black">ثانياً: تفاصيل خطة التنفيذ التنفيذية للدرس</h2>
               <p className="text-xs text-teal-200">
                 الأهداف • الإجراءات والأنشطة • التقويم • المصادر والأدوات • الزمن
               </p>
@@ -835,13 +835,13 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                 key={st.id}
                 type="button"
                 onClick={() => setActiveStageTab(st.id)}
-                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
                   activeStageTab === st.id
                     ? 'bg-teal-400 text-slate-950 shadow-xs'
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                مرحلة {toArabicDigits(st.id)}
+                {getStageOrdinal(st.id)}
               </button>
             ))}
           </div>
@@ -860,10 +860,12 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                   {/* Stage Top Bar */}
                   <div className="bg-slate-100 p-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200">
                     <div className="flex items-center gap-2.5">
-                      <span className="w-7 h-7 rounded-lg bg-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0">
-                        {toArabicDigits(stage.id)}
+                      <span className="px-2.5 h-7 rounded-lg bg-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        {getStageOrdinal(stage.id)}
                       </span>
-                      <h3 className="text-sm sm:text-base font-black text-slate-900">{stage.stageName}</h3>
+                      <h3 className="text-sm sm:text-base font-black text-slate-900">
+                        {formatStageNameWithOrdinal(stage.stageName, stage.id)}
+                      </h3>
                     </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -1330,11 +1332,11 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       {/* 3. ملاحظات وتأملات المعلم حول الدرس (صفحة 4 في الوثيقة) */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-linear-to-r from-amber-700 via-amber-800 to-slate-900 text-white p-4 sm:p-5 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-lg">
-            ٣
+          <div className="min-w-14 px-3 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
+            ثالثاً
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black">ملاحظات وتأملات المعلم حول الدرس</h2>
+            <h2 className="text-lg sm:text-xl font-black">ثالثاً: ملاحظات وتأملات المعلم حول الدرس</h2>
             <p className="text-xs text-amber-200">
               نقاط القوة • جوانب تحتاج إلى تحسين وتطوير • مقترحات للدروس القادمة
             </p>
@@ -1344,7 +1346,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
         <div className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="block text-xs font-black text-slate-800 mb-1">
-              نقاط القوة في تنفيذ الدرس:
+              أولاً: نقاط القوة في تنفيذ الدرس:
             </label>
             <textarea
               rows={2}
@@ -1365,7 +1367,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
 
           <div>
             <label className="block text-xs font-black text-slate-800 mb-1">
-              جوانب تحتاج إلى تحسين وتطوير:
+              ثانياً: جوانب تحتاج إلى تحسين وتطوير:
             </label>
             <textarea
               rows={2}
@@ -1386,7 +1388,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
 
           <div>
             <label className="block text-xs font-black text-slate-800 mb-1">
-              مقترحات للدروس القادمة:
+              ثالثاً: مقترحات للدروس القادمة:
             </label>
             <textarea
               rows={2}
@@ -1436,7 +1438,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
         }}
         title="رابعاً: التوقيع والاعتماد الرسمي"
         subtitle="اعتمادات المعلم المنفذ، الإدارة المدرسية، والإشراف التربوي المعتمد"
-        stepNumber="٤"
+        stepNumber="رابعاً"
         headerDefaults={{
           teacherName: plan.header.teacherName,
           principalName: plan.header.principalName,

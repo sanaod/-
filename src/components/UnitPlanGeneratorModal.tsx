@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES, EDUCATIONAL_STAGES, EducationalResource } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
-import { ensureExecutiveData } from '../utils/executivePlanDefaults';
+import { ensureExecutiveData, formatStageNameWithOrdinal } from '../utils/executivePlanDefaults';
 
 export interface UnitUploadedResource {
   id: string;
@@ -541,7 +541,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
             </tr>
           </table>
 
-          <h3 style="color: #0f172a; border-bottom: 1px solid #94a3b8; padding-bottom: 4px;">تفاصيل خطة التنفيذ التنفيذية للدرس:</h3>
+          <h3 style="color: #0f172a; border-bottom: 1px solid #94a3b8; padding-bottom: 4px;">ثانياً: تفاصيل خطة التنفيذ التنفيذية للدرس:</h3>
           <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 15px;">
             <tr style="background-color: #065f46; color: white;">
               <th style="width: 15%;">الأهداف</th>
@@ -552,7 +552,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
             </tr>
             ${exec.executiveStages.map((st) => `
               <tr>
-                <td><strong>${st.stageName}</strong><br><small>${st.goals}</small></td>
+                <td><strong>${formatStageNameWithOrdinal(st.stageName, st.id)}</strong><br><small>${st.goals}</small></td>
                 <td>
                   ${st.procedures.mainDescription}
                   ${st.id === 1 && st.procedures.resourceName ? `<br><strong>المصدر:</strong> ${st.procedures.resourceName}` : ''}
@@ -566,11 +566,11 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
             `).join('')}
           </table>
 
-          <h3 style="color: #0f172a;">ملاحظات وتأملات المعلم حول الدرس:</h3>
+          <h3 style="color: #0f172a;">ثالثاً: ملاحظات وتأملات المعلم حول الدرس:</h3>
           <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: right;">
-            <tr><td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">نقاط القوة:</td><td>${exec.teacherReflection.strengths}</td></tr>
-            <tr><td style="font-weight: bold; background-color: #f1f5f9;">جوانب تحتاج إلى تحسين:</td><td>${exec.teacherReflection.improvementsNeeded}</td></tr>
-            <tr><td style="font-weight: bold; background-color: #f1f5f9;">مقترحات للدروس القادمة:</td><td>${exec.teacherReflection.futureSuggestions}</td></tr>
+            <tr><td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">أولاً: نقاط القوة:</td><td>${exec.teacherReflection.strengths}</td></tr>
+            <tr><td style="font-weight: bold; background-color: #f1f5f9;">ثانياً: جوانب تحتاج إلى تحسين:</td><td>${exec.teacherReflection.improvementsNeeded}</td></tr>
+            <tr><td style="font-weight: bold; background-color: #f1f5f9;">ثالثاً: مقترحات للدروس القادمة:</td><td>${exec.teacherReflection.futureSuggestions}</td></tr>
           </table>
         </div>
         `;

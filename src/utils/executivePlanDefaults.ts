@@ -4,7 +4,7 @@ import {
   LessonPlan,
   PlanTemplateType,
 } from '../types/lessonPlan';
-import { formatDateDMY } from './arabicNumerals';
+import { formatDateDMY, toArabicDigits } from './arabicNumerals';
 import { getCurrentSemesterName } from './academicYear';
 
 export function getArabicDayOfWeek(dateStr?: string): string {
@@ -174,7 +174,7 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
     executiveStages: [
       {
         id: 1,
-        stageName: '١. تقديم الدرس (التهيئة والتحفيز)',
+        stageName: 'أولاً: تقديم الدرس (التهيئة والتحفيز)',
         goals: 'إثارة دافعية الطلبة وربط التعلم السابق بالجديد واستكشاف المفهوم عبر وسيط تعليمي محفز.',
         procedures: {
           mainDescription: p1Actions,
@@ -195,7 +195,7 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
       },
       {
         id: 2,
-        stageName: '٢. عرض الأهداف وتقديم المادة',
+        stageName: 'ثانياً: عرض الأهداف وتقديم المادة',
         goals: 'مشاركة أهداف التعلم، شرح المادة النشطة، وبناء المفاهيم تدريجياً من المحسوس إلى المجرد.',
         procedures: {
           mainDescription: p2Actions,
@@ -208,7 +208,7 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
       },
       {
         id: 3,
-        stageName: '٣. مهمة التقويم (تطبيق المعارف والمهارات)',
+        stageName: 'ثالثاً: مهمة التقويم (تطبيق المعارف والمهارات)',
         goals: 'تطبيق مباشر للمفاهيم عبر مهمة تقويم أصيلة واقعية تقيس عمق الفهم وتحفز التفكير التأملي.',
         procedures: {
           mainDescription: 'مهمة تقويم أصيلة مبنية على نموذج GRASPS مع خطوات تنفيذ واضحة ومقياس متدرج.',
@@ -220,7 +220,7 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
       },
       {
         id: 4,
-        stageName: '٤. ورقة العمل التفاعلية (إن لزمت)',
+        stageName: 'رابعاً: ورقة العمل التفاعلية (إن لزمت)',
         goals: 'تثبيت المهارات الفردية وتوفير تدريب علاجي وإثرائي موجه مع تقديم تغذية راجعة فورية.',
         procedures: {
           mainDescription: 'تنفيذ ورقة العمل التفاعلية فردياً أو جماعياً لترسيخ المفاهيم وقياس التمكن الذاتي.',
@@ -233,7 +233,7 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
       },
       {
         id: 5,
-        stageName: '٥. الغلق (التلخيص والختام)',
+        stageName: 'خامساً: الغلق (التلخيص والختام)',
         goals: 'تلخيص أبرز ملامح الدرس، تثبيت النتاجات، وتقييم ختامي سريع لقياس تحقق الأهداف.',
         procedures: {
           mainDescription: p4Actions,
@@ -260,33 +260,78 @@ export function createDefaultExecutiveData(context?: Partial<LessonPlan>): Execu
 }
 
 /**
+ * Returns ordinal string (أولاً، ثانياً، ثالثاً، رابعاً، خامساً) for stage id
+ */
+export function getStageOrdinal(id: number): string {
+  switch (id) {
+    case 1:
+      return 'أولاً';
+    case 2:
+      return 'ثانياً';
+    case 3:
+      return 'ثالثاً';
+    case 4:
+      return 'رابعاً';
+    case 5:
+      return 'خامساً';
+    default:
+      return `المرحلة ${toArabicDigits(id)}`;
+  }
+}
+
+/**
+ * Ensures stage name starts with an Arabic ordinal (أولاً: ...، ثانياً: ...، etc.) instead of numbers
+ */
+export function formatStageNameWithOrdinal(stageName: string, id: number): string {
+  const ordinal = getStageOrdinal(id);
+  if (!stageName) {
+    const defaultLabels: Record<number, string> = {
+      1: 'تقديم الدرس (التهيئة والتحفيز)',
+      2: 'عرض الأهداف وتقديم المادة',
+      3: 'مهمة التقويم (تطبيق المعارف والمهارات)',
+      4: 'ورقة العمل التفاعلية (إن لزمت)',
+      5: 'الغلق (التلخيص والختام)',
+    };
+    return `${ordinal}: ${defaultLabels[id] || 'مرحلة تنفيذية'}`;
+  }
+
+  const trimmed = stageName.trim();
+  if (/^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً)/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Remove leading numeric prefixes like "١.", "1.", "١ -", "1 -", "المرحلة الأولى:", etc.
+  const cleaned = trimmed.replace(/^([0-9١-٩]+[\s.:\-–—]+|المرحلة\s+[0-9١-٩]+\s*[:\-–—]?\s*)/u, '').trim();
+  return `${ordinal}: ${cleaned}`;
+}
+
+/**
  * Ensures a LessonPlan has fully synchronized executiveData
  */
 export function ensureExecutiveData(plan: LessonPlan): LessonPlan {
   if (plan.executiveData && plan.executiveData.executiveStages?.length === 5) {
     const tf = plan.executiveData.timeframeDetails;
     const defaultSemester = plan.header.semester || getCurrentSemesterName();
-    const needsSemesterFix = !tf?.startSemester || !tf?.endSemester;
 
-    if (needsSemesterFix && tf) {
-      return {
-        ...plan,
-        templateType: plan.templateType || 'executive',
-        executiveData: {
-          ...plan.executiveData,
-          timeframeDetails: {
-            ...tf,
-            startSemester: tf.startSemester || defaultSemester,
-            endSemester: tf.endSemester || defaultSemester,
-            autoUpdateDate: tf.autoUpdateDate !== undefined ? tf.autoUpdateDate : true,
-          },
-        },
-      };
-    }
+    // Ensure all 5 stages use proper Arabic ordinals (أولاً، ثانياً، ثالثاً، رابعاً، خامساً)
+    const normalizedStages = plan.executiveData.executiveStages.map((st) => ({
+      ...st,
+      stageName: formatStageNameWithOrdinal(st.stageName, st.id),
+    }));
 
     return {
       ...plan,
       templateType: plan.templateType || 'executive',
+      executiveData: {
+        ...plan.executiveData,
+        timeframeDetails: {
+          ...tf,
+          startSemester: tf?.startSemester || defaultSemester,
+          endSemester: tf?.endSemester || defaultSemester,
+          autoUpdateDate: tf?.autoUpdateDate !== undefined ? tf.autoUpdateDate : true,
+        },
+        executiveStages: normalizedStages,
+      },
     };
   }
 

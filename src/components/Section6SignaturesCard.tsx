@@ -54,7 +54,7 @@ export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           {stepNumber ? (
-            <div className="w-10 h-10 rounded-xl bg-emerald-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-lg">
+            <div className="min-w-10 px-2.5 h-10 rounded-xl bg-emerald-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
               {stepNumber}
             </div>
           ) : (
