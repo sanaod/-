@@ -2,22 +2,35 @@ import React, { useState } from 'react';
 import { Section4LearningEnvironment } from '../types/lessonPlan';
 import { Users2, HeartHandshake, Smile, Edit3, Check, Printer } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { PinSectionButton } from './PinSectionButton';
 
 interface Section4EnvironmentCardProps {
   data: Section4LearningEnvironment;
   onOpenParentCardModal: () => void;
   onChange: (data: Section4LearningEnvironment) => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  sectionId?: string;
 }
 
 export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = ({
   data,
   onOpenParentCardModal,
   onChange,
+  isPinned,
+  onTogglePin,
+  sectionId = 'sec-adapt-4',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden text-right">
+    <div
+      id={sectionId}
+      dir="rtl"
+      className={`bg-white rounded-2xl shadow-xs border overflow-hidden text-right transition-all duration-300 ${
+        isPinned ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md' : 'border-slate-200'
+      }`}
+    >
       {/* Header */}
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -35,6 +48,16 @@ export const Section4EnvironmentCard: React.FC<Section4EnvironmentCardProps> = (
         </div>
 
         <div className="flex items-center gap-2">
+          {onTogglePin && (
+            <PinSectionButton
+              sectionId={sectionId}
+              sectionTitle="بيئة التعلم والشراكة الوالدية"
+              isPinned={!!isPinned}
+              onToggle={() => onTogglePin()}
+              variant="dark"
+            />
+          )}
+
           <button
             onClick={onOpenParentCardModal}
             className="px-3 py-1.5 bg-teal-600/80 hover:bg-teal-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-teal-400/40"

@@ -45,6 +45,7 @@ import { getCurrentSemesterName } from '../utils/academicYear';
 import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
 import { EducationalStagePickerModal } from './EducationalStagePickerModal';
 import { Section6SignaturesCard } from './Section6SignaturesCard';
+import { PinSectionButton } from './PinSectionButton';
 
 interface ExecutivePlanEditorProps {
   plan: LessonPlan;
@@ -53,6 +54,8 @@ interface ExecutivePlanEditorProps {
   onOpenResourcesModal?: () => void;
   onOpenAiModal?: () => void;
   onOpenShareModal?: () => void;
+  pinnedSections?: string[];
+  onTogglePinSection?: (sectionId: string) => void;
 }
 
 export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
@@ -62,6 +65,8 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   onOpenResourcesModal,
   onOpenAiModal,
   onOpenShareModal,
+  pinnedSections = [],
+  onTogglePinSection,
 }) => {
   const data: ExecutivePlanData = plan.executiveData!;
 
@@ -280,7 +285,14 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   return (
     <div className="space-y-6 text-slate-800">
       {/* 1. Official Header Card: المؤسسة والبيانات العامة والترويسة الرسمية */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div
+        id="sec-exec-1"
+        className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 ${
+          pinnedSections.includes('sec-exec-1')
+            ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md'
+            : 'border-slate-200'
+        }`}
+      >
         <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="min-w-14 px-3 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
@@ -294,6 +306,15 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {onTogglePinSection && (
+              <PinSectionButton
+                sectionId="sec-exec-1"
+                sectionTitle="البيانات العامة والأهداف الذكية"
+                isPinned={pinnedSections.includes('sec-exec-1')}
+                onToggle={onTogglePinSection}
+                variant="dark"
+              />
+            )}
             {onOpenAiModal && (
               <button
                 type="button"
@@ -328,6 +349,25 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             )}
           </div>
         </div>
+
+        {/* Pinned Section Notification Banner */}
+        {pinnedSections.includes('sec-exec-1') && (
+          <div className="bg-amber-400/15 border-b border-amber-400/40 px-4 py-2 flex items-center justify-between text-xs text-amber-950 font-bold">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📌</span>
+              <span>هذا القسم مُثبّت: يظل محتوى الأهداف الذكية وبيانات الدرس معروضاً أمامك في الشريط العائم أثناء كتابة باقي مراحل الخطة.</span>
+            </div>
+            {onTogglePinSection && (
+              <button
+                type="button"
+                onClick={() => onTogglePinSection('sec-exec-1')}
+                className="text-[11px] text-amber-900 font-black hover:underline cursor-pointer bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded border border-amber-300"
+              >
+                إلغاء التثبيت ✕
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="p-4 sm:p-6 space-y-6">
           {/* Main Metadata Grid */}
@@ -806,7 +846,14 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       </div>
 
       {/* 2. جدول تفاصيل خطة التنفيذ التنفيذية للدرس (المراحل الخمس) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div
+        id="sec-exec-2"
+        className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 ${
+          pinnedSections.includes('sec-exec-2')
+            ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md'
+            : 'border-slate-200'
+        }`}
+      >
         <div className="bg-linear-to-r from-slate-900 via-emerald-950 to-teal-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="min-w-14 px-3 h-10 rounded-xl bg-teal-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
@@ -822,6 +869,15 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
 
           {/* Filter / Nav tabs for stages & AI generation */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 flex-wrap">
+            {onTogglePinSection && (
+              <PinSectionButton
+                sectionId="sec-exec-2"
+                sectionTitle="خطة التنفيذ ومراحل الدرس"
+                isPinned={pinnedSections.includes('sec-exec-2')}
+                onToggle={onTogglePinSection}
+                variant="dark"
+              />
+            )}
             {onOpenAiModal && (
               <button
                 type="button"
@@ -860,6 +916,25 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Pinned Section Notification Banner */}
+        {pinnedSections.includes('sec-exec-2') && (
+          <div className="bg-amber-400/15 border-b border-amber-400/40 px-4 py-2 flex items-center justify-between text-xs text-amber-950 font-bold">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📌</span>
+              <span>هذا القسم مُثبّت: تظل مراحل الحصة والأنشطة والزمن معروضة أمامك في الشريط العائم أثناء التمرير.</span>
+            </div>
+            {onTogglePinSection && (
+              <button
+                type="button"
+                onClick={() => onTogglePinSection('sec-exec-2')}
+                className="text-[11px] text-amber-900 font-black hover:underline cursor-pointer bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded border border-amber-300"
+              >
+                إلغاء التثبيت ✕
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Detailed Stages List */}
         <div className="p-4 sm:p-6 space-y-6">
@@ -1344,18 +1419,56 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       </div>
 
       {/* 3. ملاحظات وتأملات المعلم حول الدرس (صفحة 4 في الوثيقة) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-linear-to-r from-amber-700 via-amber-800 to-slate-900 text-white p-4 sm:p-5 flex items-center gap-3">
-          <div className="min-w-14 px-3 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
-            ثالثاً
+      <div
+        id="sec-exec-3"
+        className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 ${
+          pinnedSections.includes('sec-exec-3')
+            ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md'
+            : 'border-slate-200'
+        }`}
+      >
+        <div className="bg-linear-to-r from-amber-700 via-amber-800 to-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="min-w-14 px-3 h-10 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-md text-sm sm:text-base">
+              ثالثاً
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black">ثالثاً: ملاحظات وتأملات المعلم حول الدرس</h2>
+              <p className="text-xs text-amber-200">
+                نقاط القوة • جوانب تحتاج إلى تحسين وتطوير • مقترحات للدروس القادمة
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-black">ثالثاً: ملاحظات وتأملات المعلم حول الدرس</h2>
-            <p className="text-xs text-amber-200">
-              نقاط القوة • جوانب تحتاج إلى تحسين وتطوير • مقترحات للدروس القادمة
-            </p>
-          </div>
+
+          {onTogglePinSection && (
+            <PinSectionButton
+              sectionId="sec-exec-3"
+              sectionTitle="ملاحظات وتأملات المعلم"
+              isPinned={pinnedSections.includes('sec-exec-3')}
+              onToggle={onTogglePinSection}
+              variant="dark"
+            />
+          )}
         </div>
+
+        {/* Pinned Section Notification Banner */}
+        {pinnedSections.includes('sec-exec-3') && (
+          <div className="bg-amber-400/15 border-b border-amber-400/40 px-4 py-2 flex items-center justify-between text-xs text-amber-950 font-bold">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📌</span>
+              <span>هذا القسم مُثبّت: تظل ملاحظات وتأملات الدرس معروضة أمامك في الشريط العائم.</span>
+            </div>
+            {onTogglePinSection && (
+              <button
+                type="button"
+                onClick={() => onTogglePinSection('sec-exec-3')}
+                className="text-[11px] text-amber-900 font-black hover:underline cursor-pointer bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded border border-amber-300"
+              >
+                إلغاء التثبيت ✕
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="p-4 sm:p-6 space-y-4">
           <div>
@@ -1424,42 +1537,47 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       </div>
 
       {/* 4. التوقيع والاعتماد الرسمي (كما في النموذج الثاني) */}
-      <Section6SignaturesCard
-        data={
-          plan.section6Signatures || {
-            teacher: {
-              name: plan.header.teacherName || '',
-              date: plan.header.date || plan.header.startDate || '',
-              notes: '',
-            },
-            schoolPrincipal: {
-              name: plan.header.principalName || '',
-              date: plan.header.date || plan.header.startDate || '',
-              directives: '',
-            },
-            educationalSupervisor: {
-              name: plan.header.supervisorName || '',
-              date: plan.header.date || plan.header.startDate || '',
-              directives: '',
-            },
+      <div id="sec-exec-4">
+        <Section6SignaturesCard
+          data={
+            plan.section6Signatures || {
+              teacher: {
+                name: plan.header.teacherName || '',
+                date: plan.header.date || plan.header.startDate || '',
+                notes: '',
+              },
+              schoolPrincipal: {
+                name: plan.header.principalName || '',
+                date: plan.header.date || plan.header.startDate || '',
+                directives: '',
+              },
+              educationalSupervisor: {
+                name: plan.header.supervisorName || '',
+                date: plan.header.date || plan.header.startDate || '',
+                directives: '',
+              },
+            }
           }
-        }
-        onChange={(signatures) => {
-          onChange({
-            ...plan,
-            section6Signatures: signatures,
-          });
-        }}
-        title="رابعاً: التوقيع والاعتماد الرسمي"
-        subtitle="اعتمادات المعلم المنفذ، الإدارة المدرسية، والإشراف التربوي المعتمد"
-        stepNumber="رابعاً"
-        headerDefaults={{
-          teacherName: plan.header.teacherName,
-          principalName: plan.header.principalName,
-          supervisorName: plan.header.supervisorName,
-          date: plan.header.date || plan.header.startDate,
-        }}
-      />
+          onChange={(signatures) => {
+            onChange({
+              ...plan,
+              section6Signatures: signatures,
+            });
+          }}
+          title="رابعاً: التوقيع والاعتماد الرسمي"
+          subtitle="اعتمادات المعلم المنفذ، الإدارة المدرسية، والإشراف التربوي المعتمد"
+          stepNumber="رابعاً"
+          headerDefaults={{
+            teacherName: plan.header.teacherName,
+            principalName: plan.header.principalName,
+            supervisorName: plan.header.supervisorName,
+            date: plan.header.date || plan.header.startDate,
+          }}
+          isPinned={pinnedSections.includes('sec-exec-4')}
+          onTogglePin={() => onTogglePinSection?.('sec-exec-4')}
+          sectionId="sec-exec-4"
+        />
+      </div>
 
       {/* مودال أجندة العام الدراسي لتغيير التاريخ في خانتي التاريخ */}
       <AcademicYearAgendaModal

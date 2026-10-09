@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   PieChart as PieIcon,
   BarChart2,
+  BarChart3,
   Compass,
   AlertCircle,
   HelpCircle,
@@ -62,6 +63,7 @@ import {
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
+import { TeacherVisualStatsDashboard } from './TeacherVisualStatsDashboard';
 import { TeacherMonthlyCalendar } from './TeacherMonthlyCalendar';
 import { StudentAssessmentDashboard } from './StudentAssessmentDashboard';
 import { CompetencyDistributionDashboard } from './CompetencyDistributionDashboard';
@@ -74,6 +76,8 @@ import {
 } from '../types/dailyReminder';
 import { loadDailyReminders, saveDailyReminders } from '../utils/dailyRemindersStorage';
 import { formatDateToIso } from '../utils/palestinianCalendar';
+import { SearchScope, matchesPlanSearch } from '../utils/arabicSearch';
+import { HighlightMatch } from './HighlightMatch';
 
 export type FolderIndexingMode = 'by_subject' | 'by_teacher' | 'tree' | 'table';
 
@@ -96,6 +100,7 @@ interface TeacherDashboardProps {
   onOpenBackupRestore?: () => void;
   onOpenAssessmentSimulatorModal?: () => void;
   onOpenExecutivePlan?: () => void;
+  onOpenAuthenticTaskModal?: () => void;
 }
 
 // Subject color mappings
@@ -243,6 +248,7 @@ const STANDARD_PHASES = [
 const DEFAULT_WIDGET_ORDER = [
   'smart_alerts',
   'kpi_metrics',
+  'visual_stats',
   'achievements_visualizer',
   'daily_reminders',
   'monthly_calendar',
@@ -256,6 +262,7 @@ const DEFAULT_WIDGET_ORDER = [
 const WIDGET_TITLES: Record<string, string> = {
   smart_alerts: 'التنبيهات والمواعيد الذكية للخطط (Smart Alerts)',
   kpi_metrics: 'بطاقات مؤشرات الأداء الرئيسية (KPIs)',
+  visual_stats: 'لوحة الإحصائيات البصرية (Recharts) للدروس والمهام وتوزيع الوحدات',
   achievements_visualizer: 'الرسوم البيانية لإنجازات المعلم والنمو الحجمي',
   daily_reminders: 'الملاحظات التذكيرية والمهام اليومية المجدولة',
   monthly_calendar: 'تقويم التخطيط والمهام التربوية الشهرية',
@@ -377,12 +384,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenBackupRestore,
   onOpenAssessmentSimulatorModal,
   onOpenExecutivePlan,
+  onOpenAuthenticTaskModal,
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
   const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('all');
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchScope, setSearchScope] = useState<SearchScope>('all');
   const [chartMetric, setChartMetric] = useState<'plans' | 'periods'>('plans');
   const [hoveredPhaseIndex, setHoveredPhaseIndex] = useState<number | null>(null);
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
@@ -632,7 +641,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return map;
   }, [plans]);
 
-  // Filtered plans
+  // Filtered plans (اسم الدرس أو المادة أو الصف عبر matchesPlanSearch)
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
       const matchSubject =
@@ -649,13 +658,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         plan.header.grade.toLowerCase().includes(selectedGradeFilter.toLowerCase());
       const matchSearch =
         searchQuery.trim() === '' ||
-        plan.header.lessonTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        plan.header.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        plan.header.grade.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        plan.header.teacherName.toLowerCase().includes(searchQuery.toLowerCase());
+        matchesPlanSearch(plan, searchQuery, searchScope);
       return matchSubject && matchTeacher && matchStage && matchGrade && matchSearch;
     });
-  }, [plans, selectedSubjectFilter, selectedTeacherFilter, selectedStageFilter, selectedGradeFilter, searchQuery]);
+  }, [plans, selectedSubjectFilter, selectedTeacherFilter, selectedStageFilter, selectedGradeFilter, searchQuery, searchScope]);
 
   const isFilterActive =
     selectedSubjectFilter !== 'all' ||
@@ -670,12 +676,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     setSelectedStageFilter('all');
     setSelectedGradeFilter('all');
     setSearchQuery('');
+    setSearchScope('all');
   };
 
-  // Toggle helpers for folders (Default open if not explicitly set to false)
-  const isSubjectOpen = (subject: string) => expandedSubjectFolders[subject] !== false;
-  const isTeacherOpen = (teacher: string) => expandedTeacherFolders[teacher] !== false;
-  const isTreeSubjectOpen = (subject: string) => expandedTreeSubjects[subject] !== false;
+  // Toggle helpers for folders (Default open if not explicitly set to false, or keep open during active search)
+  const isSubjectOpen = (subject: string) => {
+    if (searchQuery.trim() !== '') return true;
+    return expandedSubjectFolders[subject] !== false;
+  };
+  const isTeacherOpen = (teacher: string) => {
+    if (searchQuery.trim() !== '') return true;
+    return expandedTeacherFolders[teacher] !== false;
+  };
+  const isTreeSubjectOpen = (subject: string) => {
+    if (searchQuery.trim() !== '') return true;
+    return expandedTreeSubjects[subject] !== false;
+  };
 
   const toggleSubjectFolder = (subject: string) => {
     setExpandedSubjectFolders((prev) => ({
@@ -1290,6 +1306,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </button>
             )}
 
+            <a
+              href="#teacher-visual-stats-dashboard"
+              className="px-3.5 py-2 bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs hover:shadow-md active:scale-97 cursor-pointer border border-emerald-400/80 ring-1 ring-emerald-400/30"
+              title="الانتقال المباشر إلى لوحة الإحصائيات البصرية (Recharts) لمتابعة الدروس المحضرة والمهام الأصيلة والوحدات"
+            >
+              <BarChart3 className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>لوحة الإحصائيات البصرية (Recharts) 📊</span>
+            </a>
+
             <button
               onClick={() => setIsQrModalOpen(true)}
               className="px-3.5 py-2 bg-linear-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-97 cursor-pointer border border-teal-400/80"
@@ -1353,7 +1378,219 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       </div>
 
-      {/* Interactive Global Filter Toolbar: Subject, Grade Level & Search */}
+      {/* 1. Main Search Feature Panel: Dedicated Lesson Plans Search (البحث في الخطط المخزنة: اسم الدرس، المادة، الصف) */}
+      <div className="bg-white border-2 border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Search className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 font-['Tajawal'] flex items-center gap-1.5">
+                  <span>البحث في الخطط المخزنة</span>
+                  <span className="text-xs font-normal text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    ميزة البحث الذكي
+                  </span>
+                </h3>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                البحث السريع والفوري في الخطط المخزنة بناءً على اسم الدرس، أو المادة الدراسية، أو الصف الدراسي
+              </p>
+            </div>
+          </div>
+
+          {/* Scope Selector Tabs (كافة الحقول / اسم الدرس / المادة الدراسية / الصف الدراسي) */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80 self-start md:self-auto overflow-x-auto max-w-full no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setSearchScope('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                searchScope === 'all'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>كافة الحقول</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchScope('lessonTitle')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                searchScope === 'lessonTitle'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>اسم الدرس</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchScope('subject')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                searchScope === 'subject'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>المادة</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchScope('grade')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                searchScope === 'grade'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>الصف</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Big Search Input with Clear Button and Scope Badge */}
+        <div className="relative">
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Search className="w-4 h-4 text-emerald-600" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={
+              searchScope === 'lessonTitle'
+                ? 'ابحث باسم أو عنوان الدرس (مثال: محيط ومساحة الدائرة، التنفس الخلوي، كان وأخواتها)...'
+                : searchScope === 'subject'
+                ? 'ابحث بالمادة الدراسية (مثال: الرياضيات، العلوم الحياتية، اللغة العربية، التربية الإسلامية)...'
+                : searchScope === 'grade'
+                ? 'ابحث بالصف الدراسي (مثال: الصف الأول، الرابع، السابع، العاشر، الثاني عشر / التوجيهي)...'
+                : 'ابحث باسم الدرس، أو المادة الدراسية، أو الصف الدراسي...'
+            }
+            className="w-full text-xs sm:text-sm bg-slate-50 text-slate-900 rounded-2xl pr-10 pl-24 py-2.5 sm:py-3 border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-inner font-medium"
+          />
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="px-2 py-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                title="مسح نص البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">مسح</span>
+              </button>
+            )}
+            <span className="text-[10px] text-slate-500 bg-slate-100 font-bold px-2 py-1 rounded-md border border-slate-200 hidden sm:inline">
+              {searchScope === 'lessonTitle'
+                ? 'نطاق: اسم الدرس'
+                : searchScope === 'subject'
+                ? 'نطاق: المادة'
+                : searchScope === 'grade'
+                ? 'نطاق: الصف'
+                : 'نطاق: كافة الحقول'}
+            </span>
+          </div>
+        </div>
+
+        {/* Quick Suggestion Chips */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs pt-0.5">
+          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 shrink-0 ml-1">
+            <Sparkles className="w-3 h-3 text-amber-500" />
+            <span>اقتراحات بحث سريعة:</span>
+          </span>
+
+          {/* Subject suggestion pills */}
+          {['الرياضيات', 'العلوم', 'اللغة العربية', 'التربية الإسلامية', 'التكنولوجيا'].map((sub) => (
+            <button
+              key={sub}
+              type="button"
+              onClick={() => {
+                setSearchScope('subject');
+                setSearchQuery(sub);
+              }}
+              className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-[11px] font-semibold border border-emerald-200/80 transition-colors cursor-pointer"
+            >
+              📚 {sub}
+            </button>
+          ))}
+
+          {/* Grade suggestion pills */}
+          {['الصف الأول', 'الصف الرابع', 'الصف الخامس', 'الصف العاشر'].map((grd) => (
+            <button
+              key={grd}
+              type="button"
+              onClick={() => {
+                setSearchScope('grade');
+                setSearchQuery(grd);
+              }}
+              className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 text-[11px] font-semibold border border-blue-200/80 transition-colors cursor-pointer"
+            >
+              🎓 {grd}
+            </button>
+          ))}
+        </div>
+
+        {/* Live Search Result Alert / Feedback Bar */}
+        {searchQuery.trim() !== '' && (
+          <div
+            className={`p-3 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border transition-all ${
+              filteredPlans.length > 0
+                ? 'bg-emerald-50/90 text-emerald-950 border-emerald-200 shadow-2xs'
+                : 'bg-amber-50 text-amber-950 border-amber-200 shadow-2xs'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {filteredPlans.length > 0 ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              )}
+              <div>
+                <span className="font-bold">
+                  {filteredPlans.length > 0
+                    ? `تم العثور على (${toArabicDigits(filteredPlans.length)}) خطة تطابق «${searchQuery}»`
+                    : `لم يتم العثور على أي خطة تطابق «${searchQuery}»`}
+                </span>
+                <span className="text-slate-600 mr-1.5 font-medium">
+                  {searchScope === 'lessonTitle'
+                    ? 'في اسم الدرس'
+                    : searchScope === 'subject'
+                    ? 'في المادة الدراسية'
+                    : searchScope === 'grade'
+                    ? 'في الصف الدراسي'
+                    : 'في كافة الحقول'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              {filteredPlans.length === 0 && searchScope !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setSearchScope('all')}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                >
+                  البحث في كافة الحقول بدلاً من ذلك
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-300 transition-colors cursor-pointer"
+              >
+                مسح البحث
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Interactive Global Filter Toolbar: Subject, Stage, Teacher & Grade */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
           <div className="flex items-center gap-2">
@@ -1362,7 +1599,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               تصفية الخطط والإحصائيات المعروضة
             </h3>
             <span className="text-[11px] text-slate-500 font-medium">
-              (تحديد المادة أو الصف الدراسي لتخصيص المؤشرات)
+              (تحديد المادة أو المرحلة أو الصف لتخصيص المؤشرات البيانية)
             </span>
           </div>
 
@@ -1373,19 +1610,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             {isFilterActive && (
               <button
                 onClick={handleResetFilters}
-                className="text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 border border-rose-200"
+                className="text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 border border-rose-200 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>إلغاء التصفية</span>
+                <span>إعادة ضبط الكل</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Dropdowns & Search Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+        {/* Dropdowns Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-center">
           {/* 1. Subject Dropdown */}
-          <div className="lg:col-span-3">
+          <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
               <span>المادة الدراسية:</span>
@@ -1405,7 +1642,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
 
           {/* 2. Educational Stage Dropdown (المرحلة الدراسية) */}
-          <div className="lg:col-span-3">
+          <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
               <span>المرحلة الدراسية:</span>
@@ -1425,7 +1662,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
 
           {/* 3. Teacher Dropdown */}
-          <div className="lg:col-span-2">
+          <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1.5">
               <UserCheck className="w-3.5 h-3.5 text-teal-600" />
               <span>المعلم:</span>
@@ -1445,7 +1682,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
 
           {/* 4. Grade Level Dropdown */}
-          <div className="lg:col-span-2">
+          <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
               <span>الصف:</span>
@@ -1463,31 +1700,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               ))}
             </select>
           </div>
-
-          {/* 5. Search Keyword */}
-          <div className="lg:col-span-2">
-            <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-slate-500" />
-              <span>بحث سريع:</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="الدرس، المعلم..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-xs bg-slate-50 text-slate-800 rounded-xl pl-7 pr-2.5 py-2 border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Active Filter Tags */}
@@ -1499,7 +1711,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>المبحث: {selectedSubjectFilter}</span>
                 <button
                   onClick={() => setSelectedSubjectFilter('all')}
-                  className="text-emerald-700 hover:text-emerald-900"
+                  className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1510,7 +1722,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>المرحلة: {STAGE_CONFIG[selectedStageFilter]?.shortLabel || selectedStageFilter}</span>
                 <button
                   onClick={() => setSelectedStageFilter('all')}
-                  className="text-purple-700 hover:text-purple-900"
+                  className="text-purple-700 hover:text-purple-900 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1521,7 +1733,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>المعلم: {selectedTeacherFilter}</span>
                 <button
                   onClick={() => setSelectedTeacherFilter('all')}
-                  className="text-teal-700 hover:text-teal-900"
+                  className="text-teal-700 hover:text-teal-900 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1532,23 +1744,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>الصف: {selectedGradeFilter}</span>
                 <button
                   onClick={() => setSelectedGradeFilter('all')}
-                  className="text-blue-700 hover:text-blue-900"
+                  className="text-blue-700 hover:text-blue-900 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {searchQuery.trim() !== '' && (
-              <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-800 border border-slate-300 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
-                <span>بحث: «{searchQuery}»</span>
-                <button onClick={() => setSearchQuery('')} className="text-slate-500 hover:text-slate-800">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
+                <span>
+                  بحث ({searchScope === 'lessonTitle' ? 'الدرس' : searchScope === 'subject' ? 'المادة' : searchScope === 'grade' ? 'الصف' : 'الكل'}): «{searchQuery}»
+                </span>
+                <button onClick={() => setSearchQuery('')} className="text-emerald-700 hover:text-emerald-900 cursor-pointer">
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             <button
               onClick={handleResetFilters}
-              className="text-[11px] text-slate-500 hover:text-rose-700 underline font-medium mr-1"
+              className="text-[11px] text-slate-500 hover:text-rose-700 underline font-medium mr-1 cursor-pointer"
             >
               مسح الكل
             </button>
@@ -1779,6 +1993,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onSelectStageFilter={(stage) => setSelectedStageFilter(stage)}
         selectedTeacherFilter={selectedTeacherFilter}
         onSelectTeacherFilter={(teacher) => setSelectedTeacherFilter(teacher)}
+      />
+
+      {/* 📊 Visual Statistics Dashboard (Recharts): Prepared Lessons, Authentic Tasks, and Curriculum Units Distribution Progress */}
+      <TeacherVisualStatsDashboard
+        plans={filteredPlans}
+        onSelectPlan={onSelectPlan}
+        onOpenEditor={onOpenEditor}
+        onOpenUnitPlanModal={onOpenUnitPlanModal}
+        onOpenSemesterPlanModal={onOpenSemesterPlanModal}
+        onOpenAuthenticTaskModal={onOpenAuthenticTaskModal}
+        selectedSubjectFilter={selectedSubjectFilter}
       />
 
       {/* 📌 Daily Pedagogical Reminders & Agenda Card (الملاحظات التذكيرية والمهام اليومية المجدولة) */}
@@ -2477,21 +2702,83 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             )}
           </div>
 
-          {/* Inline Search and reset */}
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-[200px]">
-              <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          {/* Inline Search and Scope in Folders Section */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Scope selector */}
+            <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setSearchScope('all')}
+                className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                  searchScope === 'all'
+                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="البحث في كافة الحقول"
+              >
+                الكل
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchScope('lessonTitle')}
+                className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                  searchScope === 'lessonTitle'
+                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="البحث في اسم الدرس فقط"
+              >
+                الدرس
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchScope('subject')}
+                className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                  searchScope === 'subject'
+                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="البحث في المادة فقط"
+              >
+                المادة
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchScope('grade')}
+                className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                  searchScope === 'grade'
+                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="البحث في الصف فقط"
+              >
+                الصف
+              </button>
+            </div>
+
+            <div className="relative min-w-[210px]">
+              <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-600" />
               <input
                 type="text"
-                placeholder="بحث داخل المجلدات..."
+                placeholder={
+                  searchScope === 'lessonTitle'
+                    ? 'بحث باسم الدرس...'
+                    : searchScope === 'subject'
+                    ? 'بحث بالمادة...'
+                    : searchScope === 'grade'
+                    ? 'بحث بالصف...'
+                    : 'بحث بالدرس، المادة، الصف...'
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-3 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-3 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500 font-medium"
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title="مسح البحث"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -2499,9 +2786,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
             {isFilterActive && (
               <button
+                type="button"
                 onClick={handleResetFilters}
-                title="إعادة ضبط كافة الفلاتر"
-                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200"
+                title="إعادة ضبط كافة الفلاتر والبحث"
+                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -2696,7 +2984,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="flex flex-wrap items-center gap-2">
                                             <span className={`w-2 h-2 rounded-full shrink-0 ${folder.style.bg}`} />
                                             <h5 className="font-bold text-slate-900 text-sm">
-                                              {plan.header.lessonTitle || plan.title}
+                                              <HighlightMatch text={plan.header.lessonTitle || plan.title} query={searchQuery} />
                                             </h5>
                                             {isCurrent && (
                                               <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
@@ -2705,7 +2993,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                               </span>
                                             )}
                                             <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                                              {plan.header.grade} {plan.header.section && `(${plan.header.section})`}
+                                              <HighlightMatch text={plan.header.grade} query={searchQuery} /> {plan.header.section && `(${plan.header.section})`}
                                             </span>
                                           </div>
 
@@ -2940,7 +3228,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="flex flex-wrap items-center gap-2">
                                             <span className={`w-2 h-2 rounded-full shrink-0 ${s.style.bg}`} />
                                             <h5 className="font-bold text-slate-900 text-sm">
-                                              {plan.header.lessonTitle || plan.title}
+                                              <HighlightMatch text={plan.header.lessonTitle || plan.title} query={searchQuery} />
                                             </h5>
                                             {isCurrent && (
                                               <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
@@ -2949,7 +3237,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                               </span>
                                             )}
                                             <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                                              {plan.header.grade} {plan.header.section && `(${plan.header.section})`}
+                                              <HighlightMatch text={plan.header.grade} query={searchQuery} /> {plan.header.section && `(${plan.header.section})`}
                                             </span>
                                           </div>
 
@@ -3134,9 +3422,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
                                         <FileText className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                                        <span className="text-slate-900 truncate">{p.header.lessonTitle || p.title}</span>
+                                        <span className="text-slate-900 truncate">
+                                          <HighlightMatch text={p.header.lessonTitle || p.title} query={searchQuery} />
+                                        </span>
                                         <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded-xs shrink-0">
-                                          {p.header.grade}
+                                          <HighlightMatch text={p.header.grade} query={searchQuery} />
                                         </span>
                                         {isCurrent && (
                                           <span className="text-[9px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">
@@ -3248,7 +3538,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-bold text-slate-900 line-clamp-1">
-                                    {plan.header.lessonTitle || plan.title}
+                                    <HighlightMatch text={plan.header.lessonTitle || plan.title} query={searchQuery} />
                                   </span>
                                   {isCurrent && (
                                     <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-xs">
@@ -3257,7 +3547,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   )}
                                 </div>
                                 <span className="text-[11px] text-slate-500 font-medium">
-                                  مبحث: {plan.header.subject}
+                                  مبحث: <HighlightMatch text={plan.header.subject} query={searchQuery} />
                                 </span>
                               </div>
                             </div>
@@ -3273,7 +3563,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                           {/* Grade & Section */}
                           <td className="py-3 px-3 whitespace-nowrap">
-                            <span className="font-semibold text-slate-800">{plan.header.grade}</span>
+                            <span className="font-semibold text-slate-800">
+                              <HighlightMatch text={plan.header.grade} query={searchQuery} />
+                            </span>
                             {plan.header.section && (
                               <span className="text-slate-400 text-[11px]"> ({plan.header.section})</span>
                             )}

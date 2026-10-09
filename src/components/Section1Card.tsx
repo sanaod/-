@@ -2,15 +2,27 @@ import React, { useState } from 'react';
 import { Section1AdaptivePlanning } from '../types/lessonPlan';
 import { Compass, Users, BookOpen, ShieldCheck, HelpCircle, Edit3, Check, Sparkles, Loader2, Layers, Plus } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { PinSectionButton } from './PinSectionButton';
 
 interface Section1CardProps {
   data: Section1AdaptivePlanning;
   lessonContext: { subject: string; grade: string; lessonTitle: string };
   onChange: (data: Section1AdaptivePlanning) => void;
   onOpenResourcesModal?: () => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  sectionId?: string;
 }
 
-export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext, onChange, onOpenResourcesModal }) => {
+export const Section1Card: React.FC<Section1CardProps> = ({
+  data,
+  lessonContext,
+  onChange,
+  onOpenResourcesModal,
+  isPinned,
+  onTogglePin,
+  sectionId = 'sec-adapt-1',
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [refining, setRefining] = useState(false);
 
@@ -39,7 +51,13 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
   };
 
   return (
-    <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden text-right">
+    <div
+      id={sectionId}
+      dir="rtl"
+      className={`bg-white rounded-2xl shadow-xs border overflow-hidden text-right transition-all duration-300 ${
+        isPinned ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md' : 'border-slate-200'
+      }`}
+    >
       {/* Section Header */}
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -57,6 +75,16 @@ export const Section1Card: React.FC<Section1CardProps> = ({ data, lessonContext,
         </div>
 
         <div className="flex items-center gap-2">
+          {onTogglePin && (
+            <PinSectionButton
+              sectionId={sectionId}
+              sectionTitle="التخطيط التكيفي والكفايات"
+              isPinned={!!isPinned}
+              onToggle={() => onTogglePin()}
+              variant="dark"
+            />
+          )}
+
           {onOpenResourcesModal && (
             <button
               onClick={onOpenResourcesModal}

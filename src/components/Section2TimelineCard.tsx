@@ -21,6 +21,7 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { PinSectionButton } from './PinSectionButton';
 
 interface Section2TimelineCardProps {
   timeline: LessonPhase[];
@@ -30,6 +31,9 @@ interface Section2TimelineCardProps {
   onOpenWorksheetModal?: () => void;
   onChange: (timeline: LessonPhase[]) => void;
   plan?: LessonPlan;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  sectionId?: string;
 }
 
 export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
@@ -40,6 +44,9 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
   onOpenWorksheetModal,
   onChange,
   plan,
+  isPinned,
+  onTogglePin,
+  sectionId = 'sec-adapt-2',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const currentTotal = timeline.reduce((acc, p) => acc + (p.durationMinutes || 0), 0);
@@ -137,7 +144,13 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
   };
 
   return (
-    <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden text-right">
+    <div
+      id={sectionId}
+      dir="rtl"
+      className={`bg-white rounded-2xl shadow-xs border overflow-hidden text-right transition-all duration-300 ${
+        isPinned ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md' : 'border-slate-200'
+      }`}
+    >
       {/* Header */}
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -155,6 +168,16 @@ export const Section2TimelineCard: React.FC<Section2TimelineCardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {onTogglePin && (
+            <PinSectionButton
+              sectionId={sectionId}
+              sectionTitle="سير الحصة الرباعي ومراحل التنفيذ"
+              isPinned={!!isPinned}
+              onToggle={() => onTogglePin()}
+              variant="dark"
+            />
+          )}
+
           {/* Interactive Worksheet Shortcut */}
           {onOpenWorksheetModal && (
             <button

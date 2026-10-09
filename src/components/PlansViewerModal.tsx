@@ -21,6 +21,8 @@ import {
   Database,
   Share2,
 } from 'lucide-react';
+import { matchesPlanSearch } from '../utils/arabicSearch';
+import { HighlightMatch } from './HighlightMatch';
 
 interface PlansViewerModalProps {
   isOpen: boolean;
@@ -76,13 +78,9 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
       const matchSubject =
         selectedSubject === 'all' ||
         (plan.header?.subject || '').toLowerCase().includes(selectedSubject.toLowerCase());
-      const query = searchQuery.trim().toLowerCase();
       const matchSearch =
-        query === '' ||
-        (plan.header?.lessonTitle || plan.title || '').toLowerCase().includes(query) ||
-        (plan.header?.subject || '').toLowerCase().includes(query) ||
-        (plan.header?.teacherName || '').toLowerCase().includes(query) ||
-        (plan.header?.grade || '').toLowerCase().includes(query);
+        searchQuery.trim() === '' ||
+        matchesPlanSearch(plan, searchQuery, 'all');
       return matchSubject && matchSearch;
     });
   }, [plans, selectedSubject, searchQuery]);
@@ -216,7 +214,7 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
                     <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-bold text-slate-900 text-sm">
-                          {lessonTitle}
+                          <HighlightMatch text={lessonTitle} query={searchQuery} />
                         </span>
                         {isCurrent && (
                           <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
@@ -225,13 +223,13 @@ export const PlansViewerModal: React.FC<PlansViewerModalProps> = ({
                           </span>
                         )}
                         <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                          {grade}
+                          <HighlightMatch text={grade} query={searchQuery} />
                         </span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-500 pt-0.5">
                         <span className="font-semibold text-slate-700">
-                          المبحث: {subject}
+                          المبحث: <HighlightMatch text={subject} query={searchQuery} />
                         </span>
                         <span>·</span>
                         <span>المعلم: {teacher}</span>

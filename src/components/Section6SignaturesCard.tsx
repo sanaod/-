@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Section6Signatures } from '../types/lessonPlan';
 import { FileCheck, Stamp, Award, Edit3, Check, RefreshCw } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
+import { PinSectionButton } from './PinSectionButton';
 
 interface Section6SignaturesCardProps {
   data: Section6Signatures;
@@ -15,6 +16,9 @@ interface Section6SignaturesCardProps {
     supervisorName?: string;
     date?: string;
   };
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  sectionId?: string;
 }
 
 export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
@@ -24,6 +28,9 @@ export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
   subtitle = 'اعتمادات المعلم، الإدارة المدرسية، والإشراف التربوي',
   stepNumber,
   headerDefaults,
+  isPinned,
+  onTogglePin,
+  sectionId = 'sec-adapt-6',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -49,7 +56,13 @@ export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
   };
 
   return (
-    <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden text-right">
+    <div
+      id={sectionId}
+      dir="rtl"
+      className={`bg-white rounded-2xl shadow-xs border overflow-hidden text-right transition-all duration-300 ${
+        isPinned ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md' : 'border-slate-200'
+      }`}
+    >
       {/* Header */}
       <div className="bg-slate-900 text-white p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -73,6 +86,16 @@ export const Section6SignaturesCard: React.FC<Section6SignaturesCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onTogglePin && (
+            <PinSectionButton
+              sectionId={sectionId}
+              sectionTitle={title}
+              isPinned={!!isPinned}
+              onToggle={() => onTogglePin()}
+              variant="dark"
+            />
+          )}
+
           {isEditing && headerDefaults && (
             <button
               type="button"

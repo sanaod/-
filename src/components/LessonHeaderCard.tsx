@@ -11,6 +11,7 @@ import {
 } from '../utils/palestinianCalendar';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { EducationalStagePickerModal } from './EducationalStagePickerModal';
+import { PinSectionButton } from './PinSectionButton';
 
 interface LessonHeaderCardProps {
   header: LessonHeader;
@@ -21,6 +22,9 @@ interface LessonHeaderCardProps {
   onOpenAiModal?: () => void;
   onOpenShareModal?: () => void;
   resourcesCount?: number;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  sectionId?: string;
 }
 
 export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
@@ -32,6 +36,9 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
   onOpenAiModal,
   onOpenShareModal,
   resourcesCount,
+  isPinned,
+  onTogglePin,
+  sectionId = 'sec-adapt-header',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
@@ -108,7 +115,13 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
   };
 
   return (
-    <div dir="rtl" className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:shadow-md text-right">
+    <div
+      id={sectionId}
+      dir="rtl"
+      className={`bg-white rounded-2xl shadow-xs border overflow-hidden transition-all hover:shadow-md text-right ${
+        isPinned ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-md' : 'border-slate-200'
+      }`}
+    >
       {/* Top Banner */}
       <div className="bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-950 text-white p-3.5 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -147,6 +160,16 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {onTogglePin && (
+            <PinSectionButton
+              sectionId={sectionId}
+              sectionTitle="ترويسة الدرس والبيانات الرسمية"
+              isPinned={!!isPinned}
+              onToggle={() => onTogglePin()}
+              variant="dark"
+            />
+          )}
+
           {onOpenAiModal && (
             <button
               type="button"

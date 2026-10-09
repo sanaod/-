@@ -77,7 +77,9 @@ import {
   Upload,
   FileUp,
   Share2,
+  Pin,
 } from 'lucide-react';
+import { PinnedSectionsDock } from './components/PinnedSectionsDock';
 import { SemesterPlanModal } from './components/SemesterPlanModal';
 import { CurriculumPdfExtractorModal } from './components/CurriculumPdfExtractorModal';
 import { AcademicYearMilestonesModal } from './components/AcademicYearMilestonesModal';
@@ -178,6 +180,38 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'editor' | 'official-print' | 'dashboard'>('editor');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [actionCategoryFilter, setActionCategoryFilter] = useState<'all' | 'ai' | 'resources' | 'plans' | 'export'>('all');
+
+  // Pinned Sections Feature State (تثبيت الأقسام لتظل مرئية أثناء التمرير)
+  const [pinnedSections, setPinnedSections] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('abqoor_pinned_sections_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    // Default: Pin section 1 for the executive model (smart goals and general context)
+    return ['sec-exec-1'];
+  });
+
+  const handleTogglePinSection = (sectionId: string) => {
+    setPinnedSections((prev) => {
+      const next = prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId];
+      try {
+        localStorage.setItem('abqoor_pinned_sections_v1', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const handleClearAllPins = () => {
+    setPinnedSections([]);
+    try {
+      localStorage.removeItem('abqoor_pinned_sections_v1');
+    } catch (e) {}
+  };
 
   // Modals
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -456,6 +490,7 @@ export default function App() {
             onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
             onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
             onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+            onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
             onOpenExecutivePlan={() => {
               const blank = getBlankLessonPlan();
               const newPlan = ensureExecutiveData({ ...blank, templateType: 'executive' });
@@ -675,20 +710,53 @@ export default function App() {
                   })}
                 </div>
 
-                {/* Quick Link to Resources in Subnav - Distinctive & Large */}
-                <button
-                  onClick={() => setIsResourcesModalOpen(true)}
-                  className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 rounded-xl text-xs font-black flex items-center gap-2 border-2 border-emerald-500/80 shrink-0 transition-all shadow-xs hover:shadow-sm hover:scale-[1.02] cursor-pointer ring-1 ring-emerald-500/20"
-                  title="فتح وإضافة بنك المصادر والمراجع التعليمية والمناهج"
-                >
-                  <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
-                    <Layers className="w-4 h-4 text-emerald-100" />
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
-                      +
+                {/* Subnav Action Hub: Pinned Sections Quick Badge & Resources Button */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (pinnedSections.length === 0) {
+                        const targetId = (currentPlan.templateType || 'executive') === 'executive' ? 'sec-exec-1' : 'sec-adapt-header';
+                        handleTogglePinSection(targetId);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      pinnedSections.length > 0
+                        ? 'bg-amber-100/90 text-amber-950 border-amber-400 shadow-2xs hover:bg-amber-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200 hover:text-slate-900'
+                    }`}
+                    title={
+                      pinnedSections.length > 0
+                        ? `لديك (${toArabicDigits(pinnedSections.length)}) أقسام مثبتة تظل معروضة معك في لوحة عائمة أثناء التمرير`
+                        : 'انقر لتثبيت القسم الأول ليظل معروضاً معك أثناء التمرير لأسفل'
+                    }
+                  >
+                    <Pin className={`w-3.5 h-3.5 ${pinnedSections.length > 0 ? 'rotate-45 fill-amber-500 text-amber-700' : 'text-slate-500'}`} />
+                    <span>الأقسام المثبتة</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                      pinnedSections.length > 0
+                        ? 'bg-amber-400 text-slate-950 shadow-2xs'
+                        : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {toArabicDigits(pinnedSections.length)}
                     </span>
-                  </div>
-                  <span>إضافة المصادر ({toArabicDigits(resources.length)})</span>
-                </button>
+                  </button>
+
+                  {/* Quick Link to Resources in Subnav - Distinctive & Large */}
+                  <button
+                    onClick={() => setIsResourcesModalOpen(true)}
+                    className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 rounded-xl text-xs font-black flex items-center gap-2 border-2 border-emerald-500/80 shrink-0 transition-all shadow-xs hover:shadow-sm hover:scale-[1.02] cursor-pointer ring-1 ring-emerald-500/20"
+                    title="فتح وإضافة بنك المصادر والمراجع التعليمية والمناهج"
+                  >
+                    <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
+                      <Layers className="w-4 h-4 text-emerald-100" />
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
+                        +
+                      </span>
+                    </div>
+                    <span>إضافة المصادر ({toArabicDigits(resources.length)})</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -781,6 +849,8 @@ export default function App() {
                 onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
                 onOpenAiModal={() => setIsAiModalOpen(true)}
                 onOpenShareModal={() => setIsShareModalOpen(true)}
+                pinnedSections={pinnedSections}
+                onTogglePinSection={handleTogglePinSection}
               />
             ) : (
               <>
@@ -794,6 +864,9 @@ export default function App() {
                   onOpenAiModal={() => setIsAiModalOpen(true)}
                   onOpenShareModal={() => setIsShareModalOpen(true)}
                   resourcesCount={resources.length}
+                  isPinned={pinnedSections.includes('sec-adapt-header')}
+                  onTogglePin={() => handleTogglePinSection('sec-adapt-header')}
+                  sectionId="sec-adapt-header"
                 />
 
                 {/* Section 1: Adaptive Planning */}
@@ -807,6 +880,9 @@ export default function App() {
                     }}
                     onChange={(section1) => updateCurrentPlan({ ...currentPlan, section1 })}
                     onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                    isPinned={pinnedSections.includes('sec-adapt-1')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-1')}
+                    sectionId="sec-adapt-1"
                   />
                 )}
 
@@ -820,6 +896,9 @@ export default function App() {
                     onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
                     onChange={(section2Timeline) => updateCurrentPlan({ ...currentPlan, section2Timeline })}
                     plan={currentPlan}
+                    isPinned={pinnedSections.includes('sec-adapt-2')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-2')}
+                    sectionId="sec-adapt-2"
                   />
                 )}
 
@@ -832,6 +911,9 @@ export default function App() {
                     onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
                     onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
                     onOpenRubricModal={() => setIsRubricModalOpen(true)}
+                    isPinned={pinnedSections.includes('sec-adapt-3')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-3')}
+                    sectionId="sec-adapt-3"
                   />
                 )}
 
@@ -841,6 +923,9 @@ export default function App() {
                     data={currentPlan.section4Environment}
                     onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
                     onChange={(section4Environment) => updateCurrentPlan({ ...currentPlan, section4Environment })}
+                    isPinned={pinnedSections.includes('sec-adapt-4')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-4')}
+                    sectionId="sec-adapt-4"
                   />
                 )}
 
@@ -852,6 +937,9 @@ export default function App() {
                     allPlans={plans}
                     onSelectPlan={(id) => setActivePlanId(id)}
                     onChange={(section5Reflection) => updateCurrentPlan({ ...currentPlan, section5Reflection })}
+                    isPinned={pinnedSections.includes('sec-adapt-5')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-5')}
+                    sectionId="sec-adapt-5"
                   />
                 )}
 
@@ -860,12 +948,25 @@ export default function App() {
                   <Section6SignaturesCard
                     data={currentPlan.section6Signatures}
                     onChange={(section6Signatures) => updateCurrentPlan({ ...currentPlan, section6Signatures })}
+                    isPinned={pinnedSections.includes('sec-adapt-6')}
+                    onTogglePin={() => handleTogglePinSection('sec-adapt-6')}
+                    sectionId="sec-adapt-6"
                   />
                 )}
               </>
             )}
           </main>
         </>
+      )}
+
+      {/* Pinned Sections Persistent Dock (تثبيت الأقسام مرئية دائماً أمام المعلم أثناء التمرير لأسفل) */}
+      {viewMode === 'editor' && (
+        <PinnedSectionsDock
+          plan={currentPlan}
+          pinnedSectionIds={pinnedSections}
+          onTogglePin={handleTogglePinSection}
+          onClearAllPins={handleClearAllPins}
+        />
       )}
 
       {/* Footer & Creative Commons License */}
