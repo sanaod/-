@@ -525,159 +525,158 @@ export default function App() {
           <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md no-print">
             <div className="max-w-7xl mx-auto space-y-5">
               
-              {/* Top Row: Abqoor Prominent Logo, Plan Title, Ministry Badges & Primary Output CTAs */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                
-                {/* Large Featured Logo Emblem & Title */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
-                  <div className="relative group shrink-0">
-                    <div className="absolute -inset-2 rounded-full bg-linear-to-tr from-amber-400 via-emerald-400 to-teal-300 opacity-85 blur-md group-hover:opacity-100 transition duration-300"></div>
-                    <img
-                      src="/abqoor_logo.jpg"
-                      alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
-                      className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (target.src.includes('abqoor_logo.jpg')) {
-                          target.src = '/logo.png';
-                        } else if (target.src.includes('logo.png')) {
-                          target.src = '/logo.jpg';
-                        } else {
-                          target.style.display = 'none';
-                          if (target.nextElementSibling) {
-                            (target.nextElementSibling as HTMLElement).style.display = 'flex';
-                          }
+              {/* Top Row: Abqoor Prominent Logo, Plan Title, Ministry Badges */}
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
+                {/* Large Featured Logo Emblem */}
+                <div className="relative group shrink-0">
+                  <div className="absolute -inset-2 rounded-full bg-linear-to-tr from-amber-400 via-emerald-400 to-teal-300 opacity-85 blur-md group-hover:opacity-100 transition duration-300"></div>
+                  <img
+                    src="/abqoor_logo.jpg"
+                    alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
+                    className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src.includes('abqoor_logo.jpg')) {
+                        target.src = '/logo.png';
+                      } else if (target.src.includes('logo.png')) {
+                        target.src = '/logo.jpg';
+                      } else {
+                        target.style.display = 'none';
+                        if (target.nextElementSibling) {
+                          (target.nextElementSibling as HTMLElement).style.display = 'flex';
                         }
-                      }}
-                    />
-                    <div
-                      style={{ display: 'none' }}
-                      className="relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 rounded-full bg-linear-to-tr from-emerald-800 via-teal-800 to-amber-700 items-center justify-center text-white shadow-2xl ring-4 ring-emerald-500/40 shrink-0"
+                      }
+                    }}
+                  />
+                  <div
+                    style={{ display: 'none' }}
+                    className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-linear-to-tr from-emerald-800 via-teal-800 to-amber-700 items-center justify-center text-white shadow-2xl ring-4 ring-emerald-500/40 shrink-0"
+                  >
+                    <BookOpen className="w-16 h-16 text-emerald-200" />
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-center md:text-right flex-1">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
+                      <span>📌</span>
+                      <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>معايير التميز وإطار تقييم أداء المعلم</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
+                      <span>🇵🇸 وزارة التربية والتعليم</span>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-['Tajawal'] tracking-wide text-white leading-snug">
+                    {currentPlan.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
+                    منظومة عبقور الشاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
+                  </p>
+
+                  {/* Horizontal Quick Shortcuts Directly Below Name */}
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1.5 pb-1 shrink-0">
+                    <button
+                      onClick={() => setIsAiModalOpen(true)}
+                      className="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
                     >
-                      <BookOpen className="w-16 h-16 sm:w-20 sm:h-20 text-emerald-200" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-center sm:text-right max-w-2xl">
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
-                        <span>📌</span>
-                        <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span>معايير التميز وإطار تقييم أداء المعلم</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
-                        <span>🇵🇸 وزارة التربية والتعليم</span>
-                      </div>
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-['Tajawal'] tracking-wide text-white leading-snug">
-                      {currentPlan.title}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
-                      منظومة عبقور الشاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
-                    </p>
-
-                    {/* Stacked Quick Shortcuts Directly Below Name (أيقونات الوصول السريع المكدسة والمنظمة أسفل الاسم) */}
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
-                      <button
-                        onClick={() => setIsAiModalOpen(true)}
-                        className="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                        <span>تحضير بالـ AI</span>
-                      </button>
-                      <button
-                        onClick={() => setIsUnitPlanModalOpen(true)}
-                        className="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Boxes className="w-3.5 h-3.5 text-blue-300" />
-                        <span>وحدة كاملة</span>
-                      </button>
-                      <button
-                        onClick={() => setIsSemesterPlanModalOpen(true)}
-                        className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <CalendarRange className="w-3.5 h-3.5 text-teal-300" />
-                        <span>الخطة الفصلية</span>
-                      </button>
-                      <button
-                        onClick={() => setIsWorksheetModalOpen(true)}
-                        className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <FileCheck2 className="w-3.5 h-3.5 text-teal-300" />
-                        <span>ورقة عمل AI</span>
-                      </button>
-                      <button
-                        onClick={() => setIsAssessmentModalOpen(true)}
-                        className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Activity className="w-3.5 h-3.5 text-purple-300" />
-                        <span>أدوات التقويم</span>
-                      </button>
-                      <button
-                        onClick={() => setIsAuthenticTaskModalOpen(true)}
-                        className="px-2.5 py-1 bg-pink-600/30 hover:bg-pink-600/50 border border-pink-400/40 text-pink-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Award className="w-3.5 h-3.5 text-pink-300" />
-                        <span>المهمة الأصيلة</span>
-                      </button>
-                    </div>
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>تحضير بالـ AI</span>
+                    </button>
+                    <button
+                      onClick={() => setIsUnitPlanModalOpen(true)}
+                      className="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Boxes className="w-3.5 h-3.5 text-blue-300" />
+                      <span>وحدة كاملة</span>
+                    </button>
+                    <button
+                      onClick={() => setIsSemesterPlanModalOpen(true)}
+                      className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    >
+                      <CalendarRange className="w-3.5 h-3.5 text-teal-300" />
+                      <span>الخطة الفصلية</span>
+                    </button>
+                    <button
+                      onClick={() => setIsWorksheetModalOpen(true)}
+                      className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5 text-teal-300" />
+                      <span>ورقة عمل AI</span>
+                    </button>
+                    <button
+                      onClick={() => setIsAssessmentModalOpen(true)}
+                      className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Activity className="w-3.5 h-3.5 text-purple-300" />
+                      <span>أدوات التقويم</span>
+                    </button>
+                    <button
+                      onClick={() => setIsAuthenticTaskModalOpen(true)}
+                      className="px-2.5 py-1 bg-pink-600/30 hover:bg-pink-600/50 border border-pink-400/40 text-pink-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Award className="w-3.5 h-3.5 text-pink-300" />
+                      <span>المهمة الأصيلة</span>
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                {/* Direct High-Frequency Action Buttons - Stacked & Organized */}
-                <div className="bg-slate-900/60 p-2 sm:p-2.5 rounded-2xl border border-emerald-500/30 flex flex-wrap items-center justify-center lg:justify-end gap-2 shrink-0 backdrop-blur-xs shadow-lg">
-                  <div className="hidden sm:flex items-center gap-1.5 px-2 text-xs font-bold text-emerald-300">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>إجراءات فورية:</span>
-                  </div>
-                  <button
-                    onClick={() => setViewMode('official-print')}
-                    className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                    title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
-                  >
-                    <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
-                    <span>طباعة PDF</span>
-                  </button>
+              {/* Moved below template models */}
 
-                  <button
-                    onClick={() => window.print()}
-                    className="px-3.5 py-2 bg-emerald-800/90 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
-                    title="طباعة فورية للمحرر الحالي بتنسيق رسمي معتمد أبيض وأسود خالٍ من الأزرار والعناصر الزائدة"
-                  >
-                    <Printer className="w-4 h-4 text-amber-300 shrink-0" />
-                    <span>طباعة المحرر 🖨️</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsExportModalOpen(true)}
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                    title="تصدير الخطة بصيغ Word و HTML و JSON"
-                  >
-                    <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
-                    <span>تصدير الخطة</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsShareModalOpen(true)}
-                    className="px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
-                    title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
-                  >
-                    <Share2 className="w-4 h-4 text-emerald-200 shrink-0" />
-                    <span>مشاركة الخطة 📱</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIsBackupRestoreModalOpen(true)}
-                    className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                    title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
-                  >
-                    <Database className="w-4 h-4 text-slate-950 shrink-0" />
-                    <span>نسخ احتياطي (JSON)</span>
-                  </button>
+              {/* Direct High-Frequency Action Buttons - Placed Below Form Title & Logo Row */}
+              <div className="bg-slate-900/90 p-3 rounded-2xl border border-emerald-500/40 flex flex-wrap items-center justify-center gap-2.5 shadow-lg no-print">
+                <div className="flex items-center gap-1.5 px-2 text-xs font-bold text-emerald-300">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>إجراءات فورية:</span>
                 </div>
+                <button
+                  onClick={() => setViewMode('official-print')}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                  title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
+                >
+                  <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
+                  <span>طباعة PDF</span>
+                </button>
+
+                <button
+                  onClick={() => window.print()}
+                  className="px-3.5 py-2 bg-emerald-800/90 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
+                  title="طباعة فورية للمحرر الحالي بتنسيق رسمي معتمد أبيض وأسود خالٍ من الأزرار والعناصر الزائدة"
+                >
+                  <Printer className="w-4 h-4 text-amber-300 shrink-0" />
+                  <span>طباعة المحرر 🖨️</span>
+                </button>
+
+                <button
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                  title="تصدير الخطة بصيغ Word و HTML و JSON"
+                >
+                  <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
+                  <span>تصدير الخطة</span>
+                </button>
+
+                <button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
+                  title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                >
+                  <Share2 className="w-4 h-4 text-emerald-200 shrink-0" />
+                  <span>مشاركة الخطة 📱</span>
+                </button>
+
+                <button
+                  onClick={() => setIsBackupRestoreModalOpen(true)}
+                  className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
+                  title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
+                >
+                  <Database className="w-4 h-4 text-slate-950 shrink-0" />
+                  <span>نسخ احتياطي (JSON)</span>
+                </button>
               </div>
 
               {/* Master Unified Tools & Icons Hub (مركز الأدوات والأيقونات الموحد لكافة الأجهزة) */}
@@ -844,69 +843,77 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
-                    updateCurrentPlan(updated);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                    (currentPlan.templateType || 'executive') === 'executive'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
-                  }`}
-                >
-                  <span className="text-amber-300">⭐</span>
-                  <span>النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</span>
-                </button>
+              <div className="flex flex-col gap-1.5 p-1.5 bg-slate-100 rounded-2xl shrink-0">
+                {/* Row 1: Templates */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
+                      updateCurrentPlan(updated);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      (currentPlan.templateType || 'executive') === 'executive'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span className="text-amber-300">⭐</span>
+                    <span>النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    updateCurrentPlan({ ...currentPlan, templateType: 'adaptive' });
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                    currentPlan.templateType === 'adaptive'
-                      ? 'bg-blue-700 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
-                  }`}
-                >
-                  <span>📋</span>
-                  <span>النموذج الثاني (التخطيط التكيفي الموسع)</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateCurrentPlan({ ...currentPlan, templateType: 'adaptive' });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      currentPlan.templateType === 'adaptive'
+                        ? 'bg-blue-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>📋</span>
+                    <span>النموذج الثاني (التخطيط التكيفي الموسع)</span>
+                  </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsAiModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 shadow-xs transition-all cursor-pointer border border-amber-300 group"
-                  title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-slate-950 group-hover:rotate-12 transition-transform" />
-                  <span>توليد التحضير (AI)</span>
-                </button>
+                {/* Row 2: Actions & AI Tools */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsAiModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 shadow-xs transition-all cursor-pointer border border-amber-300 group"
+                    title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-slate-950 group-hover:rotate-12 transition-transform" />
+                    <span>توليد التحضير (AI)</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-xs transition-all cursor-pointer border border-emerald-400/30 group"
-                  title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-emerald-200 group-hover:scale-110 transition-transform" />
-                  <span>مشاركة الخطة 📱</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-xs transition-all cursor-pointer border border-emerald-400/30 group"
+                    title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-emerald-200 group-hover:scale-110 transition-transform" />
+                    <span>مشاركة الخطة 📱</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all cursor-pointer border border-slate-700 group"
-                  title="طباعة الخطة مباشرة بتنسيق رسمي نظيف (أبيض وأسود) خالٍ من الأزرار والعناصر الزائدة"
-                >
-                  <Printer className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
-                  <span>طباعة المحرر (Print-Friendly) 🖨️</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all cursor-pointer border border-slate-700 group"
+                    title="طباعة الخطة مباشرة بتنسيق رسمي نظيف (أبيض وأسود) خالٍ من الأزرار والعناصر الزائدة"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+                    <span>طباعة المحرر (Print-Friendly) 🖨️</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+
 
             {/* Render Selected Template */}
             {(currentPlan.templateType || 'executive') === 'executive' ? (

@@ -120,7 +120,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAllIconsDropdownOpen, setIsAllIconsDropdownOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(currentPlan, null, 2));
@@ -170,18 +169,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-2 sm:py-3 min-h-[4.5rem] sm:min-h-[5.5rem] gap-3">
           
-          {/* Right Side: Sidebar Toggle, All Icons Dropdown Menu & Logo/Title */}
+          {/* Right Side: All Icons Dropdown Menu & Logo/Title */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Sidebar Toggle Button (زر الشريط الجانبي المخفي للأدوات السريعة) */}
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 sm:px-3 sm:py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all border border-emerald-300 shrink-0"
-              title="فتح الشريط الجانبي للأدوات السريعة"
-            >
-              <Menu className="w-5 h-5 text-emerald-700" />
-              <span className="hidden md:inline">القائمة الجانبية</span>
-            </button>
 
             {/* All Icons Dropdown Menu Button (قائمة جميع الأيقونات) */}
             <div className="relative">
@@ -534,7 +523,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <img
                 src="/abqoor_logo.jpg"
                 alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
-                className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover shadow-xl border-2 sm:border-3 border-amber-300 ring-2 sm:ring-4 ring-emerald-500/30 transition-transform group-hover:scale-105 shrink-0 bg-white"
+                className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full object-cover shadow-2xl border-3 sm:border-4 border-amber-300 ring-2 sm:ring-4 ring-emerald-500/30 transition-transform group-hover:scale-105 shrink-0 bg-white"
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (target.src.includes('abqoor_logo.jpg')) {
@@ -551,88 +540,88 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               />
               <div
                 style={{ display: 'none' }}
-                className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-linear-to-tr from-emerald-800 to-teal-700 items-center justify-center text-white shadow-md ring-2 ring-emerald-500/30 shrink-0"
+                className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full bg-linear-to-tr from-emerald-800 to-teal-700 items-center justify-center text-white shadow-md ring-2 ring-emerald-500/30 shrink-0"
               >
-                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-200" />
+                <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-200" />
               </div>
             </div>
             
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-base sm:text-lg md:text-xl font-black font-['Tajawal'] text-slate-900 leading-tight flex items-center gap-1.5">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black font-['Tajawal'] text-slate-900 leading-tight flex items-center gap-1.5">
                   <span className="text-emerald-800 group-hover:text-emerald-700 transition-colors">منظومة عبقور</span>
                   <span className="hidden sm:inline text-slate-900">للتخطيط التربوي وتحضير الدروس</span>
                 </h1>
-                <span className="text-[11px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
+                <span className="text-xs font-extrabold bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300 shadow-2xs">
                   عبقور التربوي 👑
                 </span>
-                <span className="hidden lg:inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-100 text-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-2xs">
+                <span className="hidden lg:inline-flex items-center gap-1 text-xs font-bold bg-emerald-100 text-emerald-950 px-3 py-1 rounded-full border border-emerald-300 shadow-2xs">
                   <span>المعايير الوزارية المعتمدة</span>
                 </span>
-                <span className="hidden xl:inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-300" title="رخصة المشاع الإبداعي CC BY-NC-SA 4.0">
+                <span className="hidden xl:inline-flex items-center gap-1 text-[11px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-300" title="رخصة المشاع الإبداعي CC BY-NC-SA 4.0">
                   <span>CC BY-NC-SA 4.0</span>
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-700 hidden sm:block font-semibold truncate max-w-md lg:max-w-none mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-700 hidden sm:block font-semibold truncate max-w-md lg:max-w-none mt-1">
                 إعداد وتصميم: <strong className="text-emerald-800 font-extrabold">الأستاذ عبد الرحمن دويكات</strong> | المنصة المعتمدة للتخطيط الصفي
               </p>
 
-              {/* Stacked Quick Icons Directly Below System Name (أيقونات سريعة مكدسة ومنظمة تحت الاسم مباشرة لكافة الأجهزة) */}
-              <div className="flex flex-wrap items-center gap-1 pt-1">
+              {/* Stacked Quick Icons Directly Below System Name in Two Organized Rows (أيقونات سريعة مرتبة في صفين منظمين تحت الاسم مباشرة) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1.5">
                 <button
                   type="button"
                   onClick={onOpenAiGenerator}
                   title="تحضير درس فوري بالذكاء الاصطناعي"
-                  className="px-2 py-0.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>تحضير AI</span>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span className="truncate">تحضير AI</span>
                 </button>
                 <button
                   type="button"
                   onClick={onSelectBlankPlan || onNewBlankPlan}
                   title="استمارة التحضير المفرغة المعتمدة"
-                  className="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <FileEdit className="w-3 h-3" />
-                  <span>المفرغة 📌</span>
+                  <FileEdit className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">المفرغة 📌</span>
                 </button>
                 <button
                   type="button"
                   onClick={onOpenPrintView}
                   title="طباعة الاستمارة الرسمية A4"
-                  className="px-2 py-0.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <Printer className="w-3 h-3 text-emerald-300" />
-                  <span>طباعة A4</span>
+                  <Printer className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  <span className="truncate">طباعة A4</span>
                 </button>
                 <button
                   type="button"
                   onClick={onOpenExportModal}
                   title="تصدير الخطة بصيغ Word و PDF"
-                  className="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <FileDown className="w-3 h-3 text-blue-100" />
-                  <span>تصدير</span>
+                  <FileDown className="w-3.5 h-3.5 text-blue-100 shrink-0" />
+                  <span className="truncate">تصدير</span>
                 </button>
                 <button
                   type="button"
                   onClick={onOpenResourcesModal}
                   title="إضافة وإدارة بنك المصادر والمناهج"
-                  className="px-2 py-0.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                 >
-                  <Layers className="w-3 h-3 text-teal-200" />
-                  <span>المصادر ({toArabicDigits(resourcesCount)})</span>
+                  <Layers className="w-3.5 h-3.5 text-teal-200 shrink-0" />
+                  <span className="truncate">المصادر ({toArabicDigits(resourcesCount)})</span>
                 </button>
                 {onOpenAcademicMilestonesModal && (
                   <button
                     type="button"
                     onClick={onOpenAcademicMilestonesModal}
                     title="محطات العام الدراسي (افتتاح - فصل 1 - فصل 2 - ختام)"
-                    className="px-2 py-0.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                    className="px-2.5 py-1 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <CalendarRange className="w-3 h-3 text-indigo-200" />
-                    <span>محطات العام 🗓️</span>
+                    <CalendarRange className="w-3.5 h-3.5 text-indigo-200 shrink-0" />
+                    <span className="truncate">محطات العام 🗓️</span>
                   </button>
                 )}
                 {onOpenAndroidAppModal && (
@@ -640,10 +629,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     type="button"
                     onClick={onOpenAndroidAppModal}
                     title="تنزيل وتحميل تطبيق أندرويد (APK / PWA / Google Play)"
-                    className="px-2.5 py-0.5 bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-sm cursor-pointer active:scale-95 transition-all border border-emerald-300/60 ring-2 ring-emerald-500/20"
+                    className="px-2.5 py-1 bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all border border-emerald-300/60 ring-2 ring-emerald-500/20 col-span-2 sm:col-span-2"
                   >
                     <Smartphone className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
-                    <span>تنزيل وتحميل التطبيق 📱</span>
+                    <span className="truncate">تنزيل وتحميل التطبيق 📱</span>
                   </button>
                 )}
               </div>
@@ -1485,229 +1474,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
           </div>
         )}
-
-      {/* Hidden Sidebar Drawer (الشريط الجانبي المخفي للأدوات السريعة) */}
-      {isSidebarOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          {/* Slide-over Drawer from Right (RTL) */}
-          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-96 bg-white shadow-2xl border-l border-slate-200 flex flex-col font-['Cairo',sans-serif] text-right animate-in slide-in-from-right duration-300">
-            {/* Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-l from-emerald-900 to-teal-900 text-white flex items-center justify-between border-b border-emerald-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-amber-300 font-black shadow-inner">
-                  <Menu className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">الشريط الجانبي السريع</h3>
-                  <p className="text-xs text-emerald-200 font-medium">منظومة عبقور للتخطيط التربوي</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
-                title="إغلاق الشريط الجانبي"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content / Links */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {/* Quick Navigation Section */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
-                  <span>روابط التخطيط والذكاء الاصطناعي</span>
-                </h4>
-                <div className="space-y-1">
-                  <button
-                    onClick={() => { setIsSidebarOpen(false); onOpenAiGenerator(); }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
-                  >
-                    <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black truncate">تحضير درس بالذكاء الاصطناعي</div>
-                      <div className="text-[10px] text-slate-500 truncate">الأقسام الـ 6 كاملة</div>
-                    </div>
-                  </button>
-                  {onOpenUnitPlanModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenUnitPlanModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-800 hover:text-blue-900 transition-all text-xs font-bold border border-slate-200 hover:border-blue-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Boxes className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">تحضير وحدة دراسية كاملة</div>
-                        <div className="text-[10px] text-slate-500 truncate">خطط الوحدات والدروس المرتبطة</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenSemesterPlanModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenSemesterPlanModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <CalendarRange className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">الخطة الفصلية وتوزيع الحصص</div>
-                        <div className="text-[10px] text-slate-500 truncate">دليل التقويم والتوزيع الزمني</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenAcademicMilestonesModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenAcademicMilestonesModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Sunrise className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">محطات العام الدراسي</div>
-                        <div className="text-[10px] text-slate-500 truncate">افتتاح، فصول، اختبارات واحتفالات</div>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Assessment & Worksheets Section */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black text-blue-800 bg-blue-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-blue-600" />
-                  <span>التقويم وأوراق العمل والمهام</span>
-                </h4>
-                <div className="space-y-1">
-                  {onOpenWorksheetModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenWorksheetModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <FileCheck className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">أوراق عمل تفاعلية AI</div>
-                        <div className="text-[10px] text-slate-500 truncate">تمارين متمايزة وتوليد أسئلة</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenAssessmentSimulatorModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenAssessmentSimulatorModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-900 transition-all text-xs font-bold border border-slate-200 hover:border-indigo-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Calculator className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">محاكي منظومة الاختبارات</div>
-                        <div className="text-[10px] text-slate-500 truncate">بناء واختبار أسئلة الامتحانات</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenAcademicMilestonesModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenAcademicMilestonesModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-800 hover:text-purple-900 transition-all text-xs font-bold border border-slate-200 hover:border-purple-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Target className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">المهام الأدائية وأدوات القياس</div>
-                        <div className="text-[10px] text-slate-500 truncate">روبريك التقييم ومعايير الأداء</div>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Classroom & System Tools */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl flex items-center gap-2">
-                  <LayoutDashboard className="w-4 h-4 text-amber-600" />
-                  <span>المصادر وأدوات الإدارة</span>
-                </h4>
-                <div className="space-y-1">
-                  <button
-                    onClick={() => { setIsSidebarOpen(false); if (onChangeView) onChangeView('dashboard'); }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition-all text-xs font-bold border border-slate-200 hover:border-amber-300 text-right group cursor-pointer"
-                  >
-                    <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <LayoutDashboard className="w-4 h-4" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black truncate">لوحة تحكم المعلم</div>
-                      <div className="text-[10px] text-slate-500 truncate">إدارة الخطط والبحث السريع</div>
-                    </div>
-                  </button>
-                  {onOpenMotionGraphicsModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenMotionGraphicsModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-800 hover:text-rose-900 transition-all text-xs font-bold border border-slate-200 hover:border-rose-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Clapperboard className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">فيديو موشن جرافيك للدرس</div>
-                        <div className="text-[10px] text-slate-500 truncate">شرح تفاعلي ومشاهد تعليمية</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenQrModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenQrModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-800 hover:text-teal-900 transition-all text-xs font-bold border border-slate-200 hover:border-teal-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <QrCode className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">رمز الاستجابة السريعة QR</div>
-                        <div className="text-[10px] text-slate-500 truncate">مشاركة الرابط مع الطلاب والأهالي</div>
-                      </div>
-                    </button>
-                  )}
-                  {onOpenAndroidAppModal && (
-                    <button
-                      onClick={() => { setIsSidebarOpen(false); onOpenAndroidAppModal(); }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition-all text-xs font-bold border border-slate-200 hover:border-emerald-300 text-right group cursor-pointer"
-                    >
-                      <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Smartphone className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-black truncate">تطبيق أندرويد المستقل (APK)</div>
-                        <div className="text-[10px] text-slate-500 truncate">تحميل تطبيق المنظومة على الجوال</div>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer of Sidebar */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">
-              <p className="text-[11px] text-slate-500 font-bold">
-                منظومة عبقور التربوية © 2026 • جميع الحقوق محفوظة
-              </p>
-            </div>
-          </div>
-        </>
-      )}
 
       <input
         type="file"

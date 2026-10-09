@@ -124,7 +124,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<ToolCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [layoutMode, setLayoutMode] = useState<'stacked' | 'grid' | 'compact'>('stacked');
+  const [layoutMode, setLayoutMode] = useState<'stacked' | 'grid' | 'compact' | 'horizontal'>('horizontal');
 
   // Master definition of all 22 system tools
   const tools: ToolItem[] = useMemo(() => [
@@ -790,8 +790,20 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
             )}
           </div>
 
-          {/* Layout Mode Toggle: Stacked (مكدس ومنظم) vs Grid (شبكة) vs Compact (مدمج) */}
+          {/* Layout Mode Toggle: Horizontal (أفقي) vs Stacked vs Grid vs Compact */}
           <div className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700 shrink-0 gap-1">
+            <button
+              type="button"
+              onClick={() => setLayoutMode('horizontal')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer touch-manipulation flex items-center gap-1.5 ${
+                layoutMode === 'horizontal'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="عرض أفقي شريطي متجاور (أفقياً)"
+            >
+              <span className="text-[11px] font-black">أفقي ↔️</span>
+            </button>
             <button
               type="button"
               onClick={() => setLayoutMode('stacked')}
@@ -800,10 +812,10 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-300 hover:text-white'
               }`}
-              title="عرض مكدس ومنظم في مسارات مصنفة بوضوح (الخيار الموصى به)"
+              title="عرض مكدس ومنظم في مسارات مصنفة بوضوح"
             >
               <Layers className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-black">مكدس ومنظم</span>
+              <span className="text-[11px] font-black">مكدس</span>
             </button>
             <button
               type="button"
@@ -911,7 +923,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
         </span>
       </div>
 
-      {/* 3. Main Display Area: Stacked Tiers (الترتيب المكدس والمنظم) vs Grid vs Compact */}
+      {/* 3. Main Display Area: Horizontal Scrolling Strips vs Stacked vs Grid vs Compact */}
       {filteredTools.length === 0 ? (
         <div className="py-8 text-center bg-slate-800/50 rounded-2xl border border-dashed border-slate-700 p-4">
           <p className="text-xs text-slate-400">
@@ -924,6 +936,50 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
           >
             مسح كلمة البحث
           </button>
+        </div>
+      ) : layoutMode === 'horizontal' ? (
+        /* HORIZONTAL SCROLLING STRIPS (الترتيب الأفقي والشريطي المتجاور) */
+        <div className="space-y-4">
+          {CATEGORY_SECTIONS.map((section) => {
+            const sectionTools = filteredTools.filter((t) => t.category === section.id);
+            if (sectionTools.length === 0) return null;
+            const SectionIcon = section.icon;
+
+            return (
+              <div
+                key={section.id}
+                className={`bg-slate-800/75 border ${section.tierBorder} rounded-2xl p-3 sm:p-4 space-y-3 transition-all shadow-md`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-700/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-xl ${section.iconBg} flex items-center justify-center border shadow-xs shrink-0`}>
+                      <SectionIcon className={`w-4 h-4 ${section.iconColor}`} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-white font-['Tajawal'] flex items-center gap-1.5">
+                        {section.title}
+                      </h4>
+                      <p className="text-[10px] sm:text-[11px] text-slate-300 mt-0.5">
+                        {section.description}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-300 px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700/80 shrink-0 tabular-nums">
+                    {toArabicDigits(sectionTools.length)} أدوات أفقية
+                  </span>
+                </div>
+
+                {/* Horizontal Scrolling Row */}
+                <div className="flex items-center gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-emerald-500/40">
+                  {sectionTools.map((tool) => (
+                    <div key={tool.id} className="min-w-[210px] sm:min-w-[230px] max-w-[250px] shrink-0">
+                      {renderToolCard(tool, false)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : layoutMode === 'stacked' ? (
         /* STACKED & ORGANIZED TIERS (الترتيب المكدس والمنظم حسب المسارات والوظائف) */
