@@ -301,8 +301,24 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
     });
   };
 
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
+
+  useEffect(() => {
+    setSaveStatus('saving');
+    const timer = setTimeout(() => {
+      setSaveStatus('saved');
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [plan]);
+
   return (
     <div className="space-y-6 text-slate-800">
+      <div className="flex items-center justify-end px-4 gap-2 text-xs font-bold text-slate-500 no-print">
+        <span>حالة الحفظ:</span>
+        <span className={saveStatus === 'saving' ? 'text-amber-600' : 'text-emerald-600'}>
+          {saveStatus === 'saving' ? 'جارٍ الحفظ...' : 'تم الحفظ'}
+        </span>
+      </div>
       {/* 1. Official Header Card: المؤسسة والبيانات العامة والترويسة الرسمية */}
       <div
         id="sec-exec-1"
