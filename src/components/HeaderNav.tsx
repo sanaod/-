@@ -303,72 +303,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
           {/* Quick Icons Stack Beside System Name (أيقونات الوصول السريع المكدسة والمنظمة بجانب اسم المنظومة) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Inline Quick Action Icons Dock */}
-            <div className="hidden sm:flex items-center gap-1 bg-white/95 p-1 rounded-2xl border border-emerald-300/60 shadow-2xs backdrop-blur-xs">
-              {/* Quick AI Plan */}
-              <button
-                onClick={onOpenAiGenerator}
-                title="توليد خطة درس نموذجية بالذكاء الاصطناعي"
-                className="p-1.5 text-emerald-800 hover:text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
-                <span className="hidden xl:inline text-[11px]">تحضير AI</span>
-              </button>
 
-              {/* Quick Blank Form */}
-              <button
-                onClick={onSelectBlankPlan || onNewBlankPlan}
-                title="استمارة التحضير المفرغة المعتمدة (الصفحة الرئيسية)"
-                className="p-1.5 text-amber-800 hover:text-amber-900 hover:bg-amber-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-              >
-                <FileEdit className="w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
-                <span className="hidden xl:inline text-[11px]">المفرغة 📌</span>
-              </button>
-
-              {/* Quick Print A4 */}
-              <button
-                onClick={onOpenPrintView}
-                title="معاينة وطباعة استمارة الدرس الرسمية A4"
-                className="p-1.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-              >
-                <Printer className="w-4 h-4 text-slate-800 group-hover:scale-110 transition-transform" />
-                <span className="hidden xl:inline text-[11px]">طباعة</span>
-              </button>
-
-              {/* Quick Export */}
-              <button
-                onClick={onOpenExportModal}
-                title="تصدير الخطة بصيغ Word و PDF و HTML"
-                className="p-1.5 text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-              >
-                <FileDown className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
-                <span className="hidden xl:inline text-[11px]">تصدير</span>
-              </button>
-
-              {/* Quick Share via Web Share API */}
-              {onOpenShareModal && (
-                <button
-                  onClick={onOpenShareModal}
-                  title="مشاركة الخطة مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
-                  className="p-1.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-                >
-                  <Share2 className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
-                  <span className="hidden xl:inline text-[11px]">مشاركة</span>
-                </button>
-              )}
-
-              {/* Quick Backup/Restore */}
-              {onOpenBackupRestoreModal && (
-                <button
-                  onClick={onOpenBackupRestoreModal}
-                  title="نسخ احتياطي واستيراد الخطط (JSON)"
-                  className="p-1.5 text-teal-700 hover:text-teal-900 hover:bg-teal-50 rounded-xl transition-all cursor-pointer group flex items-center gap-1 text-xs font-bold"
-                >
-                  <Database className="w-4 h-4 text-teal-600 group-hover:scale-110 transition-transform" />
-                  <span className="hidden xl:inline text-[11px]">نسخ احتياطي</span>
-                </button>
-              )}
-            </div>
 
             {/* Direct QR Code Generator Button */}
             {onOpenQrModal && (
