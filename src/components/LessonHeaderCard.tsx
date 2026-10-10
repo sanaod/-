@@ -522,9 +522,9 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
               <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="text-[11px] font-bold text-slate-500 block mb-1 flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                  التاريخ (سنة/شهر/يوم - yyyy/m/d)
+                  التاريخ (يوم/شهر/سنة - d/m/yyyy)
                 </span>
-                <span className="text-xs font-bold text-slate-800">{formatDateDMY(header.date) || '٢٠٢٦/١٠/٥'}</span>
+                <span className="text-xs font-bold text-slate-800">{formatDateDMY(header.date) || '٥/١٠/٢٠٢٦'}</span>
               </div>
             </div>
 
@@ -536,7 +536,7 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
                 </div>
                 <div>
                   <span className="font-bold text-teal-950 block text-xs">
-                    الفترة الزمنية لتنفيذ الدرس (سنة/شهر/يوم - yyyy/m/d):
+                    الفترة الزمنية لتنفيذ الدرس (يوم/شهر/سنة - d/m/yyyy):
                   </span>
                   <span className="font-black text-emerald-900 text-xs sm:text-sm font-['Tajawal']">
                     {header.startDate && header.endDate

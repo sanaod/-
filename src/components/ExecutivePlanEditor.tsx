@@ -594,7 +594,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         type="text"
                         value={data.timeframeDetails.startDate}
                         onChange={(e) => handleStartDateTextChange(e.target.value)}
-                        placeholder="yyyy/m/d"
+                        placeholder="d/m/yyyy"
                         className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                       />
                       <input
@@ -688,7 +688,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         type="text"
                         value={data.timeframeDetails.endDate}
                         onChange={(e) => handleEndDateTextChange(e.target.value)}
-                        placeholder="yyyy/m/d"
+                        placeholder="d/m/yyyy"
                         className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                       />
                       <input

@@ -1359,7 +1359,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                       handleApplySemesterDates('2026-09-01', '2027-01-15');
                     }}
                     className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
-                    title="الفصل الأول: 2026/9/1 - 2027/1/15"
+                    title="الفصل الأول: 1/9/2026 - 15/1/2027"
                   >
                     🗓️ الفصل الأول
                   </button>
@@ -1372,7 +1372,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                       handleApplySemesterDates('2027-02-01', '2027-05-30');
                     }}
                     className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
-                    title="الفصل الثاني: 2027/2/1 - 2027/5/30"
+                    title="الفصل الثاني: 1/2/2027 - 30/5/2027"
                   >
                     🗓️ الفصل الثاني
                   </button>
