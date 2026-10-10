@@ -229,15 +229,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
               {/* Stacked Quick Icons Directly Below System Name in Two Organized Rows (أيقونات سريعة مرتبة في صفين منظمين تحت الاسم مباشرة) */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1.5">
-                <button
-                  type="button"
-                  onClick={onOpenAiGenerator}
-                  title="تحضير درس فوري بالذكاء الاصطناعي"
-                  className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span className="truncate">تحضير AI</span>
-                </button>
+                <div className="col-span-2 grid grid-cols-2 rounded-xl overflow-hidden border border-emerald-600/60 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={onOpenAiGenerator}
+                    title="تحضير درس فوري بالذكاء الاصطناعي (مربوط ببنك المصادر)"
+                    className="px-2 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black flex items-center justify-center gap-1 cursor-pointer active:scale-95 transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                    <span className="truncate">تحضير AI ⚡</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onOpenResourcesModal}
+                    title="بنك المصادر والمناهج المربوط تلقائياً بتحضير الدرس - يتغير المصدر تلقائياً عند الإضافة"
+                    className="px-2 py-1 bg-teal-800 hover:bg-teal-900 text-white text-xs font-black flex items-center justify-center gap-1 cursor-pointer active:scale-95 transition-all border-r border-emerald-600/50"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-teal-200 shrink-0" />
+                    <span className="truncate">بنك المصادر ({toArabicDigits(resourcesCount)}) 📚</span>
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={onSelectBlankPlan || onNewBlankPlan}
@@ -264,15 +275,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 >
                   <FileDown className="w-3.5 h-3.5 text-blue-100 shrink-0" />
                   <span className="truncate">تصدير</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onOpenResourcesModal}
-                  title="إضافة وإدارة بنك المصادر والمناهج"
-                  className="px-2.5 py-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
-                >
-                  <Layers className="w-3.5 h-3.5 text-teal-200 shrink-0" />
-                  <span className="truncate">المصادر ({toArabicDigits(resourcesCount)})</span>
                 </button>
                 {onOpenAcademicMilestonesModal && (
                   <button
@@ -315,6 +317,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <span className="text-[10px] bg-white px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600 font-bold">
                 {currentPlan.header?.grade || 'الصف'}
               </span>
+              {currentPlan.attachedResources && currentPlan.attachedResources.length > 0 && (
+                <button
+                  type="button"
+                  onClick={onOpenResourcesModal}
+                  title={`المصدر المربوط: ${currentPlan.attachedResources[0].title} - انقر لإدارة بنك المصادر`}
+                  className="hidden md:inline-flex items-center gap-1 text-[10px] bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-md font-bold truncate max-w-[140px] cursor-pointer"
+                >
+                  <Layers className="w-3 h-3 text-teal-700 shrink-0" />
+                  <span className="truncate">{currentPlan.attachedResources[0].title}</span>
+                </button>
+              )}
             </div>
 
             {/* Direct WhatsApp Contact Button (Desktop / Tablet) */}
@@ -375,15 +388,34 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span>مكدس التخطيط والـ AI:</span>
               </span>
 
-              {/* AI Plan Generator CTA */}
-              <button
-                onClick={onOpenAiGenerator}
-                className="px-2.5 py-1.5 bg-linear-to-r from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                title="توليد خطة درس نموذجية بالذكاء الاصطناعي وفق معايير التميز الوزارية"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span>تحضير بالـ AI</span>
-              </button>
+              {/* Linked Preparation & Resource Bank Twin Cluster (الربط التلقائي بين تحضير الدرس وبنك المصادر) */}
+              <div className="flex items-center rounded-xl overflow-hidden border-2 border-emerald-500/80 shadow-xs bg-linear-to-r from-emerald-800 to-teal-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={onOpenAiGenerator}
+                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                  title="توليد خطة درس نموذجية بالذكاء الاصطناعي وفق معايير التميز الوزارية"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>تحضير بالـ AI</span>
+                </button>
+                <div
+                  className="flex items-center justify-center px-1.5 py-1.5 bg-emerald-950/80 text-amber-300 text-[10px] font-black border-x border-emerald-600/50"
+                  title="الربط التلقائي مفعّل: تغيير المصدر تلقائياً عند إضافة أي مصدر"
+                >
+                  🔗
+                </div>
+                <button
+                  type="button"
+                  onClick={onOpenResourcesModal}
+                  className="px-3 py-1.5 bg-teal-800 hover:bg-teal-700 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 group"
+                  title="بنك المصادر والمناهج المربوط تلقائياً بتحضير الدرس - يتغير المصدر تلقائياً عند إضافة أي مصدر"
+                >
+                  <Layers className="w-3.5 h-3.5 text-teal-200 group-hover:rotate-12 transition-transform shrink-0" />
+                  <span>بنك المصادر ({toArabicDigits(resourcesCount)}) 📚</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="الربط التلقائي مفعّل" />
+                </button>
+              </div>
 
               {/* Unit Plan Generator CTA */}
               {onOpenUnitPlanModal && (
@@ -845,10 +877,21 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     onOpenAiGenerator();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="p-2.5 bg-linear-to-r from-emerald-700 to-teal-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="p-2.5 bg-linear-to-r from-emerald-700 to-teal-800 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-2xs font-black cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>تحضير درس AI</span>
+                  <span>تحضير درس AI ⚡</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onOpenResourcesModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 bg-linear-to-r from-teal-800 to-emerald-900 text-white border border-teal-500/40 rounded-xl flex items-center justify-center gap-1.5 shadow-2xs font-black cursor-pointer"
+                >
+                  <Layers className="w-3.5 h-3.5 text-teal-200" />
+                  <span>بنك المصادر ({toArabicDigits(resourcesCount)}) 📚</span>
                 </button>
 
                 {onOpenUnitPlanModal && (

@@ -5,6 +5,7 @@ import {
   ExecutiveStage,
   STANDARD_GRADES,
   EDUCATIONAL_STAGES,
+  EducationalResource,
 } from '../types/lessonPlan';
 import {
   Sparkles,
@@ -56,6 +57,9 @@ interface ExecutivePlanEditorProps {
   onOpenShareModal?: () => void;
   pinnedSections?: string[];
   onTogglePinSection?: (sectionId: string) => void;
+  resourcesCount?: number;
+  resources?: EducationalResource[];
+  onApplyResource?: (resource: EducationalResource) => void;
 }
 
 export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
@@ -67,6 +71,9 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   onOpenShareModal,
   pinnedSections = [],
   onTogglePinSection,
+  resourcesCount = 0,
+  resources = [],
+  onApplyResource,
 }) => {
   const data: ExecutivePlanData = plan.executiveData || createDefaultExecutiveData(plan);
 
@@ -353,17 +360,38 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                 variant="dark"
               />
             )}
-            {onOpenAiModal && (
-              <button
-                type="button"
-                onClick={onOpenAiModal}
-                title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
-                className="px-3.5 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer border border-amber-300 group"
+            {/* Linked Preparation & Resource Bank Twin Cluster */}
+            <div className="flex items-center rounded-xl overflow-hidden border-2 border-amber-300 shadow-xs bg-slate-900 shrink-0">
+              {onOpenAiModal && (
+                <button
+                  type="button"
+                  onClick={onOpenAiModal}
+                  title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
+                  className="px-3 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 group"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
+                  <span>توليد التحضير (AI)</span>
+                </button>
+              )}
+              <div
+                className="flex items-center justify-center px-1.5 py-1.5 bg-slate-950 text-amber-300 text-[10px] font-black border-x border-slate-700"
+                title="الربط التلقائي مفعّل: تغيير المصدر تلقائياً عند إضافة أي مصدر"
               >
-                <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
-                <span>توليد التحضير (AI)</span>
-              </button>
-            )}
+                🔗
+              </div>
+              {onOpenResourcesModal && (
+                <button
+                  type="button"
+                  onClick={onOpenResourcesModal}
+                  title="بنك المصادر والمناهج المربوط تلقائياً بتحضير الدرس - يتغير المصدر تلقائياً عند إضافة أي مصدر"
+                  className="px-3 py-1.5 bg-linear-to-r from-emerald-700 to-teal-800 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 group"
+                >
+                  <Layers className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
+                  <span>بنك المصادر ({toArabicDigits(resourcesCount)}) 📚</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" title="الربط التلقائي مفعّل" />
+                </button>
+              )}
+            </div>
             {onOpenUnitPlanModal && (
               <button
                 type="button"
@@ -408,6 +436,89 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
         )}
 
         <div className="p-4 sm:p-6 space-y-6">
+          {/* Linked Resource Bank Banner (الربط التلقائي بين تحضير الدرس وبنك المصادر) */}
+          <div className="bg-linear-to-r from-emerald-950 via-teal-950 to-slate-900 text-white rounded-2xl p-3.5 sm:p-4 border border-emerald-500/40 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
+                  <Layers className="w-5 h-5 text-emerald-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-emerald-300">بنك المصادر والمناهج • الربط التلقائي بالتحضير</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>مربوط تلقائياً بالدرس 🔗</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-200 font-bold mt-0.5">
+                    المصدر المعتمد حالياً في خطة الدرس:{' '}
+                    <span className="text-amber-300 font-black">
+                      {plan.attachedResources?.[0]?.title || data.executiveStages[0]?.procedures?.resourceName || plan.section1?.learningResources?.textbook || 'الكتاب المدرسي والمحسوسات التعليمية'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              {onOpenResourcesModal && (
+                <button
+                  type="button"
+                  onClick={onOpenResourcesModal}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 border border-emerald-400/50 shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>إضافة مصدر جديد لبنك المصادر</span>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Switcher for Available Resources in Bank */}
+            {resources && resources.length > 0 && (
+              <div className="pt-2.5 border-t border-emerald-800/60 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-[11px] font-bold text-emerald-300 flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 text-amber-300" />
+                  <span>تغيير المصدر المعتمد تلقائياً:</span>
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {resources.map((res) => {
+                    const isCurrent =
+                      plan.attachedResources?.[0]?.id === res.id ||
+                      data.executiveStages[0]?.procedures?.resourceName === res.title;
+                    return (
+                      <button
+                        key={res.id}
+                        type="button"
+                        onClick={() => {
+                          if (onApplyResource) {
+                            onApplyResource(res);
+                          } else {
+                            updateStage(1, (st) => ({
+                              ...st,
+                              procedures: {
+                                ...st.procedures,
+                                resourceName: res.title,
+                              },
+                              resourcesAndTools: res.title,
+                            }));
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          isCurrent
+                            ? 'bg-amber-400 text-slate-950 font-black shadow-xs ring-2 ring-amber-300'
+                            : 'bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
+                        }`}
+                        title={`تغيير المصدر إلى: ${res.title}`}
+                      >
+                        <Layers className="w-3 h-3 shrink-0" />
+                        <span className="truncate max-w-[160px]">{res.title}</span>
+                        {isCurrent && <CheckCircle2 className="w-3 h-3 text-slate-950 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Main Metadata Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div>
@@ -1080,6 +1191,35 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                                 placeholder="فيديو تعليمي تفاعلي، مجسم معداد، لعبة حركية..."
                                 className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
                               />
+                              {resources && resources.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                                  <span className="text-[10px] font-bold text-emerald-800">تغيير فوري من بنك المصادر:</span>
+                                  {resources.slice(0, 5).map((res) => (
+                                    <button
+                                      key={res.id}
+                                      type="button"
+                                      onClick={() => {
+                                        if (onApplyResource) {
+                                          onApplyResource(res);
+                                        } else {
+                                          updateStage(1, (st) => ({
+                                            ...st,
+                                            procedures: {
+                                              ...st.procedures,
+                                              resourceName: res.title,
+                                            },
+                                            resourcesAndTools: res.title,
+                                          }));
+                                        }
+                                      }}
+                                      className="px-2 py-0.5 bg-emerald-100/90 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 rounded text-[10px] font-bold truncate max-w-[140px] transition-colors cursor-pointer"
+                                      title={res.title}
+                                    >
+                                      {res.title}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <div>
                               <label className="block text-[11px] font-bold text-slate-700 mb-1">

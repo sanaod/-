@@ -11,7 +11,9 @@ import {
   Printer,
   FileDown,
   Sparkles,
+  Layers,
 } from 'lucide-react';
+import { toArabicDigits } from '../utils/arabicNumerals';
 
 interface MobileBottomNavProps {
   currentView: 'editor' | 'dashboard' | 'official-print';
@@ -19,6 +21,8 @@ interface MobileBottomNavProps {
   onOpenToolsHub: () => void;
   onOpenExportModal: () => void;
   onOpenAiModal: () => void;
+  onOpenResourcesModal?: () => void;
+  resourcesCount?: number;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
@@ -27,6 +31,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenToolsHub,
   onOpenExportModal,
   onOpenAiModal,
+  onOpenResourcesModal,
+  resourcesCount = 0,
 }) => {
   return (
     <nav
@@ -63,18 +69,32 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span className="text-[10px] font-bold mt-0.5 tracking-tight">الأدوات (٢٢)</span>
         </button>
 
-        {/* Tab 3: Center Primary Action (AI Generator Quick Trigger) */}
-        <button
-          type="button"
-          onClick={onOpenAiModal}
-          className="flex flex-col items-center justify-center -mt-3.5 group cursor-pointer"
-          title="تحضير درس جديد بالذكاء الاصطناعي"
-        >
-          <div className="w-11 h-11 rounded-full bg-linear-to-tr from-emerald-700 via-teal-700 to-emerald-800 text-white flex items-center justify-center shadow-lg ring-4 ring-white group-active:scale-95 transition-transform">
-            <Sparkles className="w-5 h-5 text-amber-300" />
+        {/* Tab 3: Center Primary Action - Twin Preparation & Resources Bank Hub */}
+        <div className="flex flex-col items-center justify-center -mt-3.5">
+          <div className="flex items-center bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-900 p-1 rounded-full shadow-lg ring-3 ring-white border border-emerald-300/40">
+            <button
+              type="button"
+              onClick={onOpenAiModal}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-700/80 hover:bg-emerald-600 text-white active:scale-95 transition-all cursor-pointer"
+              title="تحضير درس جديد بالذكاء الاصطناعي"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+            </button>
+            <div className="w-px h-4 bg-emerald-500/50 mx-0.5" />
+            <button
+              type="button"
+              onClick={onOpenResourcesModal}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-800 hover:bg-teal-700 text-white relative active:scale-95 transition-all cursor-pointer group"
+              title="بنك المصادر المربوط تلقائياً بتحضير الدرس"
+            >
+              <Layers className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 text-amber-950 font-black rounded-full flex items-center justify-center text-[8px] shadow-2xs">
+                {toArabicDigits(resourcesCount)}
+              </span>
+            </button>
           </div>
-          <span className="text-[10px] font-black text-emerald-800 mt-0.5">تحضير AI</span>
-        </button>
+          <span className="text-[9px] font-black text-emerald-800 mt-0.5 tracking-tighter">تحضير • بنك المصادر</span>
+        </div>
 
         {/* Tab 4: Teacher Dashboard */}
         <button

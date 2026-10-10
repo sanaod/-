@@ -238,6 +238,7 @@ export default function App() {
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
+  const [resourceLinkNotice, setResourceLinkNotice] = useState<string | null>(null);
 
   const handleUnitPlansGenerated = (newPlans: LessonPlan[]) => {
     if (!newPlans || newPlans.length === 0) return;
@@ -313,29 +314,72 @@ export default function App() {
         }
       : analyzeContentLocally(resource.content, resource.fileName, resource.fileExt);
 
+    // Target specific learningResources field based on resource type
+    const currentRes = { ...currentPlan.section1.learningResources };
+    if (resource.type === 'textbook' || resource.type === 'guide') {
+      currentRes.textbook = resource.sourceInfo || resource.title;
+    } else if (resource.type === 'tangible') {
+      currentRes.tangibleMedia = resource.title;
+    } else if (resource.type === 'digital' || resource.type === 'link') {
+      currentRes.digitalMedia = resource.content.startsWith('http') ? resource.content : resource.title;
+    } else if (resource.type === 'worksheet') {
+      currentRes.tangibleMedia = currentRes.tangibleMedia
+        ? `${currentRes.tangibleMedia}، ${resource.title}`
+        : resource.title;
+    } else {
+      currentRes.externalReferences = resource.title;
+    }
+
+    // Automatically synchronize with executive plan stages (Stage 1 is the primary educational resource)
+    const basePlanWithExec = ensureExecutiveData(currentPlan);
+    const updatedExec = {
+      ...basePlanWithExec.executiveData,
+      executiveStages: basePlanWithExec.executiveData.executiveStages.map((stage, idx) => {
+        if (idx === 0) {
+          return {
+            ...stage,
+            procedures: {
+              ...stage.procedures,
+              resourceName: resource.title,
+            },
+            resourcesAndTools: resource.title,
+          };
+        }
+        return stage;
+      }),
+    };
+
+    const isPlanEmptyOrPlaceholder =
+      !currentPlan.header.lessonTitle ||
+      currentPlan.id.startsWith('plan-blank') ||
+      currentPlan.title.includes('مفرغة') ||
+      currentPlan.title.includes('مفرغ');
+
     const updatedPlan: LessonPlan = {
       ...currentPlan,
-      title: resource.title,
+      title: isPlanEmptyOrPlaceholder
+        ? (meta.lessonTitle || resource.title)
+        : currentPlan.title,
       header: {
         ...currentPlan.header,
-        lessonTitle: meta.lessonTitle || currentPlan.header.lessonTitle,
+        lessonTitle: isPlanEmptyOrPlaceholder ? (meta.lessonTitle || resource.title) : currentPlan.header.lessonTitle,
         subject: meta.subject || currentPlan.header.subject,
         grade: meta.grade || currentPlan.header.grade,
       },
       section1: {
         ...currentPlan.section1,
-        learningResources: {
-          ...currentPlan.section1.learningResources,
-          textbook: resource.sourceInfo || resource.title,
-        },
+        learningResources: currentRes,
       },
+      executiveData: updatedExec,
       attachedResources: [
-        ...(currentPlan.attachedResources || []).filter((r) => r.id !== resource.id),
         resource,
+        ...(currentPlan.attachedResources || []).filter((r) => r.id !== resource.id),
       ],
     };
 
     updateCurrentPlan(updatedPlan);
+    setResourceLinkNotice(`تم تغيير المصدر المعتمد تلقائياً إلى: «${resource.title}» ورُبط بتحضير الدرس بنجاح! 🔗`);
+    setTimeout(() => setResourceLinkNotice(null), 4500);
     setViewMode('editor');
   };
 
@@ -790,6 +834,42 @@ export default function App() {
 
           {/* Main Content Body */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 lesson-editor-root print-friendly-lesson-editor">
+            {/* Automatic Source Link Toast Notice */}
+            {resourceLinkNotice && (
+              <div
+                dir="rtl"
+                className="bg-emerald-950 text-emerald-100 p-3 sm:p-3.5 rounded-2xl border-2 border-emerald-400 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 no-print"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 bg-emerald-500 text-emerald-950 rounded-xl font-black shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-amber-300 block">
+                      الربط التلقائي بين تحضير الدرس وبنك المصادر:
+                    </span>
+                    <span className="text-xs font-bold text-white">{resourceLinkNotice}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsResourcesModalOpen(true)}
+                    className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                  >
+                    عرض بنك المصادر ({toArabicDigits(resources.length)}) 📚
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResourceLinkNotice(null)}
+                    className="p-1 text-emerald-300 hover:text-white rounded-lg hover:bg-emerald-900/80 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Official Print-Only Submission Header (يظهر حصرياً عند طباعة المحرر للاعتماد الرسمي) */}
             <div className="hidden print:block official-editor-print-header">
               <div className="flex items-center justify-between border-b-2 border-black pb-3 text-black">
@@ -922,6 +1002,9 @@ export default function App() {
                 onChange={updateCurrentPlan}
                 onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
                 onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                resourcesCount={resources.length}
+                resources={resources}
+                onApplyResource={handleApplyResourceToCurrentPlan}
                 onOpenAiModal={() => setIsAiModalOpen(true)}
                 onOpenShareModal={() => setIsShareModalOpen(true)}
                 pinnedSections={pinnedSections}
@@ -939,6 +1022,9 @@ export default function App() {
                   onOpenAiModal={() => setIsAiModalOpen(true)}
                   onOpenShareModal={() => setIsShareModalOpen(true)}
                   resourcesCount={resources.length}
+                  resources={resources}
+                  attachedResources={currentPlan.attachedResources}
+                  onApplyResource={handleApplyResourceToCurrentPlan}
                   isPinned={pinnedSections.includes('sec-adapt-header')}
                   onTogglePin={() => handleTogglePinSection('sec-adapt-header')}
                   sectionId="sec-adapt-header"
@@ -1077,9 +1163,11 @@ export default function App() {
         isOpen={isResourcesModalOpen}
         onClose={() => setIsResourcesModalOpen(false)}
         resources={resources}
+        attachedResourceId={currentPlan.attachedResources?.[0]?.id}
         onAddResource={(newRes) => {
           setResources((prev) => [newRes, ...prev]);
           setSelectedResourceForPlanning(newRes);
+          handleApplyResourceToCurrentPlan(newRes);
         }}
         onDeleteResource={(id) => setResources((prev) => prev.filter((r) => r.id !== id))}
         onGenerateWithResources={(selectedRes) => {
@@ -1362,6 +1450,8 @@ export default function App() {
         }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenAiModal={() => setIsAiModalOpen(true)}
+        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+        resourcesCount={resources.length}
       />
 
       {/* Floating WhatsApp Contact Button */}

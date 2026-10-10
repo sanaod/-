@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LessonHeader, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
-import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag, GraduationCap, ChevronDown, Share2 } from 'lucide-react';
+import { LessonHeader, STANDARD_GRADES, EDUCATIONAL_STAGES, EducationalResource } from '../types/lessonPlan';
+import { School, User, Calendar, Clock, BookOpen, Layers, Edit3, Check, Boxes, CalendarRange, Sparkles, Flag, GraduationCap, ChevronDown, Share2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toArabicDigits, formatDateDMY, formatTimeframeDMY } from '../utils/arabicNumerals';
 import {
   analyzeTeachingCalendar,
@@ -22,6 +22,9 @@ interface LessonHeaderCardProps {
   onOpenAiModal?: () => void;
   onOpenShareModal?: () => void;
   resourcesCount?: number;
+  resources?: EducationalResource[];
+  attachedResources?: EducationalResource[];
+  onApplyResource?: (resource: EducationalResource) => void;
   isPinned?: boolean;
   onTogglePin?: () => void;
   sectionId?: string;
@@ -36,6 +39,9 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
   onOpenAiModal,
   onOpenShareModal,
   resourcesCount,
+  resources = [],
+  attachedResources = [],
+  onApplyResource,
   isPinned,
   onTogglePin,
   sectionId = 'sec-adapt-header',
@@ -170,34 +176,38 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
             />
           )}
 
-          {onOpenAiModal && (
-            <button
-              type="button"
-              onClick={onOpenAiModal}
-              title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
-              className="px-3.5 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer border border-amber-300 group"
+          {/* Linked Preparation & Resource Bank Twin Cluster */}
+          <div className="flex items-center rounded-xl overflow-hidden border-2 border-amber-300 shadow-xs bg-slate-900 shrink-0">
+            {onOpenAiModal && (
+              <button
+                type="button"
+                onClick={onOpenAiModal}
+                title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي وفق المعايير الوزارية"
+                className="px-3 py-1.5 bg-linear-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 group"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
+                <span>توليد التحضير (AI)</span>
+              </button>
+            )}
+            <div
+              className="flex items-center justify-center px-1.5 py-1.5 bg-slate-950 text-amber-300 text-[10px] font-black border-x border-slate-700"
+              title="الربط التلقائي مفعّل: تغيير المصدر تلقائياً عند إضافة أي مصدر"
             >
-              <Sparkles className="w-4 h-4 text-emerald-950 group-hover:rotate-12 transition-transform" />
-              <span>توليد التحضير (AI)</span>
-            </button>
-          )}
-
-          {onOpenResourcesModal && (
-            <button
-              type="button"
-              onClick={onOpenResourcesModal}
-              title="إدارة ورفع المناهج والكتب والمصادر التعليمية بسهولة"
-              className="px-3.5 py-1.5 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl text-xs font-black text-white flex items-center gap-1.5 transition-all shadow-xs border border-emerald-300/40 cursor-pointer group"
-            >
-              <div className="relative p-0.5 bg-emerald-800/80 rounded-md shrink-0">
-                <Layers className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[8px] font-black">
-                  +
-                </span>
-              </div>
-              <span>إضافة المصادر {resourcesCount !== undefined ? `(${toArabicDigits(resourcesCount)})` : ''}</span>
-            </button>
-          )}
+              🔗
+            </div>
+            {onOpenResourcesModal && (
+              <button
+                type="button"
+                onClick={onOpenResourcesModal}
+                title="بنك المصادر والمناهج المربوط تلقائياً بتحضير الدرس - يتغير المصدر تلقائياً عند إضافة أي مصدر"
+                className="px-3 py-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer group active:scale-95"
+              >
+                <Layers className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
+                <span>بنك المصادر {resourcesCount !== undefined ? `(${toArabicDigits(resourcesCount)})` : ''} 📚</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="الربط التلقائي مفعّل" />
+              </button>
+            )}
+          </div>
 
           {onOpenUnitPlanModal && (
             <button
@@ -240,6 +250,47 @@ export const LessonHeaderCard: React.FC<LessonHeaderCardProps> = ({
             )}
           </button>
         </div>
+      </div>
+
+      {/* Linked Resource Bank Strip (الربط التلقائي بين تحضير الدرس وبنك المصادر) */}
+      <div className="mx-3.5 sm:mx-5 mt-3.5 p-3 bg-emerald-950 text-white rounded-xl border border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2 text-xs font-bold">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 font-black">
+            🔗 مربوط تلقائياً
+          </span>
+          <span className="text-slate-300">المصدر المعتمد في التحضير:</span>
+          <span className="text-amber-300 font-black">
+            {attachedResources?.[0]?.title || 'الكتاب المدرسي والمحسوسات التعليمية'}
+          </span>
+        </div>
+        {resources && resources.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-[11px] text-emerald-300 font-bold flex items-center gap-1">
+              <RefreshCw className="w-3 h-3 text-amber-300" />
+              <span>تغيير المصدر:</span>
+            </span>
+            {resources.slice(0, 3).map((res) => (
+              <button
+                key={res.id}
+                type="button"
+                onClick={() => onApplyResource ? onApplyResource(res) : null}
+                className="px-2 py-0.5 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 rounded text-[10px] font-bold border border-emerald-600 truncate max-w-[130px] cursor-pointer"
+                title={res.title}
+              >
+                {res.title}
+              </button>
+            ))}
+            {onOpenResourcesModal && (
+              <button
+                type="button"
+                onClick={onOpenResourcesModal}
+                className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold cursor-pointer"
+              >
+                + بنك المصادر
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Grid of Lesson Details */}

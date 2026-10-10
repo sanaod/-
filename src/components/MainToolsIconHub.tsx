@@ -146,6 +146,22 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
       keywords: ['تحضير', 'درس', 'ذكاء', 'توليد', 'خطة', 'ai', 'فوري', 'معايير'],
     },
     {
+      id: 'resources-bank',
+      category: 'ai',
+      title: 'بنك المصادر والربط بالتحضير',
+      subtitle: 'ربط وتغيير المصادر تلقائياً بالدرس',
+      badge: `+${toArabicDigits(resourcesCount)} مربوط بالتحضير 📚🔗`,
+      badgeType: 'success',
+      icon: Layers,
+      colorGradient: 'from-emerald-900 via-teal-900 to-emerald-950',
+      borderColor: 'border-emerald-400/80',
+      hoverBorder: 'hover:border-emerald-300',
+      iconBg: 'bg-emerald-600/40 border-emerald-300/40',
+      iconColor: 'text-emerald-200',
+      action: onOpenResourcesModal,
+      keywords: ['مصادر', 'مناهج', 'مراجع', 'كتب', 'رفع', 'بنك', 'تحضير', 'ربط', 'تلقائي'],
+    },
+    {
       id: 'ai-unit',
       category: 'ai',
       title: 'تحضير وحدة كاملة',
@@ -373,22 +389,6 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
     },
 
     // 3. Curriculum, Resources & Simulators
-    {
-      id: 'resources-bank',
-      category: 'resources',
-      title: 'بنك المصادر والمناهج',
-      subtitle: 'رفع المراجع والكتب والدلائل',
-      badge: `+${toArabicDigits(resourcesCount)} مراجع 📚`,
-      badgeType: 'success',
-      icon: Layers,
-      colorGradient: 'from-emerald-900 via-teal-900 to-emerald-950',
-      borderColor: 'border-emerald-400/80',
-      hoverBorder: 'hover:border-emerald-300',
-      iconBg: 'bg-white/20 border-emerald-200/40',
-      iconColor: 'text-emerald-100',
-      action: onOpenResourcesModal,
-      keywords: ['مصادر', 'مناهج', 'مراجع', 'كتب', 'رفع', 'بنك'],
-    },
     {
       id: 'abacus-simulator',
       category: 'resources',
@@ -665,7 +665,10 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   // Filter tools based on category and search query
   const filteredTools = useMemo(() => {
     return tools.filter((tool) => {
-      const matchesCategory = selectedCategory === 'all' || tool.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        tool.category === selectedCategory ||
+        (tool.id === 'resources-bank' && (selectedCategory === 'ai' || selectedCategory === 'resources'));
       if (!matchesCategory) return false;
 
       if (!searchQuery.trim()) return true;
