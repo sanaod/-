@@ -28,6 +28,7 @@ import {
   PlusCircle,
   Download,
   GraduationCap,
+  Activity,
   X,
   RotateCcw,
   FileEdit,
@@ -101,6 +102,7 @@ interface TeacherDashboardProps {
   onOpenAssessmentSimulatorModal?: () => void;
   onOpenExecutivePlan?: () => void;
   onOpenAuthenticTaskModal?: () => void;
+  onOpenWizardModal?: () => void;
 }
 
 // Subject color mappings
@@ -385,7 +387,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenAssessmentSimulatorModal,
   onOpenExecutivePlan,
   onOpenAuthenticTaskModal,
+  onOpenWizardModal,
 }) => {
+  const [activeTrackTab, setActiveTrackTab] = useState<'planning' | 'assessment' | 'resources' | 'management' | 'export'>('planning');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
   const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('all');
@@ -1137,6 +1141,277 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </span>
             </div>
           </div>
+        </div>
+      </div>
+
+
+
+      {/* Primary Action Banner requested by user */}
+      <div className="bg-linear-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-5 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 no-print">
+        <div>
+          <h3 className="text-lg font-black font-['Tajawal'] flex items-center gap-2">
+            <span>✨ لوحة القيادة السريعة لمنظومة عبقور</span>
+          </h3>
+          <p className="text-xs text-emerald-200 mt-1">
+            اختر أحد الإجراءات الأساسية أدناه للبدء الفوري، أو تصفح المسارات التعليمية الخمسة المنظمة:
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenWizardModal && (
+            <button
+              type="button"
+              onClick={onOpenWizardModal}
+              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>إنشاء تحضير جديد ⚡</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('indexed-folders-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/20"
+          >
+            <FolderOpen className="w-4 h-4 text-amber-300" />
+            <span>تحاضيري المحفوظة 📂</span>
+          </button>
+
+          {onOpenSemesterPlanModal && (
+            <button
+              type="button"
+              onClick={onOpenSemesterPlanModal}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/20"
+            >
+              <CalendarRange className="w-4 h-4 text-cyan-300" />
+              <span>التخطيط السنوي والفصلي 🗓️</span>
+            </button>
+          )}
+
+          {onOpenAssessmentSimulatorModal && (
+            <button
+              type="button"
+              onClick={onOpenAssessmentSimulatorModal}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/20"
+            >
+              <Activity className="w-4 h-4 text-purple-300" />
+              <span>التقويم وأدوات التقييم 📊</span>
+            </button>
+          )}
+
+          {onOpenResourcesModal && (
+            <button
+              type="button"
+              onClick={onOpenResourcesModal}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/20"
+            >
+              <Layers className="w-4 h-4 text-emerald-300" />
+              <span>مصادر التعلم 📚</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 5 Core Tracks Hub (المسارات الخمسة الأساسية) */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 no-print">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 className="text-base font-black text-slate-900 font-['Tajawal'] flex items-center gap-2">
+              <Compass className="w-5 h-5 text-emerald-700" />
+              <span>المسارات الخمسة الأساسية لترتيب الأدوات والخدمات التربوية</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              وصول فوري ومنظم لكافة قدرات المنظومة مصنفة في خمسة مسارات تخصصية متكاملة
+            </p>
+          </div>
+        </div>
+
+        {/* Tracks Tabs */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {[
+            { id: 'planning', label: '١. التخطيط والتحضير', icon: BookOpen, color: 'bg-emerald-700 text-white' },
+            { id: 'assessment', label: '٢. التقويم والتقييم', icon: Activity, color: 'bg-purple-700 text-white' },
+            { id: 'resources', label: '٣. المصادر والتعلم الرقمي', icon: Layers, color: 'bg-teal-700 text-white' },
+            { id: 'management', label: '٤. الإدارة والمتابعة', icon: Users, color: 'bg-indigo-700 text-white' },
+            { id: 'export', label: '٥. الطباعة والتصدير', icon: Printer, color: 'bg-slate-800 text-white' },
+          ].map((tr) => {
+            const IconComp = tr.icon;
+            const isSel = activeTrackTab === tr.id;
+            return (
+              <button
+                key={tr.id}
+                type="button"
+                onClick={() => setActiveTrackTab(tr.id as any)}
+                className={`p-3 rounded-2xl text-xs font-black flex flex-col items-center gap-1.5 transition-all cursor-pointer border text-center ${
+                  isSel
+                    ? `${tr.color} shadow-md scale-102 border-transparent`
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                <IconComp className="w-5 h-5 shrink-0" />
+                <span className="truncate">{tr.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Track Content Panel */}
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {activeTrackTab === 'planning' && (
+            <>
+              {onOpenWizardModal && (
+                <div onClick={onOpenWizardModal} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                    <span>معالج تحضير الدرس المتدرج ⚡</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">إنشاء خطة درس عبر ٦ خطوات متسلسلة وموجّهة</p>
+                </div>
+              )}
+
+              <div onClick={onOpenAiGenerator} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>توليد درس فوري بالذكاء الاصطناعي</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">توليد الخطة والأنشطة وفق المصادر المرفقة بالـ AI</p>
+              </div>
+
+              {onOpenExecutivePlan && (
+                <div onClick={onOpenExecutivePlan} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                    <span className="text-amber-500">⭐</span>
+                    <span>النموذج الرئيسي (الخطة التنفيذية SMART)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">خطة الدرس النموذجية الرسمية المعتمدة للدرجة ٤</p>
+                </div>
+              )}
+
+              {onOpenUnitPlanModal && (
+                <div onClick={onOpenUnitPlanModal} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                    <Boxes className="w-4 h-4 text-blue-600" />
+                    <span>مولد تحضير وحدة كاملة (AI Unit Planner)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">توليد متسلسل لجميع دروس الوحدة وخططها</p>
+                </div>
+              )}
+
+              {onOpenSemesterPlanModal && (
+                <div onClick={onOpenSemesterPlanModal} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                    <CalendarRange className="w-4 h-4 text-teal-600" />
+                    <span>الخطة الفصلية وتوزيع الحصص الأسبوعي</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">توزيع المنهاج والأسابيع الدراسية والعطل الرسمية</p>
+                </div>
+              )}
+
+              {onOpenBlankTemplateModal && (
+                <div onClick={onOpenBlankTemplateModal} className="p-3 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-emerald-800 text-xs flex items-center gap-1.5">
+                    <FileEdit className="w-4 h-4 text-amber-600" />
+                    <span>استمارة التحضير المفرغة 📌</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">استمارة مفرغة قابلة للتعبئة والكتابة المباشرة</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTrackTab === 'assessment' && (
+            <>
+              {onOpenAssessmentSimulatorModal && (
+                <div onClick={onOpenAssessmentSimulatorModal} className="p-3 bg-white hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-purple-800 text-xs flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-purple-600" />
+                    <span>محاكي التقويم التربوي</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">قياس وتوقع نتائج وأداء الطلبة والمؤشرات</p>
+                </div>
+              )}
+
+              {onOpenAuthenticTaskModal && (
+                <div onClick={onOpenAuthenticTaskModal} className="p-3 bg-white hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-purple-800 text-xs flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-pink-600" />
+                    <span>مولد مهام التقويم الأصيل (GRASPS)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">تصميم مهام واقعية وأدوار ومواقف وسلالم تقدير</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTrackTab === 'resources' && (
+            <>
+              {onOpenResourcesModal && (
+                <div onClick={onOpenResourcesModal} className="p-3 bg-white hover:bg-teal-50 rounded-xl border border-slate-200 hover:border-teal-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-teal-800 text-xs flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-teal-600" />
+                    <span>بنك المصادر والمناهج المرفقة ({toArabicDigits(resourcesCount)})</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">إدارة ورفع وربط المراجع والمصادر بذكاء</p>
+                </div>
+              )}
+
+              {onOpenAbacusModal && (
+                <div onClick={onOpenAbacusModal} className="p-3 bg-white hover:bg-teal-50 rounded-xl border border-slate-200 hover:border-teal-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-teal-800 text-xs flex items-center gap-1.5">
+                    <Calculator className="w-4 h-4 text-teal-600" />
+                    <span>الأداة الرقمية / محاكي المعداد</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">محاكاة تفاعلية للعمليات الحسابية والوسائل</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTrackTab === 'management' && (
+            <>
+              <div onClick={() => setIsReportPdfModalOpen(true)} className="p-3 bg-white hover:bg-indigo-50 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer shadow-2xs group">
+                <div className="font-bold text-slate-900 group-hover:text-indigo-800 text-xs flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  <span>تقرير إنجازات المعلم التربوي (PDF)</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">إصدار تقرير شامل وموثق لجميع الخطط المنجزة</p>
+              </div>
+
+              {onOpenBackupRestore && (
+                <div onClick={onOpenBackupRestore} className="p-3 bg-white hover:bg-indigo-50 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-bold text-slate-900 group-hover:text-indigo-800 text-xs flex items-center gap-1.5">
+                    <Database className="w-4 h-4 text-indigo-600" />
+                    <span>النسخ الاحتياطي والاستعادة (JSON)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">حفظ واسترجاع كافة البيانات والخطط بسلاسة</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTrackTab === 'export' && (
+            <>
+              <div onClick={() => onOpenPrintView()} className="p-3 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 hover:border-slate-400 transition-all cursor-pointer shadow-2xs group">
+                <div className="font-bold text-slate-900 group-hover:text-slate-950 text-xs flex items-center gap-1.5">
+                  <Printer className="w-4 h-4 text-slate-700" />
+                  <span>معاينة وطباعة الاستمارة الرسمية A4</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">طباعة نظيفة ومعتمدة للاعتماد الإداري والتربوي</p>
+              </div>
+
+              <div onClick={() => window.print()} className="p-3 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 hover:border-slate-400 transition-all cursor-pointer shadow-2xs group">
+                <div className="font-bold text-slate-900 group-hover:text-slate-950 text-xs flex items-center gap-1.5">
+                  <Printer className="w-4 h-4 text-amber-600" />
+                  <span>طباعة المحرر المباشرة (Print-Friendly)</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">طباعة فورية للمحتوى الحالي بخطوط متناسقة</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -45,6 +45,7 @@ import { toArabicDigits, formatDateDMY } from './utils/arabicNumerals';
 import { analyzeContentLocally } from './utils/resourceAnalyzer';
 import { formatDateToIso } from './utils/palestinianCalendar';
 import {
+  X,
   Compass,
   Clock,
   Target,
@@ -316,25 +317,21 @@ export default function App() {
 
     // Target specific learningResources field based on resource type
     const currentRes = { ...currentPlan.section1.learningResources };
-    if (resource.type === 'textbook' || resource.type === 'guide') {
+    if (resource.type === 'textbook' || resource.type === 'curriculum_guide') {
       currentRes.textbook = resource.sourceInfo || resource.title;
-    } else if (resource.type === 'tangible') {
-      currentRes.tangibleMedia = resource.title;
-    } else if (resource.type === 'digital' || resource.type === 'link') {
-      currentRes.digitalMedia = resource.content.startsWith('http') ? resource.content : resource.title;
-    } else if (resource.type === 'worksheet') {
+    } else if (resource.type === 'worksheet' || resource.type === 'image' || resource.type === 'document') {
       currentRes.tangibleMedia = currentRes.tangibleMedia
         ? `${currentRes.tangibleMedia}، ${resource.title}`
         : resource.title;
     } else {
-      currentRes.externalReferences = resource.title;
+      currentRes.digitalReadiness = resource.content.startsWith('http') ? resource.content : resource.title;
     }
 
     // Automatically synchronize with executive plan stages (Stage 1 is the primary educational resource)
-    const basePlanWithExec = ensureExecutiveData(currentPlan);
-    const updatedExec = {
-      ...basePlanWithExec.executiveData,
-      executiveStages: basePlanWithExec.executiveData.executiveStages.map((stage, idx) => {
+    const basePlanWithExec: any = ensureExecutiveData(currentPlan);
+    const updatedExec: any = {
+      ...(basePlanWithExec.executiveData || {}),
+      executiveStages: (basePlanWithExec.executiveData?.executiveStages || []).map((stage: any, idx: number) => {
         if (idx === 0) {
           return {
             ...stage,
@@ -1163,7 +1160,6 @@ export default function App() {
         isOpen={isResourcesModalOpen}
         onClose={() => setIsResourcesModalOpen(false)}
         resources={resources}
-        attachedResourceId={currentPlan.attachedResources?.[0]?.id}
         onAddResource={(newRes) => {
           setResources((prev) => [newRes, ...prev]);
           setSelectedResourceForPlanning(newRes);

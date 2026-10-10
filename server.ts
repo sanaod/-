@@ -1511,6 +1511,100 @@ app.post('/api/suggest-unit-lessons', async (req, res) => {
   }
 });
 
+// Endpoint: Automatically analyze attached source and extract unit title, subject, grade, and lessons
+app.post('/api/analyze-unit-source', async (req, res) => {
+  try {
+    const { subject, grade, resources } = req.body;
+
+    const prompt = `أنت خبير تربوي ومصمم مناهج تعليمية للوزارة. قم بتحليل المصادر المرفقة التالية بعناية فائقة واستخرج منها:
+1. عنوان الوحدة التعليمية بدقة (unitTitle)
+2. المبحث الدراسي (subject)
+3. الصف الدراسي (grade)
+4. قائمة شاملة ومفصلة بدروس الوحدة (lessons)، بحيث يحتوي كل درس على: رقم الدرس (lessonNumber)، عنوان الدرس (title)، عدد الحصص المقترحة (periods - افتراضياً ٢)، وملخص أو هدف مختصر للدرس (summary).
+
+المبحث المفترض: ${subject || 'غير محدد'}
+الصف المفترض: ${grade || 'غير محدد'}
+المصادر والمراجع المرفقة:
+${JSON.stringify(resources || [])}
+
+أرجع النتيجة حصراً بصيغة JSON بالتنسيق التالي:
+{
+  "unitTitle": "عنوان الوحدة المستخرج أو المقترح",
+  "subject": "المبحث",
+  "grade": "الصف",
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "title": "عنوان الدرس الأول",
+      "periods": 2,
+      "summary": "نتاجات الدرس وملخصه"
+    }
+  ]
+}`;
+
+    try {
+      const response = await generateWithModelFallback({
+        contents: prompt,
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            unitTitle: { type: Type.STRING },
+            subject: { type: Type.STRING },
+            grade: { type: Type.STRING },
+            lessons: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  lessonNumber: { type: Type.INTEGER },
+                  title: { type: Type.STRING },
+                  periods: { type: Type.INTEGER },
+                  summary: { type: Type.STRING },
+                },
+                required: ['lessonNumber', 'title', 'periods', 'summary'],
+              },
+            },
+          },
+          required: ['unitTitle', 'lessons'],
+        },
+      });
+
+      const text = response?.text;
+      if (text) {
+        const parsed = JSON.parse(text);
+        if (parsed && parsed.unitTitle && Array.isArray(parsed.lessons)) {
+          return res.json({ success: true, ...parsed });
+        }
+      }
+    } catch (aiErr: any) {
+      console.warn('[AI Unit Analyzer] Gemini analysis fallback:', aiErr?.message);
+    }
+
+    // Intelligent fallback extraction from resources
+    const firstResTitle = resources?.[0]?.title || '';
+    const resContent = resources?.[0]?.content || '';
+    const inferredTitle = firstResTitle ? `وحدة: ${firstResTitle.replace(/^(كتاب|ورقة عمل|مستند|دليل)[\s:\-]*/i, '')}` : 'الوحدة التعليمية المستخرجة من المصدر المرفق';
+
+    const fallbackLessons = createFallbackUnitLessons({
+      subject: subject || 'الرياضيات',
+      grade: grade || 'الثالث الأساسي',
+      unitTitle: inferredTitle,
+      numberOfLessons: 4,
+    });
+
+    return res.json({
+      success: true,
+      unitTitle: inferredTitle,
+      subject: subject || 'الرياضيات',
+      grade: grade || 'الثالث الأساسي',
+      lessons: fallbackLessons,
+    });
+  } catch (err: any) {
+    console.error('Error analyzing unit source:', err);
+    return res.status(500).json({ error: 'فشل في تحليل المصدر المرفق: ' + (err.message || '') });
+  }
+});
+
 // Endpoint: Generate complete unit preparation with multiple lesson plans
 app.post('/api/generate-unit-plan', async (req, res) => {
   try {

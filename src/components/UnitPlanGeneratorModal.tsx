@@ -351,6 +351,44 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
     }
   };
 
+  // AI Analyze Attached Source for Unit & Lessons
+  const [isAnalyzingSource, setIsAnalyzingSource] = useState(false);
+  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
+
+  const handleAiAnalyzeAttachedSource = async () => {
+    if (!resources || resources.length === 0) return;
+    setIsAnalyzingSource(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/analyze-unit-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          grade,
+          resources,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.unitTitle) setUnitTitle(data.unitTitle);
+        if (data.subject) setSubject(data.subject);
+        if (data.grade) setGrade(data.grade);
+        if (Array.isArray(data.lessons) && data.lessons.length > 0) {
+          setLessons(data.lessons);
+          setNumberOfLessons(data.lessons.length);
+        }
+        setAnalysisNotice('تم تحليل المصدر المرفق واستخراج الوحدة ودروسها بالذكاء الاصطناعي بنجاح! ✨');
+        setTimeout(() => setAnalysisNotice(null), 4500);
+      }
+    } catch (err: any) {
+      console.warn('Analysis error:', err);
+      setError('تعذر تحليل المصدر المرفق آلياً');
+    } finally {
+      setIsAnalyzingSource(false);
+    }
+  };
+
   // Update specific lesson
   const updateLesson = (idx: number, field: keyof UnitLessonItem, val: any) => {
     setLessons((prev) => {
@@ -735,22 +773,51 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
                           </span>
                         </div>
                         <p className="text-[11px] text-emerald-800/90 mt-0.5">
-                          اختر مصدراً لمزامنة المبحث والصف وعنوان الوحدة تلقائياً من بنك المصادر
+                          التعرف التلقائي وتحليل المصدر المرفق واستخراج الوحدة ودروسها بالذكاء الاصطناعي
                         </p>
                       </div>
                     </div>
 
-                    {onOpenResourcesModal && (
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
-                        onClick={onOpenResourcesModal}
-                        className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shrink-0 transition-all shadow-xs hover:shadow-md hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer ring-1 ring-emerald-500/30"
+                        onClick={handleAiAnalyzeAttachedSource}
+                        disabled={isAnalyzingSource}
+                        className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="تحليل المصدر المرفق تلقائياً واستخراج الوحدة ودروسها بالذكاء الاصطناعي"
                       >
-                        <Plus className="w-4 h-4 text-emerald-200" />
-                        <span>إدارة بنك المصادر</span>
+                        {isAnalyzingSource ? (
+                          <>
+                            <Sparkles className="w-4 h-4 animate-spin text-amber-200" />
+                            <span>جاري التحليل...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4 text-amber-200" />
+                            <span>تحليل تلقائي للمصدر بالذكاء الاصطناعي ⚡</span>
+                          </>
+                        )}
                       </button>
-                    )}
+
+                      {onOpenResourcesModal && (
+                        <button
+                          type="button"
+                          onClick={onOpenResourcesModal}
+                          className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4 text-emerald-200" />
+                          <span>إدارة المصادر</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {analysisNotice && (
+                    <div className="p-2 bg-emerald-600 text-white text-xs rounded-xl font-bold flex items-center gap-2 shadow-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                      <span>{analysisNotice}</span>
+                    </div>
+                  )}
 
                   <div className="pt-2.5 border-t border-emerald-200">
                     <span className="block text-[11px] font-bold text-emerald-900 mb-1.5 flex items-center gap-1">
