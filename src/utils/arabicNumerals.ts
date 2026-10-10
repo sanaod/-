@@ -19,38 +19,44 @@ export const toArabicPercent = (num: number): string => {
 };
 
 /**
- * Formats a date string (YYYY-MM-DD or ISO date) into Day/Month/Year format (DD/MM/YYYY).
- * Formats dates explicitly starting with DAY, then MONTH, then YEAR (يوم / شهر / سنة).
- * Example: "2026-10-05" => "٠٥/١٠/٢٠٢٦م"
+ * Formats a date string (YYYY-MM-DD, ISO date, or any standard date) into Year/Month/Day format (yyyy/m/d).
+ * Formats dates explicitly starting with YEAR, then MONTH, then DAY (سنة / شهر / يوم).
+ * Example: "2026-10-05" => "٢٠٢٦/١٠/٥"
  */
-export function formatDateDMY(
+export function formatDateYMD(
   dateInput: string | Date | undefined | null,
   convertToArabicNumerals = true,
-  includeM = true
+  includeM = false
 ): string {
   if (!dateInput) return '';
-  
+
   if (typeof dateInput === 'string') {
-    const cleanStr = dateInput.trim();
+    let cleanStr = dateInput.trim();
     if (!cleanStr) return '';
 
-    // If input matches YYYY-MM-DD
-    const isoMatch = cleanStr.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-    if (isoMatch) {
-      const year = isoMatch[1];
-      const month = isoMatch[2].padStart(2, '0');
-      const day = isoMatch[3].padStart(2, '0');
-      const res = `${day}/${month}/${year}${includeM ? 'م' : ''}`;
+    // Remove invisible marks and Arabic 'm' / 'h' if present
+    cleanStr = cleanStr.replace(/[\u200E\u200F\u202A-\u202E\u061C]/g, '').replace(/[مهـ]/g, '').trim();
+
+    // Convert Eastern Arabic numerals to Western digits for robust parsing
+    const normalized = cleanStr.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+
+    // If input matches YYYY-MM-DD or YYYY/M/D or YYYY.M.D
+    const ymdMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (ymdMatch) {
+      const year = ymdMatch[1];
+      const month = parseInt(ymdMatch[2], 10);
+      const day = parseInt(ymdMatch[3], 10);
+      const res = `${year}/${month}/${day}${includeM ? 'م' : ''}`;
       return convertToArabicNumerals ? toArabicDigits(res) : res;
     }
 
-    // If input matches DD/MM/YYYY or DD-MM-YYYY
-    const dmyMatch = cleanStr.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+    // If input matches DD/MM/YYYY or DD-MM-YYYY or D/M/YYYY
+    const dmyMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
     if (dmyMatch) {
-      const day = dmyMatch[1].padStart(2, '0');
-      const month = dmyMatch[2].padStart(2, '0');
+      const day = parseInt(dmyMatch[1], 10);
+      const month = parseInt(dmyMatch[2], 10);
       const year = dmyMatch[3];
-      const res = `${day}/${month}/${year}${includeM ? 'م' : ''}`;
+      const res = `${year}/${month}/${day}${includeM ? 'م' : ''}`;
       return convertToArabicNumerals ? toArabicDigits(res) : res;
     }
   }
@@ -60,27 +66,30 @@ export function formatDateDMY(
     return convertToArabicNumerals ? toArabicDigits(String(dateInput)) : String(dateInput);
   }
 
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
 
-  const formatted = `${day}/${month}/${year}${includeM ? 'م' : ''}`;
+  const formatted = `${year}/${month}/${day}${includeM ? 'م' : ''}`;
   return convertToArabicNumerals ? toArabicDigits(formatted) : formatted;
 }
 
+// Alias for backward compatibility across all modules
+export const formatDateDMY = formatDateYMD;
+
 /**
- * Formats a timeframe range starting with Day/Month/Year.
+ * Formats a timeframe range starting with Year/Month/Day (yyyy/m/d).
  * Example: startDate="2026-10-05", endDate="2026-10-08"
- * => "من ٠٥/١٠/٢٠٢٦م إلى ٠٨/١٠/٢٠٢٦م"
+ * => "من ٢٠٢٦/١٠/٥ إلى ٢٠٢٦/١٠/٨"
  */
-export function formatTimeframeDMY(
+export function formatTimeframeYMD(
   startDate?: string,
   endDate?: string,
   holidayNotice?: string
 ): string {
   if (!startDate && !endDate) return '';
-  const startStr = formatDateDMY(startDate);
-  const endStr = formatDateDMY(endDate || startDate);
+  const startStr = formatDateYMD(startDate);
+  const endStr = formatDateYMD(endDate || startDate);
   const notice = holidayNotice ? ` ${holidayNotice}` : '';
 
   if (startStr && endStr && startStr !== endStr) {
@@ -88,3 +97,6 @@ export function formatTimeframeDMY(
   }
   return `تاريخ التنفيذ: ${startStr || endStr}${notice}`;
 }
+
+// Alias for backward compatibility
+export const formatTimeframeDMY = formatTimeframeYMD;

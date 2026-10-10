@@ -281,11 +281,11 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
                 <div className="p-2 font-bold bg-slate-100 border-b border-black">المديرية والوزارة:</div>
                 <div className="p-2 border-b border-black">{plan.header.directorate} ({plan.header.ministry})</div>
 
-                <div className="p-2 font-bold bg-slate-100">الفترة الزمنية للدرس (يوم/شهر/سنة):</div>
+                <div className="p-2 font-bold bg-slate-100">الفترة الزمنية للدرس (سنة/شهر/يوم - yyyy/m/d):</div>
                 <div className="p-2 col-span-3 font-extrabold text-black">
                   {plan.header.startDate && plan.header.endDate
                     ? `من (${formatDateDMY(plan.header.startDate)}) إلى (${formatDateDMY(plan.header.endDate)})`
-                    : `من (${formatDateDMY(plan.header.date) || '٠٥/١٠/٢٠٢٦م'})`}
+                    : `من (${formatDateDMY(plan.header.date) || '٢٠٢٦/١٠/٥'})`}
                   <span className="text-[10px] font-normal text-slate-700 mr-2">
                     (مراعاة عطلة الجمعة والسبت والإجازات الرسمية لوزارة التربية والتعليم الفلسطينية)
                   </span>

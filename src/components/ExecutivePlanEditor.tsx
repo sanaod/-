@@ -40,7 +40,7 @@ import {
   PALESTINIAN_MINISTRY_HOLIDAYS,
   formatDateToIso,
 } from '../utils/palestinianCalendar';
-import { parseDateParts, getStageOrdinal, formatStageNameWithOrdinal } from '../utils/executivePlanDefaults';
+import { parseDateParts, getStageOrdinal, formatStageNameWithOrdinal, createDefaultExecutiveData } from '../utils/executivePlanDefaults';
 import { getCurrentSemesterName } from '../utils/academicYear';
 import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
 import { EducationalStagePickerModal } from './EducationalStagePickerModal';
@@ -68,15 +68,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
   pinnedSections = [],
   onTogglePinSection,
 }) => {
-  const data: ExecutivePlanData = plan.executiveData || {
-    executiveStages: [],
-    smartObjectives: [],
-    learningCompetencies: '',
-    valuesAndEthics: '',
-    studentCharacteristicsAnalysis: '',
-    environmentalAnalysis: '',
-    timeframeDetails: {} as any,
-  };
+  const data: ExecutivePlanData = plan.executiveData || createDefaultExecutiveData(plan);
 
   const handleUpdate = (updatedData: ExecutivePlanData) => {
     onChange({
@@ -164,7 +156,8 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
       (!data.timeframeDetails.startDate ||
         !data.timeframeDetails.startSemester ||
         data.timeframeDetails.startDate.includes('...') ||
-        data.timeframeDetails.startDate === '15/10/2026')
+        data.timeframeDetails.startDate === '15/10/2026' ||
+        data.timeframeDetails.startDate === '2026/10/15')
     ) {
       applyTodayDateAutomatically();
     }
@@ -601,7 +594,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         type="text"
                         value={data.timeframeDetails.startDate}
                         onChange={(e) => handleStartDateTextChange(e.target.value)}
-                        placeholder="DD/MM/YYYY"
+                        placeholder="yyyy/m/d"
                         className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                       />
                       <input
@@ -695,7 +688,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
                         type="text"
                         value={data.timeframeDetails.endDate}
                         onChange={(e) => handleEndDateTextChange(e.target.value)}
-                        placeholder="DD/MM/YYYY"
+                        placeholder="yyyy/m/d"
                         className="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-medium focus:ring-1 focus:ring-emerald-500"
                       />
                       <input

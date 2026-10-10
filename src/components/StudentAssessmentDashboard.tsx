@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
-import { toArabicDigits, toArabicPercent } from '../utils/arabicNumerals';
+import { toArabicDigits, toArabicPercent, formatDateYMD } from '../utils/arabicNumerals';
 import {
   ResponsiveContainer,
   BarChart,
@@ -644,7 +644,7 @@ export const StudentAssessmentDashboard: React.FC<StudentAssessmentDashboardProp
         setTrendReport({
           reportTitle: `تقرير التشخيص الأكاديمي الذكي وتحليل اتجاهات الكفايات (${selectedSubjectFilter === 'all' ? 'العام الأكاديمي' : selectedSubjectFilter})`,
           academicYear: '٢٠٢٦ / ٢٠٢٧م',
-          generatedDate: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }),
+          generatedDate: formatDateYMD(new Date()),
           executiveSummary: `أظهرت قراءة الخطط المحفوظة مستويات تمكن مفاهيمي وإجرائي مرتفعة بنسبة إتقان بلغت ${assessmentData.highProficiencyRate}%، مع تغطية متسلسلة لنواتج التعلم وسلالم التقدير اللفظية عبر الفصلين الأول والثاني.`,
           overallProficiencyIndex: `${assessmentData.highProficiencyRate}% (إتقان متميز)`,
           trendAnalysis: {

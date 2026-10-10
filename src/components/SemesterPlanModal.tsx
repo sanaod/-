@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { SemesterPlanDocument, SemesterPlanRow } from '../types/semesterPlan';
 import { LessonPlan, EDUCATIONAL_STAGES, STANDARD_GRADES } from '../types/lessonPlan';
-import { toArabicDigits } from '../utils/arabicNumerals';
+import { toArabicDigits, formatDateYMD } from '../utils/arabicNumerals';
 import {
   ALL_SEMESTER_PLANS,
   sampleMathSemesterPlan,
@@ -810,11 +810,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
           : ' (أيام تدريس فعلية)';
 
         const formatShortDate = (dStr: string) => {
-          const parts = dStr.split('-');
-          if (parts.length === 3) {
-            return `${parts[0]}/${parts[1]}/${parts[2]}`;
-          }
-          return dStr;
+          return formatDateYMD(dStr, false);
         };
 
         const newTimeframe = `الأسبوع (${toArabicDigits(idx + 1)}): من ${formatShortDate(result.startDate)} إلى ${formatShortDate(result.endDate)}${holidaysPassedText}`;
@@ -1363,7 +1359,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                       handleApplySemesterDates('2026-09-01', '2027-01-15');
                     }}
                     className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
-                    title="الفصل الأول: 01/09/2026 - 15/01/2027"
+                    title="الفصل الأول: 2026/9/1 - 2027/1/15"
                   >
                     🗓️ الفصل الأول
                   </button>
@@ -1376,7 +1372,7 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                       handleApplySemesterDates('2027-02-01', '2027-05-30');
                     }}
                     className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shadow-2xs"
-                    title="الفصل الثاني: 01/02/2027 - 30/05/2027"
+                    title="الفصل الثاني: 2027/2/1 - 2027/5/30"
                   >
                     🗓️ الفصل الثاني
                   </button>
@@ -2388,8 +2384,8 @@ export const SemesterPlanModal: React.FC<SemesterPlanModalProps> = ({
                             </span>
                             <span className="text-[10px] text-slate-500">
                               {holiday.startDate === holiday.endDate
-                                ? `تاريخ الإجازة: ${holiday.startDate}`
-                                : `من ${holiday.startDate} إلى ${holiday.endDate}`}
+                                ? `تاريخ الإجازة: ${formatDateYMD(holiday.startDate, false)}`
+                                : `من ${formatDateYMD(holiday.startDate, false)} إلى ${formatDateYMD(holiday.endDate, false)}`}
                               {holiday.notes ? ` • ${holiday.notes}` : ''}
                             </span>
                           </div>

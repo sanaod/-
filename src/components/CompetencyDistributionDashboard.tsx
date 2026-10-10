@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
-import { toArabicDigits, toArabicPercent } from '../utils/arabicNumerals';
+import { toArabicDigits, toArabicPercent, formatDateYMD } from '../utils/arabicNumerals';
 import {
   ResponsiveContainer,
   BarChart,
@@ -416,7 +416,7 @@ export const CompetencyDistributionDashboard: React.FC<CompetencyDistributionDas
   // Copy Markdown Gap Analysis Report
   const handleCopyReport = () => {
     const md = `# تقرير تحليل توزيع الكفايات التعليمية وفجوات التخطيط عبر الفصول الدراسية
-العام الدراسي: ٢٠٢٦ / ٢٠٢٧م | تاريخ التحليل: ${new Date().toLocaleDateString('ar-EG')}
+العام الدراسي: ٢٠٢٦ / ٢٠٢٧م | تاريخ التحليل: ${formatDateYMD(new Date())}
 المبحث: ${selectedSubjectFilter === 'all' ? 'كافة المباحث' : selectedSubjectFilter} | الخطط المفحوصة: ${analyticsData.activePlansCount} خطة
 
 ## 📊 الملخص الإحصائي

@@ -1,5 +1,5 @@
 import { LessonPlan } from '../types/lessonPlan';
-import { toArabicDigits } from './arabicNumerals';
+import { toArabicDigits, formatDateYMD } from './arabicNumerals';
 
 /**
  * Checks if the Web Share API is available in the current browser/device environment.
@@ -27,7 +27,9 @@ export function generatePlanShareText(plan: LessonPlan): string {
   lines.push(`⏱️ *عدد الحصص:* ${toArabicDigits(h.totalPeriods || 1)} حصص (${toArabicDigits(h.periodDurationMinutes || 40)} دقيقة للحصة)`);
 
   if (h.date || h.startDate) {
-    lines.push(`📅 *التاريخ والفترة:* ${toArabicDigits(h.date || h.startDate || '')}${h.endDate && h.endDate !== h.startDate ? ` إلى ${toArabicDigits(h.endDate)}` : ''}`);
+    const sDateFormatted = formatDateYMD(h.startDate || h.date);
+    const eDateFormatted = h.endDate && h.endDate !== h.startDate ? formatDateYMD(h.endDate) : '';
+    lines.push(`📅 *التاريخ والفترة:* ${sDateFormatted}${eDateFormatted ? ` إلى ${eDateFormatted}` : ''}`);
   }
 
   if (h.school) {

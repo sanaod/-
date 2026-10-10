@@ -16,7 +16,7 @@ export const palestineMathGrade3Plan: LessonPlan = {
     totalPeriods: 2,
     currentPeriod: 1,
     periodDurationMinutes: 40,
-    date: '2026/10/15م',
+    date: '2026/10/15',
     semester: 'الفصل الدراسي الأول',
   },
   section1: {
@@ -217,17 +217,17 @@ export const palestineMathGrade3Plan: LessonPlan = {
   section6Signatures: {
     teacher: {
       name: 'أ. عبد الرحمن دويكات',
-      date: '2026/10/15م',
+      date: '2026/10/15',
       notes: 'تم تنفيذ الحصة بنجاح واكتمال كافة النتاجات وتوثيق الشواهد في ملف الإنجاز.',
     },
     schoolPrincipal: {
       name: 'أ. خالد عبد الرحمن',
-      date: '2026/10/15م',
+      date: '2026/10/15',
       directives: 'خطة متكاملة ومستوفية لكافة مؤشرات التميز التربوي والدمج والمواطنة، بوركت الجهود.',
     },
     educationalSupervisor: {
       name: 'أ. فاطمة خليل',
-      date: '2026/10/16م',
+      date: '2026/10/16',
       directives: 'ملاحظة صفية متميزة جداً (درجة 4) ونشاط رائد في توظيف التقييم الأصيل والربط الوطني.',
     },
   },
@@ -251,7 +251,7 @@ export const defaultExemplarPlans: LessonPlan[] = [
       totalPeriods: 2,
       currentPeriod: 1,
       periodDurationMinutes: 40,
-      date: '2026/10/20م',
+      date: '2026/10/20',
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -452,17 +452,17 @@ export const defaultExemplarPlans: LessonPlan[] = [
     section6Signatures: {
       teacher: {
         name: 'أ. مريم النابلسي',
-        date: '2026/10/20م',
+        date: '2026/10/20',
         notes: 'حصة تفاعلية ممتازة، حققت النتاجات بطلاقة ورضا عالٍ من الطلبة.',
       },
       schoolPrincipal: {
         name: 'أ. هناء عودة',
-        date: '2026/10/20م',
+        date: '2026/10/20',
         directives: 'خطة أنموذجية ممتازة في توظيف الهوية واللغة والتقويم الأصيل، بوركت الجهود.',
       },
       educationalSupervisor: {
         name: 'د. سمير الحلبي',
-        date: '2026/10/21م',
+        date: '2026/10/21',
         directives: 'إعداد راقٍ يعكس كفاءة تعليمية واستراتيجيات نوعية متقدمة في تعليم القراءة.',
       },
     },
@@ -483,7 +483,7 @@ export const defaultExemplarPlans: LessonPlan[] = [
       totalPeriods: 2,
       currentPeriod: 1,
       periodDurationMinutes: 45,
-      date: '2026/10/25م',
+      date: '2026/10/25',
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -678,17 +678,17 @@ export const defaultExemplarPlans: LessonPlan[] = [
     section6Signatures: {
       teacher: {
         name: 'أ. أحمد الزرعيني',
-        date: '2026/10/25م',
+        date: '2026/10/25',
         notes: 'حصة استقصائية ممتعة طبقت فيها معايير المختبر الآمن بكفاءة عالية.',
       },
       schoolPrincipal: {
         name: 'أ. غسان شلبي',
-        date: '2026/10/25م',
+        date: '2026/10/25',
         directives: 'خطة متكاملة تستحق التعميم على مباحث العلوم بالمديرية.',
       },
       educationalSupervisor: {
         name: 'د. رويدة مصطفى',
-        date: '2026/10/26م',
+        date: '2026/10/26',
         directives: 'يُنصح بمشاركة هذه الممارسات المخبرية في المعرض التربوي السنوي.',
       },
     },
@@ -709,7 +709,7 @@ export const defaultExemplarPlans: LessonPlan[] = [
       totalPeriods: 2,
       currentPeriod: 1,
       periodDurationMinutes: 40,
-      date: '2026/10/28م',
+      date: '2026/10/28',
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -904,17 +904,17 @@ export const defaultExemplarPlans: LessonPlan[] = [
     section6Signatures: {
       teacher: {
         name: 'أ. سحر القواسمي',
-        date: '2026/10/28م',
+        date: '2026/10/28',
         notes: 'حصة وطنية وجغرافية متميزة حققت أهدافها بكفاءة عالية.',
       },
       schoolPrincipal: {
         name: 'أ. جهاد عسيلة',
-        date: '2026/10/28م',
+        date: '2026/10/28',
         directives: 'يُوصى بعرض مجسمات الطلبة في المعرض الوطني للمدرسة.',
       },
       educationalSupervisor: {
         name: 'أ. كفاح طهبوب',
-        date: '2026/10/29م',
+        date: '2026/10/29',
         directives: 'إعداد نموذجي يُعتد به كمرجع تدريبي للمعلمين الجدد.',
       },
     },
@@ -935,7 +935,7 @@ export const defaultExemplarPlans: LessonPlan[] = [
       totalPeriods: 2,
       currentPeriod: 1,
       periodDurationMinutes: 40,
-      date: '2026/10/10م',
+      date: '2026/10/10',
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -1095,17 +1095,17 @@ export const defaultExemplarPlans: LessonPlan[] = [
     section6Signatures: {
       teacher: {
         name: 'أ. هناء البرغوثي',
-        date: '2026/10/10م',
+        date: '2026/10/10',
         notes: 'حصة تأسيسية ناجحة ومبهجة عززت ثقة الأطفال بالأرقام.',
       },
       schoolPrincipal: {
         name: 'أ. فدوى الريماوي',
-        date: '2026/10/11م',
+        date: '2026/10/11',
         directives: 'بيئة صفية جاذبة ومحفزة للتعلم الاستكشافي المبكر.',
       },
       educationalSupervisor: {
         name: 'أ. خولة عبد القادر',
-        date: '2026/10/12م',
+        date: '2026/10/12',
         directives: 'تطبيق متميز لمعايير الطفولة المبكرة والتعلم باللعب والمحسوسات.',
       },
     },
@@ -1126,7 +1126,7 @@ export const defaultExemplarPlans: LessonPlan[] = [
       totalPeriods: 2,
       currentPeriod: 1,
       periodDurationMinutes: 40,
-      date: '2026/10/12م',
+      date: '2026/10/12',
       semester: 'الفصل الدراسي الأول',
     },
     section1: {
@@ -1282,17 +1282,17 @@ export const defaultExemplarPlans: LessonPlan[] = [
     section6Signatures: {
       teacher: {
         name: 'أ. محمود الكرد',
-        date: '2026/10/12م',
+        date: '2026/10/12',
         notes: 'حصة قرائية ممتعة حققت نواتج التعلم المستهدفة بنجاح.',
       },
       schoolPrincipal: {
         name: 'أ. ناصر الرجبي',
-        date: '2026/10/13م',
+        date: '2026/10/13',
         directives: 'جهود قرائية متميزة تثري معارف الطلبة وتنمي حب القراءة.',
       },
       educationalSupervisor: {
         name: 'أ. إيمان القواسمي',
-        date: '2026/10/14م',
+        date: '2026/10/14',
         directives: 'خطة عمل متقنة تراعي الخصائص العمرية لطلبة الصف الثاني الأساسي.',
       },
     },

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { LessonPlan } from '../types/lessonPlan';
-import { toArabicDigits, toArabicPercent } from '../utils/arabicNumerals';
+import { toArabicDigits, toArabicPercent, formatDateYMD } from '../utils/arabicNumerals';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { exportLessonPlanToPdf } from '../utils/pdfExport';
 import {
@@ -1004,7 +1004,7 @@ export const TeacherReportPdfModal: React.FC<TeacherReportPdfModalProps> = ({
                             )}
                           </td>
                           <td className="py-2 px-2 text-center text-slate-600 font-medium tabular-nums text-[11px]">
-                            {plan.header.date || '٢٠٢٦م'}
+                            {formatDateYMD(plan.header.date) || '٢٠٢٦/١٠/٥'}
                           </td>
                         </tr>
                       );

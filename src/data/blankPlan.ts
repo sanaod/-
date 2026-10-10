@@ -211,7 +211,7 @@ const initialDefaultPlanBase: LessonPlan = {
     date: '2026-10-05',
     startDate: '2026-10-05',
     endDate: '2026-10-05',
-    timeframe: 'من (٠٥/١٠/٢٠٢٦م) إلى (٠٥/١٠/٢٠٢٦م)',
+    timeframe: 'من (٢٠٢٦/١٠/٥) إلى (٢٠٢٦/١٠/٥)',
     semester: 'الفصل الدراسي الأول',
   },
   section1: {
