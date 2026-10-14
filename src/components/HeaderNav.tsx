@@ -38,6 +38,8 @@ import {
   QrCode,
   Clapperboard,
   Share2,
+  Globe,
+  Lightbulb,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -79,6 +81,9 @@ interface HeaderNavProps {
   onOpenAssessmentSimulatorModal?: () => void;
   onOpenAcademicMilestonesModal?: () => void;
   onOpenAndroidAppModal?: () => void;
+  onOpenPalestinianOerHub?: () => void;
+  onOpenSmartGuideModal?: () => void;
+  onOpenCompetenciesModal?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -86,6 +91,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   activePlanId,
   onSelectPlan,
   onOpenAiGenerator,
+  onOpenPalestinianOerHub,
+  onOpenSmartGuideModal,
+  onOpenCompetenciesModal,
   onOpenUnitPlanModal,
   onOpenSemesterPlanModal,
   onOpenAbacusModal,
@@ -416,6 +424,46 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="الربط التلقائي مفعّل" />
                 </button>
               </div>
+
+              {/* Palestinian OER Direct Integration Hub CTA */}
+              {onOpenPalestinianOerHub && (
+                <button
+                  type="button"
+                  onClick={onOpenPalestinianOerHub}
+                  className="px-2.5 py-1.5 bg-linear-to-r from-emerald-800 to-teal-900 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs border border-amber-300/40 active:scale-95 shrink-0"
+                  title="وحدة الربط المباشر بمصادر التعليم المفتوحة OER المعتمدة في فلسطين ومكتبتي الشخصية"
+                >
+                  <span className="text-amber-300">🇵🇸</span>
+                  <Globe className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  <span>مصادر OER فلسطين</span>
+                </button>
+              )}
+
+              {/* Palestinian National Competencies CTA */}
+              {onOpenCompetenciesModal && (
+                <button
+                  type="button"
+                  onClick={onOpenCompetenciesModal}
+                  className="px-2.5 py-1.5 bg-linear-to-r from-teal-800 to-slate-900 hover:from-teal-700 hover:to-slate-850 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs border border-teal-400/40 active:scale-95 shrink-0"
+                  title="مكتبة الكفايات الوطنية الفلسطينية وفق إطار وزارة التربية والتعليم العالي"
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>مكتبة الكفايات 🎯</span>
+                </button>
+              )}
+
+              {/* Smart Pedagogical Guide & Compliance Checker CTA */}
+              {onOpenSmartGuideModal && (
+                <button
+                  type="button"
+                  onClick={onOpenSmartGuideModal}
+                  className="px-2.5 py-1.5 bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs border border-amber-300 active:scale-95 shrink-0"
+                  title="مرشد عبقور التربوي الذكي ووحدة فحص التوافق والمعايير الوزارية"
+                >
+                  <Lightbulb className="w-3.5 h-3.5 text-slate-950 shrink-0 animate-pulse" />
+                  <span>مرشد عبقور وفحص التوافق 💡</span>
+                </button>
+              )}
 
               {/* Unit Plan Generator CTA */}
               {onOpenUnitPlanModal && (

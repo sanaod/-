@@ -17,6 +17,7 @@ import {
   FileText,
   Calendar,
   Eye,
+  Globe,
   SlidersHorizontal,
   ChevronLeft,
   PieChart as PieIcon,
@@ -61,6 +62,7 @@ import {
   ArrowUp,
   ArrowDown,
   Share2,
+  Lightbulb,
 } from 'lucide-react';
 import { TeacherReportPdfModal } from './TeacherReportPdfModal';
 import { TeacherAchievementsVisualizer, getStageFromGrade, STAGE_CONFIG } from './TeacherAchievementsVisualizer';
@@ -79,6 +81,12 @@ import { loadDailyReminders, saveDailyReminders } from '../utils/dailyRemindersS
 import { formatDateToIso } from '../utils/palestinianCalendar';
 import { SearchScope, matchesPlanSearch } from '../utils/arabicSearch';
 import { HighlightMatch } from './HighlightMatch';
+import { UserRole } from '../types/roleDashboards';
+import { RoleDashboardSwitcher } from './RoleDashboardSwitcher';
+import { TeacherRoleDashboard } from './TeacherRoleDashboard';
+import { SupervisorRoleDashboard } from './SupervisorRoleDashboard';
+import { PrincipalRoleDashboard } from './PrincipalRoleDashboard';
+import { EducationalResource } from '../types/lessonPlan';
 
 export type FolderIndexingMode = 'by_subject' | 'by_teacher' | 'tree' | 'table';
 
@@ -97,12 +105,18 @@ interface TeacherDashboardProps {
   onDeletePlan?: (planId: string) => void;
   onOpenResourcesModal?: () => void;
   resourcesCount?: number;
+  resources?: EducationalResource[];
   onOpenAbacusModal?: () => void;
   onOpenBackupRestore?: () => void;
   onOpenAssessmentSimulatorModal?: () => void;
   onOpenExecutivePlan?: () => void;
   onOpenAuthenticTaskModal?: () => void;
   onOpenWizardModal?: () => void;
+  onOpenPalestinianOerHub?: () => void;
+  onOpenCompetenciesModal?: () => void;
+  onOpenSmartGuideModal?: () => void;
+  onOpenReportsCenter?: (defaultTab?: string) => void;
+  onUpdatePlanReview?: (planId: string, directives: string, status: 'approved' | 'needs_revision') => void;
 }
 
 // Subject color mappings
@@ -382,13 +396,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onDeletePlan,
   onOpenResourcesModal,
   resourcesCount = 0,
+  resources = [],
   onOpenAbacusModal,
   onOpenBackupRestore,
   onOpenAssessmentSimulatorModal,
   onOpenExecutivePlan,
   onOpenAuthenticTaskModal,
   onOpenWizardModal,
+  onOpenPalestinianOerHub,
+  onOpenCompetenciesModal,
+  onOpenSmartGuideModal,
+  onOpenReportsCenter,
+  onUpdatePlanReview,
 }) => {
+  const [activeUserRole, setActiveUserRole] = useState<UserRole>('teacher');
   const [activeTrackTab, setActiveTrackTab] = useState<'planning' | 'assessment' | 'resources' | 'management' | 'export'>('planning');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState<string>('all');
@@ -1095,6 +1116,43 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Multi-Role Dashboard Switcher (المعلم 🟢 — المشرف 🔵 — المدير 🟠) */}
+      <RoleDashboardSwitcher
+        currentRole={activeUserRole}
+        onChangeRole={(role) => setActiveUserRole(role)}
+        onOpenReportsCenter={() => onOpenReportsCenter?.()}
+        completedPlansCount={plans.length}
+      />
+
+      {/* Render Active Role Dashboard */}
+      {activeUserRole === 'teacher' ? (
+        <TeacherRoleDashboard
+          plans={plans}
+          resources={resources}
+          activePlanId={activePlanId}
+          onSelectPlan={onSelectPlan}
+          onOpenEditor={onOpenEditor}
+          onOpenCompetenciesLibrary={onOpenCompetenciesModal}
+          onOpenPalestinianOerHub={onOpenPalestinianOerHub}
+          onOpenReportsCenter={onOpenReportsCenter}
+        />
+      ) : activeUserRole === 'supervisor' ? (
+        <SupervisorRoleDashboard
+          plans={plans}
+          onSelectPlan={onSelectPlan}
+          onOpenEditor={onOpenEditor}
+          onOpenReportsCenter={onOpenReportsCenter}
+          onUpdatePlanReview={onUpdatePlanReview}
+        />
+      ) : (
+        <PrincipalRoleDashboard
+          plans={plans}
+          resources={resources}
+          onOpenReportsCenter={onOpenReportsCenter}
+          onOpenEditor={onOpenEditor}
+        />
+      )}
+
       {/* 1. Main Title & Identity Header Card (العنوان الرئيسي وهوية المنظومة) */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1213,6 +1271,43 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <span>مصادر التعلم 📚</span>
             </button>
           )}
+
+          {onOpenPalestinianOerHub && (
+            <button
+              type="button"
+              onClick={onOpenPalestinianOerHub}
+              className="px-4 py-2.5 bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-amber-300/40 shadow-xs hover:shadow-sm"
+              title="وحدة الربط المباشر بمصادر التعليم المفتوحة OER المعتمدة في فلسطين ومكتبتي الشخصية"
+            >
+              <span className="text-amber-300">🇵🇸</span>
+              <Globe className="w-4 h-4 text-emerald-200" />
+              <span>مصادر OER المعتمدة والمكتبة</span>
+            </button>
+          )}
+
+          {onOpenCompetenciesModal && (
+            <button
+              type="button"
+              onClick={onOpenCompetenciesModal}
+              className="px-4 py-2.5 bg-linear-to-r from-emerald-800 via-teal-800 to-slate-900 hover:from-emerald-700 hover:to-slate-800 text-white font-black rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-emerald-400/50 shadow-xs hover:shadow-sm"
+              title="مكتبة الكفايات الوطنية الفلسطينية — وزارة التربية والتعليم العالي"
+            >
+              <Award className="w-4 h-4 text-amber-300" />
+              <span>مكتبة الكفايات الوطنية 🎯</span>
+            </button>
+          )}
+
+          {onOpenSmartGuideModal && (
+            <button
+              type="button"
+              onClick={onOpenSmartGuideModal}
+              className="px-4 py-2.5 bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-amber-300 shadow-xs hover:shadow-sm"
+              title="مرشد عبقور التربوي الذكي ووحدة فحص التوافق والمعايير الوزارية"
+            >
+              <Lightbulb className="w-4 h-4 text-slate-950" />
+              <span>مرشد عبقور وفحص التوافق 💡</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1320,6 +1415,40 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <p className="text-[11px] text-slate-500 mt-1">استمارة مفرغة قابلة للتعبئة والكتابة المباشرة</p>
                 </div>
               )}
+
+              {onOpenCompetenciesModal && (
+                <div onClick={onOpenCompetenciesModal} className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 rounded-xl border-2 border-emerald-500/80 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-black text-emerald-950 group-hover:text-emerald-900 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-emerald-700" />
+                      <span>مكتبة الكفايات الوطنية الفلسطينية (الوزارة)</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                      معتمد
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800/90 mt-1">
+                    كفايات عامة وتخصصية • مؤشرات أداء قابلة للملاحظة والقياس • تتبع تغطية الفصل
+                  </p>
+                </div>
+              )}
+
+              {onOpenSmartGuideModal && (
+                <div onClick={onOpenSmartGuideModal} className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 rounded-xl border-2 border-amber-400 hover:border-amber-500 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-black text-amber-950 group-hover:text-amber-900 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Lightbulb className="w-4 h-4 text-amber-600" />
+                      <span>مرشد عبقور وفحص التوافق الوزاري</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                      ذكي 💡
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 mt-1">
+                    مقترحات فورية للمنهاج وثلاثي المصادر والمواقف التعليمية وتنبيهات فحص التوافق
+                  </p>
+                </div>
+              )}
             </>
           )}
 
@@ -1349,6 +1478,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
           {activeTrackTab === 'resources' && (
             <>
+              {onOpenPalestinianOerHub && (
+                <div onClick={onOpenPalestinianOerHub} className="p-3 bg-linear-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 rounded-xl border-2 border-emerald-400 hover:border-emerald-500 transition-all cursor-pointer shadow-2xs group">
+                  <div className="font-black text-emerald-950 group-hover:text-emerald-900 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">🇵🇸</span>
+                      <Globe className="w-4 h-4 text-emerald-700" />
+                      <span>وحدة مصادر OER المعتمدة في فلسطين</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black">
+                      رسمي
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800/90 mt-1">
+                    ربط مباشر بـ: elearn.edu.ps • منهاجي • روافد • مكتبة المحتوى • مكتبتي الشخصية
+                  </p>
+                </div>
+              )}
+
               {onOpenResourcesModal && (
                 <div onClick={onOpenResourcesModal} className="p-3 bg-white hover:bg-teal-50 rounded-xl border border-slate-200 hover:border-teal-300 transition-all cursor-pointer shadow-2xs group">
                   <div className="font-bold text-slate-900 group-hover:text-teal-800 text-xs flex items-center gap-1.5">
@@ -1489,6 +1636,40 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
           {/* Group 2: Resources & Pedagogical Lab (المصادر والأدوات الرقمية) */}
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenPalestinianOerHub && (
+              <button
+                onClick={onOpenPalestinianOerHub}
+                className="px-4 py-2 bg-linear-to-r from-emerald-800 via-teal-800 to-slate-900 hover:from-emerald-900 hover:to-slate-950 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all border border-amber-300/50 shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-97 cursor-pointer"
+                title="وحدة الربط المباشر بمصادر التعليم المفتوحة OER المعتمدة في فلسطين ومكتبتي الشخصية"
+              >
+                <span className="text-amber-300">🇵🇸</span>
+                <Globe className="w-4 h-4 text-emerald-300 shrink-0" />
+                <span>مصادر OER المعتمدة والمكتبة</span>
+              </button>
+            )}
+
+            {onOpenCompetenciesModal && (
+              <button
+                onClick={onOpenCompetenciesModal}
+                className="px-4 py-2 bg-linear-to-r from-teal-800 via-emerald-800 to-slate-900 hover:from-teal-900 hover:to-slate-950 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all border border-emerald-400/50 shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-97 cursor-pointer"
+                title="مكتبة الكفايات الوطنية الفلسطينية — مؤشرات الأداء ونسبة تغطية الفصل"
+              >
+                <Award className="w-4 h-4 text-amber-300 shrink-0" />
+                <span>مكتبة الكفايات الوطنية 🎯</span>
+              </button>
+            )}
+
+            {onOpenSmartGuideModal && (
+              <button
+                onClick={onOpenSmartGuideModal}
+                className="px-4 py-2 bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-slate-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all border border-amber-300 shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-97 cursor-pointer"
+                title="مرشد عبقور التربوي الذكي ووحدة فحص التوافق والمعايير الوزارية"
+              >
+                <Lightbulb className="w-4 h-4 text-slate-950 shrink-0" />
+                <span>مرشد عبقور وفحص التوافق 💡</span>
+              </button>
+            )}
+
             {onOpenResourcesModal && (
               <button
                 onClick={onOpenResourcesModal}

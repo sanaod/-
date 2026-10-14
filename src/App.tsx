@@ -17,12 +17,27 @@ import { Section5ReflectionCard } from './components/Section5ReflectionCard';
 import { Section6SignaturesCard } from './components/Section6SignaturesCard';
 import { OfficialPrintView } from './components/OfficialPrintView';
 import { ExecutivePlanEditor } from './components/ExecutivePlanEditor';
+import { OerLessonPlanEditor } from './components/OerLessonPlanEditor';
 import { ensureExecutiveData } from './utils/executivePlanDefaults';
+import { ensureOerData } from './data/oerPalestinianCurriculum';
 import { AbacusSimulationModal } from './components/AbacusSimulationModal';
 import { AiGeneratorModal } from './components/AiGeneratorModal';
 import { ExitTicketModal } from './components/ExitTicketModal';
 import { ParentCardModal } from './components/ParentCardModal';
 import { ResourcesManagerModal } from './components/ResourcesManagerModal';
+import { PalestinianOerHubModal } from './components/PalestinianOerHubModal';
+import { PalestinianCompetenciesLibraryModal } from './components/PalestinianCompetenciesLibraryModal';
+import { SmartPedagogicalGuideModal } from './components/SmartPedagogicalGuideModal';
+import { OerReportsCenterModal } from './components/OerReportsCenterModal';
+import { AbqoorHomeDashboard } from './components/AbqoorHomeDashboard';
+import { UserRole } from './types/roleDashboards';
+import {
+  ObservablePerformanceIndicator,
+  SuggestedLearningSituation,
+  SuggestedResourceLink,
+} from './types/palestinianCompetencies';
+import { PalestinianOerItem } from './types/palestinianOer';
+import { OerResourceItem } from './types/lessonPlan';
 import { ExportModal } from './components/ExportModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { TeacherDashboard } from './components/TeacherDashboard';
@@ -178,7 +193,8 @@ export default function App() {
     return defaultBlankPlan.id;
   });
 
-  const [viewMode, setViewMode] = useState<'editor' | 'official-print' | 'dashboard'>('editor');
+  const [viewMode, setViewMode] = useState<'editor' | 'official-print' | 'dashboard'>('dashboard');
+  const [currentRole, setCurrentRole] = useState<UserRole>('teacher');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [actionCategoryFilter, setActionCategoryFilter] = useState<'all' | 'ai' | 'resources' | 'plans' | 'export'>('all');
 
@@ -240,6 +256,34 @@ export default function App() {
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
   const [resourceLinkNotice, setResourceLinkNotice] = useState<string | null>(null);
+  const [isPalestinianOerHubOpen, setIsPalestinianOerHubOpen] = useState(false);
+  const [isCompetenciesModalOpen, setIsCompetenciesModalOpen] = useState(false);
+  const [isSmartGuideModalOpen, setIsSmartGuideModalOpen] = useState(false);
+  const [isReportsCenterOpen, setIsReportsCenterOpen] = useState(false);
+  const [reportsCenterDefaultTab, setReportsCenterDefaultTab] = useState<
+    'official_lesson_plan' | 'student_competencies_record' | 'school_oer_statistics'
+  >('official_lesson_plan');
+
+  const handleUpdatePlanReview = (planId: string, directives: string, status: 'approved' | 'needs_revision') => {
+    setPlans((prev) =>
+      prev.map((p) => {
+        if (p.id === planId) {
+          return {
+            ...p,
+            section6Signatures: {
+              ...p.section6Signatures,
+              educationalSupervisor: {
+                name: 'د. إياد كمال طهبوب (مشرف المرحلة الأساسية)',
+                date: formatDateDMY(new Date().toISOString()),
+                directives: directives || p.section6Signatures?.educationalSupervisor?.directives || '',
+              },
+            },
+          };
+        }
+        return p;
+      })
+    );
+  };
 
   const handleUnitPlansGenerated = (newPlans: LessonPlan[]) => {
     if (!newPlans || newPlans.length === 0) return;
@@ -380,10 +424,177 @@ export default function App() {
     setViewMode('editor');
   };
 
+  const handleApplyPalestinianOerResource = (
+    oerItem: PalestinianOerItem,
+    targetType: 'as_primary' | 'as_induction' | 'as_step' | 'as_alternative' = 'as_primary'
+  ) => {
+    const resType =
+      oerItem.type === 'book' || oerItem.type === 'teacher_guide'
+        ? 'book'
+        : oerItem.type === 'video'
+        ? 'video'
+        : oerItem.type === 'visual_card'
+        ? 'image'
+        : 'link';
+
+    const oerResItem: OerResourceItem = {
+      title: `${oerItem.title} - (${oerItem.publisherNameAr})`,
+      type: resType,
+      directUrl: oerItem.directUrl,
+      licenseType: oerItem.publisher === 'elearn_edu_ps' ? 'ministry_elearn' : 'creative_commons',
+      notes: `مصدر معتمد رسمياً: ${oerItem.publisherNameAr}. ${oerItem.suggestedUseInLesson || ''}`,
+    };
+
+    const asEduRes: EducationalResource = {
+      id: `oer-${oerItem.id}-${Date.now()}`,
+      type: oerItem.type === 'book' || oerItem.type === 'teacher_guide' ? 'textbook' : oerItem.type === 'video' ? 'video' : oerItem.type === 'worksheet' ? 'worksheet' : 'link',
+      title: oerItem.title,
+      content: oerItem.directUrl,
+      sourceInfo: `${oerItem.publisherNameAr} • ${oerItem.officialBadge.text}`,
+      createdAt: formatDateDMY(new Date().toISOString()),
+      tags: [oerItem.subject, oerItem.grade, oerItem.topic, oerItem.publisher],
+      inferredSubject: oerItem.subject,
+      inferredGrade: oerItem.grade,
+      inferredLessonTitle: oerItem.topic,
+    };
+
+    const isPlanEmpty = !currentPlan.header.lessonTitle || currentPlan.id.startsWith('plan-blank');
+    const basePlan = ensureOerData(currentPlan);
+    const currentOerData = { ...basePlan.oerData! };
+
+    if (targetType === 'as_induction') {
+      const indIdx = currentOerData.activities.findIndex((a) => a.stageType === 'induction');
+      if (indIdx >= 0) {
+        currentOerData.activities[indIdx].primaryResource = oerResItem;
+      }
+    } else if (targetType === 'as_step') {
+      const stepIdx = currentOerData.activities.findIndex((a) => a.stageType === 'step');
+      if (stepIdx >= 0) {
+        currentOerData.activities[stepIdx].primaryResource = oerResItem;
+      }
+    } else if (targetType === 'as_alternative') {
+      if (currentOerData.activities.length > 0) {
+        currentOerData.activities[0].alternativeResource1 = oerResItem;
+      }
+    } else {
+      if (currentOerData.activities.length > 0) {
+        currentOerData.activities[0].primaryResource = oerResItem;
+      }
+    }
+
+    if (isPlanEmpty) {
+      currentOerData.lessonInfo.subject = oerItem.subject;
+      currentOerData.lessonInfo.grade = oerItem.grade;
+      currentOerData.lessonInfo.lessonTitle = oerItem.topic;
+      currentOerData.lessonInfo.unitTitle = oerItem.unitTitle || currentOerData.lessonInfo.unitTitle;
+    }
+
+    const updatedPlan: LessonPlan = {
+      ...basePlan,
+      title: isPlanEmpty ? oerItem.topic : basePlan.title,
+      header: {
+        ...basePlan.header,
+        subject: isPlanEmpty ? oerItem.subject : basePlan.header.subject,
+        grade: isPlanEmpty ? oerItem.grade : basePlan.header.grade,
+        lessonTitle: isPlanEmpty ? oerItem.topic : basePlan.header.lessonTitle,
+      },
+      section1: {
+        ...basePlan.section1,
+        learningResources: {
+          ...basePlan.section1.learningResources,
+          textbook: oerItem.title,
+          digitalReadiness: oerItem.directUrl,
+        },
+      },
+      oerData: currentOerData,
+      attachedResources: [asEduRes, ...(basePlan.attachedResources || []).filter((r) => r.id !== asEduRes.id)],
+    };
+
+    updateCurrentPlan(updatedPlan);
+    setResources((prev) => [asEduRes, ...prev.filter((r) => r.title !== asEduRes.title)]);
+    setResourceLinkNotice(`تم ربط المصدر المعتمد «${oerItem.title}» بخطة درسك بنجاح! 🇵🇸🔗`);
+    setTimeout(() => setResourceLinkNotice(null), 4500);
+    setViewMode('editor');
+  };
+
+  const handleApplyCompetenciesToPlan = (appliedData: {
+    competencies: { title: string; description: string }[];
+    indicators: ObservablePerformanceIndicator[];
+    learningSituations: SuggestedLearningSituation[];
+    suggestedResources: SuggestedResourceLink[];
+  }) => {
+    const basePlan = ensureOerData(currentPlan);
+    const existing = basePlan.section1.integrativeCompetencies || [];
+    const existingTitles = new Set(existing.map((c) => c.title.toLowerCase()));
+    const newComps = appliedData.competencies.filter((c) => !existingTitles.has(c.title.toLowerCase()));
+    const updatedIntegrative = [...existing, ...newComps];
+
+    const updatedPlan: LessonPlan = {
+      ...basePlan,
+      section1: {
+        ...basePlan.section1,
+        integrativeCompetencies: updatedIntegrative,
+      },
+    };
+
+    if (updatedPlan.oerData) {
+      const indicatorsStatements = appliedData.indicators.map((ind) => ind.statement);
+      const existingIndicators = updatedPlan.oerData.targetCompetencies?.observableIndicators || [];
+      const newUniqueIndicators = indicatorsStatements.filter((stmt) => !existingIndicators.includes(stmt));
+
+      updatedPlan.oerData = {
+        ...updatedPlan.oerData,
+        targetCompetencies: {
+          generalCompetency: appliedData.competencies[0]?.title || updatedPlan.oerData.targetCompetencies?.generalCompetency || '',
+          specificCompetency: appliedData.competencies[1]?.title || appliedData.competencies[0]?.title || updatedPlan.oerData.targetCompetencies?.specificCompetency || '',
+          observableIndicators: [...existingIndicators, ...newUniqueIndicators],
+        },
+      };
+
+      if (appliedData.learningSituations && appliedData.learningSituations.length > 0) {
+        const oerActivities = [...updatedPlan.oerData.activities];
+        if (oerActivities.length > 0) {
+          appliedData.learningSituations.forEach((sit) => {
+            if (!oerActivities[0].description.includes(sit.title)) {
+              oerActivities[0].description = `${oerActivities[0].description}\n• موقف تعليمي كفائي (${sit.title}): ${sit.contextDescription}`;
+            }
+          });
+          updatedPlan.oerData.activities = oerActivities;
+        }
+      }
+    }
+
+    updateCurrentPlan(updatedPlan);
+
+    if (appliedData.suggestedResources && appliedData.suggestedResources.length > 0) {
+      setResources((prev) => {
+        const existingUrls = new Set(prev.map((r) => r.content));
+        const toAdd: EducationalResource[] = appliedData.suggestedResources
+          .filter((sr) => !existingUrls.has(sr.url))
+          .map((sr) => ({
+            id: `res-comp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            title: sr.title,
+            type: sr.type === 'video' ? 'video' : sr.type === 'worksheet' ? 'worksheet' : sr.type === 'simulation' || sr.type === 'interactive' ? 'link' : 'textbook',
+            sourceInfo: `${sr.providerLabel} • كفاية معتمدة من الوزارة`,
+            content: sr.url,
+            createdAt: formatDateDMY(new Date().toISOString()),
+            tags: ['كفايات_وزارية', currentPlan.header.subject || 'عام'],
+            inferredSubject: currentPlan.header.subject,
+            inferredGrade: currentPlan.header.grade,
+          }));
+        return [...toAdd, ...prev];
+      });
+    }
+
+    setResourceLinkNotice(`تم إدراج ${toArabicDigits(appliedData.competencies.length)} كفايات ومؤشرات أدائها في خطتك بنجاح! 🎯🇵🇸`);
+    setTimeout(() => setResourceLinkNotice(null), 4500);
+    setViewMode('editor');
+  };
+
   const handlePlanGenerated = (newPlan: LessonPlan) => {
-    const withExec = ensureExecutiveData(newPlan);
-    setPlans((prev) => [withExec, ...prev]);
-    setActivePlanId(withExec.id);
+    const withOer = ensureOerData(ensureExecutiveData(newPlan));
+    setPlans((prev) => [withOer, ...prev]);
+    setActivePlanId(withOer.id);
   };
 
   const handleCreateNewBlankPlan = () => {
@@ -516,50 +727,50 @@ export default function App() {
         onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
         onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
+        onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
+        onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
+        onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
       />
 
       {viewMode === 'dashboard' ? (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <TeacherDashboard
-            plans={plans}
-            activePlanId={currentPlan.id}
-            onSelectPlan={(id) => {
-              setActivePlanId(id);
-              setViewMode('editor');
-            }}
-            onOpenEditor={() => setViewMode('editor')}
-            onOpenAiGenerator={() => setIsAiModalOpen(true)}
-            onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
-            onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
-            onOpenWorksheetModal={(planId) => {
-              if (planId) setActivePlanId(planId);
-              setIsWorksheetModalOpen(true);
-            }}
-            onOpenPrintView={(planId) => {
-              if (planId) setActivePlanId(planId);
-              setViewMode('official-print');
-            }}
-            onOpenShareModal={(planId) => {
-              if (planId) setActivePlanId(planId);
-              setIsShareModalOpen(true);
-            }}
-            onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
-            onDeletePlan={handleDeletePlan}
-            onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-            resourcesCount={resources.length}
-            onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
-            onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
-            onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
-            onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
-            onOpenExecutivePlan={() => {
-              const blank = getBlankLessonPlan();
-              const newPlan = ensureExecutiveData({ ...blank, templateType: 'executive' });
-              setPlans((prev) => [newPlan, ...prev]);
-              setActivePlanId(newPlan.id);
-              setViewMode('editor');
-            }}
-          />
-        </main>
+        <AbqoorHomeDashboard
+          plans={plans}
+          resources={resources}
+          activePlanId={currentPlan.id}
+          onSelectPlan={(id) => {
+            setActivePlanId(id);
+            setViewMode('editor');
+          }}
+          onOpenEditor={() => setViewMode('editor')}
+          onOpenAiGenerator={() => setIsAiModalOpen(true)}
+          onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+          onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+          onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+          onOpenAssessmentModal={() => setIsAssessmentModalOpen(true)}
+          onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+          onOpenRubricModal={() => setIsRubricModalOpen(true)}
+          onOpenPrintView={() => setViewMode('official-print')}
+          onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+          onOpenExportModal={() => setIsExportModalOpen(true)}
+          onOpenShareModal={() => setIsShareModalOpen(true)}
+          onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
+          onNewBlankPlan={handleCreateNewBlankPlan}
+          onDeletePlan={handleDeletePlan}
+          onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
+          onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
+          onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
+          onOpenReportsCenter={(tab) => {
+            if (tab) setReportsCenterDefaultTab(tab as any);
+            setIsReportsCenterOpen(true);
+          }}
+          onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
+          onOpenBackupRestore={() => setIsBackupRestoreModalOpen(true)}
+          onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+          onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
+          onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
+          currentRole={currentRole}
+          onChangeRole={(role) => setCurrentRole(role)}
+        />
       ) : (
         <>
           {/* Hero Pedagogical Context & Categorized Quick Action Hub */}
@@ -758,24 +969,42 @@ export default function App() {
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between overflow-x-auto py-2 sm:py-2.5 scrollbar-none touch-pan-x gap-2">
                 <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                  {navSections.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 transition-all ${
-                          isActive
-                            ? 'bg-emerald-700 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-                        }`}
-                      >
-                        <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-200' : 'text-slate-500'}`} />
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
+                  {currentPlan.templateType === 'adaptive' ? (
+                    navSections.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id)}
+                          className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 transition-all ${
+                            isActive
+                              ? 'bg-emerald-700 text-white shadow-xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                          }`}
+                        >
+                          <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-200' : 'text-slate-500'}`} />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })
+                  ) : (currentPlan.templateType || 'oer') === 'oer' ? (
+                    <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
+                      <span className="bg-emerald-100 border border-emerald-400 px-3 py-1 rounded-xl flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>دليل OER الفلسطيني (الصفوف ١-٤) • معتمد عبر elearn.edu.ps</span>
+                      </span>
+                      <span className="hidden md:inline-flex text-[11px] text-slate-600 font-semibold">
+                        هيكل خماسي: بيانات الدرس ← الكفايات المستهدفة ← الموقف التعليمي ومصادر OER ← التقويم الشامل ← بدائل وملاحظات
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
+                      <span className="bg-slate-100 border border-slate-300 px-3 py-1 rounded-xl flex items-center gap-1.5">
+                        <span>📋 النموذج التنفيذي (SMART) • ٥ مراحل لتنفيذ الدرس</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Subnav Action Hub: Pinned Sections Quick Badge & Resources Button */}
@@ -909,13 +1138,15 @@ export default function App() {
                       نموذج تحضير الدرس المعتمد
                     </h3>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-amber-100 text-amber-900 border border-amber-300">
-                      {(currentPlan.templateType || 'executive') === 'executive'
-                        ? '⭐ النموذج الرئيسي (الرسمي المعتمد)'
-                        : '📋 النموذج الثاني (التكيفي الموسع)'}
+                      {(currentPlan.templateType || 'oer') === 'oer'
+                        ? '⭐ نموذج دليل مصادر التعلم المفتوحة OER (الصفوف ١-٤)'
+                        : currentPlan.templateType === 'executive'
+                        ? '📋 النموذج التنفيذي (خطة التنفيذ SMART)'
+                        : '📑 النموذج الثاني (التكيفي الموسع)'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    يمكنك التبديل بين النموذجين في أي وقت؛ بياناتك تُحفظ وتُزامن تلقائياً وبدقة عالية
+                    النموذج الافتراضي متوافق كلياً مع دليل المعلم الفلسطيني لمصادر التعليم المفتوحة OER ومعتمد عبر elearn.edu.ps
                   </p>
                 </div>
               </div>
@@ -926,17 +1157,33 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => {
-                      const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
+                      const updated = ensureOerData({ ...currentPlan, templateType: 'oer' });
                       updateCurrentPlan(updated);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                      (currentPlan.templateType || 'executive') === 'executive'
+                      (currentPlan.templateType || 'oer') === 'oer'
                         ? 'bg-emerald-700 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
                     }`}
                   >
                     <span className="text-amber-300">⭐</span>
-                    <span>النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</span>
+                    <span>نموذج دليل OER (الصفوف ١–٤ المعتمد)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
+                      updateCurrentPlan(updated);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      currentPlan.templateType === 'executive'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>📋</span>
+                    <span>النموذج التنفيذي (SMART)</span>
                   </button>
 
                   <button
@@ -950,8 +1197,8 @@ export default function App() {
                         : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
                     }`}
                   >
-                    <span>📋</span>
-                    <span>النموذج الثاني (التخطيط التكيفي الموسع)</span>
+                    <span>📑</span>
+                    <span>النموذج التكيفي الموسع</span>
                   </button>
                 </div>
 
@@ -993,7 +1240,22 @@ export default function App() {
 
 
             {/* Render Selected Template */}
-            {(currentPlan.templateType || 'executive') === 'executive' ? (
+            {(currentPlan.templateType || 'oer') === 'oer' ? (
+              <OerLessonPlanEditor
+                plan={ensureOerData(currentPlan)}
+                onChange={updateCurrentPlan}
+                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+                onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                resourcesCount={resources.length}
+                resources={resources}
+                onApplyResource={handleApplyResourceToCurrentPlan}
+                onOpenAiModal={() => setIsAiModalOpen(true)}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
+                onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
+                onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
+                onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
+              />
+            ) : currentPlan.templateType === 'executive' ? (
               <ExecutivePlanEditor
                 plan={ensureExecutiveData(currentPlan)}
                 onChange={updateCurrentPlan}
@@ -1038,6 +1300,7 @@ export default function App() {
                     }}
                     onChange={(section1) => updateCurrentPlan({ ...currentPlan, section1 })}
                     onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                    onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
                     isPinned={pinnedSections.includes('sec-adapt-1')}
                     onTogglePin={() => handleTogglePinSection('sec-adapt-1')}
                     sectionId="sec-adapt-1"
@@ -1177,6 +1440,56 @@ export default function App() {
         }}
         onApplyToCurrentPlan={handleApplyResourceToCurrentPlan}
         currentPlanTitle={currentPlan.title}
+        onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
+      />
+
+      {/* Palestinian OER Direct Integration Hub & Personal Library */}
+      <PalestinianOerHubModal
+        isOpen={isPalestinianOerHubOpen}
+        onClose={() => setIsPalestinianOerHubOpen(false)}
+        currentPlan={currentPlan}
+        onApplyOerResourceToPlan={handleApplyPalestinianOerResource}
+      />
+
+      {/* Palestinian National Competencies Library & Semester Progress Tracker */}
+      <PalestinianCompetenciesLibraryModal
+        isOpen={isCompetenciesModalOpen}
+        onClose={() => setIsCompetenciesModalOpen(false)}
+        currentPlan={currentPlan}
+        allPlans={plans}
+        onApplyCompetenciesToPlan={handleApplyCompetenciesToPlan}
+        onSelectCompetencyToNewPlan={(compTitle) => {
+          const fresh = getBlankLessonPlan();
+          fresh.header.lessonTitle = `درس حول كفاية: ${compTitle}`;
+          fresh.header.subject = currentPlan.header.subject;
+          fresh.header.grade = currentPlan.header.grade;
+          fresh.title = `درس: ${compTitle}`;
+          const withOer = ensureOerData(fresh);
+          setPlans((prev) => [withOer, ...prev]);
+          setActivePlanId(withOer.id);
+          setViewMode('editor');
+        }}
+      />
+
+      {/* Smart Pedagogical Guide & Compliance Audit Unit (مرشد عبقور التربوي الذكي ووحدة فحص التوافق) */}
+      <SmartPedagogicalGuideModal
+        isOpen={isSmartGuideModalOpen}
+        onClose={() => setIsSmartGuideModalOpen(false)}
+        currentPlan={currentPlan}
+        onApplySuggestionsToPlan={(updatedPlan) => {
+          updateCurrentPlan(updatedPlan);
+          setResourceLinkNotice('تم تطبيق توجيهات واقتراحات المرشد التربوي الذكي وفحص التوافق بنجاح! 💡🇵🇸');
+          setTimeout(() => setResourceLinkNotice(null), 4500);
+          setViewMode('editor');
+        }}
+        onOpenPalestinianOerHub={() => {
+          setIsSmartGuideModalOpen(false);
+          setIsPalestinianOerHubOpen(true);
+        }}
+        onOpenCompetenciesLibrary={() => {
+          setIsSmartGuideModalOpen(false);
+          setIsCompetenciesModalOpen(true);
+        }}
       />
 
       <AbacusSimulationModal

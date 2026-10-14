@@ -3,6 +3,7 @@ import { LessonPlan } from '../types/lessonPlan';
 export const palestineMathGrade3Plan: LessonPlan = {
   id: 'palestine-math-grade3-placevalue',
   title: 'الدرس الثاني: القيمة المنزلية للأعداد ضمن 9999 (الصف الثالث)',
+  templateType: 'oer',
   header: {
     country: 'دولة فلسطين',
     ministry: 'وزارة التربية والتعليم',

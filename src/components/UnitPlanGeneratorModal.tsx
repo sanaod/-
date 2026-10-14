@@ -217,6 +217,15 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceUrl, setNewResourceUrl] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [currentProgressText, setCurrentProgressText] = useState('');
+  const [generatedPlans, setGeneratedPlans] = useState<LessonPlan[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState(false);
+  const [expandedPlanIdx, setExpandedPlanIdx] = useState<number | null>(0);
+  const [isAnalyzingSource, setIsAnalyzingSource] = useState(false);
+  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
 
   // File Upload Handler
   const handleFileUpload = (files: FileList | File[]) => {
@@ -276,14 +285,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
     setUploadedResources((prev) => prev.filter((r) => r.id !== id));
   };
 
-  // Loading & Progress State
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [progressPercent, setProgressPercent] = useState(0);
-  const [currentProgressText, setCurrentProgressText] = useState('');
-  const [generatedPlans, setGeneratedPlans] = useState<LessonPlan[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [copiedSummary, setCopiedSummary] = useState(false);
-  const [expandedPlanIdx, setExpandedPlanIdx] = useState<number | null>(0);
+
 
   if (!isOpen) return null;
 
@@ -351,9 +353,7 @@ export const UnitPlanGeneratorModal: React.FC<UnitPlanGeneratorModalProps> = ({
     }
   };
 
-  // AI Analyze Attached Source for Unit & Lessons
-  const [isAnalyzingSource, setIsAnalyzingSource] = useState(false);
-  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
+
 
   const handleAiAnalyzeAttachedSource = async () => {
     if (!resources || resources.length === 0) return;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Section1AdaptivePlanning } from '../types/lessonPlan';
-import { Compass, Users, BookOpen, ShieldCheck, HelpCircle, Edit3, Check, Sparkles, Loader2, Layers, Plus } from 'lucide-react';
+import { Compass, Users, BookOpen, ShieldCheck, HelpCircle, Edit3, Check, Sparkles, Loader2, Layers, Plus, Award } from 'lucide-react';
 import { toArabicDigits } from '../utils/arabicNumerals';
 import { PinSectionButton } from './PinSectionButton';
 
@@ -9,6 +9,7 @@ interface Section1CardProps {
   lessonContext: { subject: string; grade: string; lessonTitle: string };
   onChange: (data: Section1AdaptivePlanning) => void;
   onOpenResourcesModal?: () => void;
+  onOpenCompetenciesModal?: () => void;
   isPinned?: boolean;
   onTogglePin?: () => void;
   sectionId?: string;
@@ -19,6 +20,7 @@ export const Section1Card: React.FC<Section1CardProps> = ({
   lessonContext,
   onChange,
   onOpenResourcesModal,
+  onOpenCompetenciesModal,
   isPinned,
   onTogglePin,
   sectionId = 'sec-adapt-1',
@@ -135,9 +137,23 @@ export const Section1Card: React.FC<Section1CardProps> = ({
       <div className="p-3.5 sm:p-5 space-y-6">
         {/* 1. الكفايات التكاملية المستهدفة */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-600" />
-            <h4 className="text-sm font-bold text-slate-800">الكفايات التكاملية المستهدفة:</h4>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+              <h4 className="text-sm font-bold text-slate-800">الكفايات التكاملية المستهدفة:</h4>
+            </div>
+
+            {onOpenCompetenciesModal && (
+              <button
+                type="button"
+                onClick={onOpenCompetenciesModal}
+                className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                title="فتح مكتبة الكفايات الوطنية الفلسطينية المعتمدة من وزارة التربية والتعليم العالي"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span>مكتبة الكفايات الوطنية (وزارة التربية)</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

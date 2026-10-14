@@ -150,7 +150,68 @@ export interface EducationalResource {
   inferredLessonTitle?: string;
 }
 
-export type PlanTemplateType = 'executive' | 'adaptive';
+export type PlanTemplateType = 'oer' | 'executive' | 'adaptive';
+
+export type OerResourceType = 'book' | 'video' | 'link' | 'image' | 'environmental';
+export type OerLicenseType = 'ministry_elearn' | 'creative_commons' | 'public_domain' | 'local_teacher';
+export type OerStudentRole = 'individual' | 'pairs' | 'groups' | 'collective';
+
+export interface OerResourceItem {
+  title: string;
+  type: OerResourceType;
+  directUrl?: string;
+  licenseType: OerLicenseType;
+  notes?: string;
+}
+
+export interface OerActivityStage {
+  id: string;
+  stageType: 'induction' | 'step' | 'closure';
+  title: string;
+  allocatedTimeMinutes: number;
+  description: string;
+  studentRoles: OerStudentRole;
+  studentRolesDetails: string;
+  expectedProducts: string;
+  primaryResource: OerResourceItem;
+  alternativeResource1: OerResourceItem;
+  alternativeResource2: OerResourceItem;
+  formativeAssessment: string;
+  productAssessment: string;
+}
+
+export interface OerLessonPlanData {
+  lessonInfo: {
+    subject: string;
+    grade: string;
+    section: string;
+    date: string;
+    durationMinutes: number;
+    totalPeriods: number;
+    teacherName: string;
+    school: string;
+    directorate: string;
+    lessonTitle: string;
+    unitTitle?: string;
+    semester: string;
+  };
+  targetCompetencies: {
+    generalCompetency: string;
+    specificCompetency: string;
+    observableIndicators: string[];
+  };
+  activities: OerActivityStage[];
+  summativeAssessment: {
+    description: string;
+    alignmentWithIndicators: string;
+    assessmentTool: string;
+  };
+  contingenciesAndNotes: {
+    sourceContingencies: string;
+    postLessonReflection: string;
+    followUpActions: string;
+  };
+}
 
 export interface ExecutiveResourceConditions {
   competencyAlignment: boolean;    // الارتباط بالكفايات
@@ -239,6 +300,7 @@ export interface LessonPlan {
   section5Reflection: Section5SelfReflection;
   section6Signatures: Section6Signatures;
   executiveData?: ExecutivePlanData;
+  oerData?: OerLessonPlanData;
   attachedResources?: EducationalResource[];
 }
 

@@ -1,6 +1,7 @@
 import { LessonPlan } from '../types/lessonPlan';
 import { getCurrentSemesterName } from '../utils/academicYear';
 import { createDefaultExecutiveData } from '../utils/executivePlanDefaults';
+import { createDefaultOerData } from './oerPalestinianCurriculum';
 
 /**
  * Creates a completely blank, pristine ministerial lesson plan ready for teacher input.
@@ -12,8 +13,8 @@ export function getBlankLessonPlan(): LessonPlan {
 
   const planBase: LessonPlan = {
     id: `plan-blank-${timestamp}`,
-    title: 'استمارة تحضير درس مفرغة (النموذج الرئيسي المعتمد)',
-    templateType: 'executive',
+    title: 'استمارة خطة درس OER (دليل المعلم الفلسطيني - الصفوف ١-٤)',
+    templateType: 'oer',
     header: {
       country: 'دولة فلسطين',
       ministry: 'وزارة التربية والتعليم',
@@ -185,6 +186,7 @@ export function getBlankLessonPlan(): LessonPlan {
     },
   };
   planBase.executiveData = createDefaultExecutiveData(planBase);
+  planBase.oerData = createDefaultOerData(planBase);
   return planBase;
 }
 
@@ -193,8 +195,8 @@ export function getBlankLessonPlan(): LessonPlan {
  */
 const initialDefaultPlanBase: LessonPlan = {
   id: 'plan-blank-default',
-  title: 'استمارة تحضير درس مفرغة (النموذج الرئيسي المعتمد)',
-  templateType: 'executive',
+  title: 'استمارة خطة درس OER (دليل المعلم الفلسطيني - الصفوف ١-٤)',
+  templateType: 'oer',
   header: {
     country: 'دولة فلسطين',
     ministry: 'وزارة التربية والتعليم',
@@ -367,5 +369,6 @@ const initialDefaultPlanBase: LessonPlan = {
 };
 
 initialDefaultPlanBase.executiveData = createDefaultExecutiveData(initialDefaultPlanBase);
+initialDefaultPlanBase.oerData = createDefaultOerData(initialDefaultPlanBase);
 
 export const defaultBlankPlan: LessonPlan = initialDefaultPlanBase;

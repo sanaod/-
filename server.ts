@@ -2873,6 +2873,365 @@ ${customNotes ? `- توجيهات أو أسئلة إضافية من المعلم
   }
 });
 
+// Smart Pedagogical Guide & Advisor Endpoint (Abaqoor Palestinian OER Advisor)
+app.post('/api/pedagogical-assistant', async (req, res) => {
+  try {
+    const { subject, grade, lessonTitle, topic } = req.body;
+    const cleanSub = subject || 'الرياضيات';
+    const cleanGrade = grade || 'الصف الرابع';
+    const cleanTitle = lessonTitle || topic || 'الدرس النموذجي';
+
+    let isAi = false;
+    let pkg: any = null;
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const prompt = `أنت المساعد والمرشد التربوي الذكي لمنظومة «عبقور» لتخطيط الدروس في دولة فلسطين.
+المبحث: ${cleanSub}
+الصف: ${cleanGrade}
+عنوان الدرس والموضوع: ${cleanTitle}
+
+المطلوب إعداد حزمة تربوية استرشادية متكاملة تلتزم حصراً بالمنهاج الفلسطيني الرسمي الصادر عن وزارة التربية والتعليم العالي ومصادر التعليم المفتوحة OER.
+أخرج JSON يحتوي على:
+1. targetCompetencies: كفاية عامة وكفاية تخصصية للمبحث من الإطار الوطني الفلسطيني.
+2. objectiveOptions: 3 خيارات لأهداف ومؤشرات أداء إجرائية قابلة للملاحظة والقياس (معرفي، مهاري، قيمي وطني).
+3. resourcesTriad: مصدر رئيسي معتمد من elearn.edu.ps ومصدر بديل 1 من روافد ومصدر بديل 2 من منهاجي.
+4. learningSituation: موقف تعليمي صفي متكامل في السياق الفلسطيني (4 خطوات: تهيئة 7د، استكشاف 15د، تطبيق 15د، ختام 8د)، وأدوار المعلم والطلبة والمنتجات المتوقعة.
+5. differentiatedActivities: أنشطة دعم وتيسير علاجي للمتعثرين، وأنشطة إثراء وتحدٍ للمتميزين.`;
+
+        const response = await generateWithModelFallback({
+          contents: prompt,
+          systemInstruction: 'أنت خبير المناهج الفلسطينية والإشراف التربوي والتعليم المفتوح OER في وزارة التربية والتعليم العالي بدولة فلسطين. التزم بالأسلوب التربوي الاسترشادي والأرقام العربية.',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              targetCompetencies: {
+                type: Type.OBJECT,
+                properties: {
+                  generalCompetency: {
+                    type: Type.OBJECT,
+                    properties: {
+                      code: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      statement: { type: Type.STRING },
+                      domainLabel: { type: Type.STRING },
+                    },
+                    required: ['code', 'title', 'statement', 'domainLabel'],
+                  },
+                  specificCompetency: {
+                    type: Type.OBJECT,
+                    properties: {
+                      code: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      statement: { type: Type.STRING },
+                      subject: { type: Type.STRING },
+                    },
+                    required: ['code', 'title', 'statement', 'subject'],
+                  },
+                },
+                required: ['generalCompetency', 'specificCompetency'],
+              },
+              objectiveOptions: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    type: { type: Type.STRING },
+                    typeLabel: { type: Type.STRING },
+                    objectiveStatement: { type: Type.STRING },
+                    performanceIndicator: { type: Type.STRING },
+                    suggestedAssessmentMethod: { type: Type.STRING },
+                    isSelected: { type: Type.BOOLEAN },
+                  },
+                  required: ['id', 'type', 'typeLabel', 'objectiveStatement', 'performanceIndicator', 'suggestedAssessmentMethod'],
+                },
+              },
+              resourcesTriad: {
+                type: Type.OBJECT,
+                properties: {
+                  primaryResource: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      provider: { type: Type.STRING },
+                      url: { type: Type.STRING },
+                      type: { type: Type.STRING },
+                      pedagogicalNotes: { type: Type.STRING },
+                    },
+                    required: ['title', 'provider', 'url', 'type'],
+                  },
+                  alternativeResource1: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      provider: { type: Type.STRING },
+                      url: { type: Type.STRING },
+                      type: { type: Type.STRING },
+                      pedagogicalNotes: { type: Type.STRING },
+                    },
+                    required: ['title', 'provider', 'url', 'type'],
+                  },
+                  alternativeResource2: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      provider: { type: Type.STRING },
+                      url: { type: Type.STRING },
+                      type: { type: Type.STRING },
+                      pedagogicalNotes: { type: Type.STRING },
+                    },
+                    required: ['title', 'provider', 'url', 'type'],
+                  },
+                },
+                required: ['primaryResource', 'alternativeResource1', 'alternativeResource2'],
+              },
+              learningSituation: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  contextDescription: { type: Type.STRING },
+                  authenticPalestineContext: { type: Type.STRING },
+                  totalDurationMinutes: { type: Type.INTEGER },
+                  steps: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        stepNumber: { type: Type.INTEGER },
+                        phaseName: { type: Type.STRING },
+                        durationMinutes: { type: Type.INTEGER },
+                        teacherAction: { type: Type.STRING },
+                        studentAction: { type: Type.STRING },
+                        expectedProducts: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      },
+                      required: ['stepNumber', 'phaseName', 'durationMinutes', 'teacherAction', 'studentAction', 'expectedProducts'],
+                    },
+                  },
+                  expectedProducts: { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+                required: ['title', 'contextDescription', 'authenticPalestineContext', 'totalDurationMinutes', 'steps', 'expectedProducts'],
+              },
+              differentiatedActivities: {
+                type: Type.OBJECT,
+                properties: {
+                  supportActivities: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        id: { type: Type.STRING },
+                        title: { type: Type.STRING },
+                        strategy: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        materialsNeeded: { type: Type.STRING },
+                      },
+                      required: ['id', 'title', 'strategy', 'description', 'materialsNeeded'],
+                    },
+                  },
+                  enrichmentActivities: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        id: { type: Type.STRING },
+                        title: { type: Type.STRING },
+                        challengeType: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                      },
+                      required: ['id', 'title', 'challengeType', 'description'],
+                    },
+                  },
+                },
+                required: ['supportActivities', 'enrichmentActivities'],
+              },
+            },
+            required: ['targetCompetencies', 'objectiveOptions', 'resourcesTriad', 'learningSituation', 'differentiatedActivities'],
+          },
+        });
+
+        const text = response?.text;
+        if (text) {
+          pkg = JSON.parse(text);
+          pkg.id = `ai-pkg-${Date.now()}`;
+          pkg.isAiEnhanced = true;
+          isAi = true;
+        }
+      } catch (aiErr) {
+        console.warn('[Pedagogical Assistant] AI generation failed, using local grounded generator:', aiErr);
+      }
+    }
+
+    if (!pkg) {
+      pkg = {
+        id: `pkg-fallback-${Date.now()}`,
+        lessonContext: {
+          subject: cleanSub,
+          grade: cleanGrade,
+          lessonTitle: cleanTitle,
+          topic: cleanTitle,
+        },
+        targetCompetencies: {
+          generalCompetency: {
+            code: 'GEN-COMM-01',
+            title: 'الاستماع النشط والتعبير الشفهي الواضح والإقناع بالحجة',
+            statement: 'أن يستمع المتعلم باهتمام ويحلل مضامين النص ويعبر عن رأيه بلغة عربية سليمة مدعومة بالبرهان.',
+            domainLabel: 'التواصل والاتصال الفعّال',
+          },
+          specificCompetency: {
+            code: 'SPEC-PAL-01',
+            title: `كفاية التطبيق والاستقصاء في مبحث ${cleanSub}`,
+            statement: `أن يوظف المتعلم مهارات ومفاهيم (${cleanTitle}) في حل مواقف ومشكلات تعليمية متصلة بالبيئة الفلسطينية.`,
+            subject: cleanSub,
+          },
+        },
+        objectiveOptions: [
+          {
+            id: 'obj-1',
+            type: 'cognitive',
+            typeLabel: 'الهدف المعرفي والاستيعابي الفاحص',
+            objectiveStatement: `أن يحلل الطالب المفهوم الأساسي لدرس (${cleanTitle}) مميزاً خصائصه الجوهرية.`,
+            performanceIndicator: 'يستخرج 3 عناصر رئيسة في مخطط بصري منظّم ويعلل اختياره.',
+            suggestedAssessmentMethod: 'قائمة شطب الملاحظة الصفية وورقة عمل بنائية.',
+            isSelected: true,
+          },
+          {
+            id: 'obj-2',
+            type: 'skill',
+            typeLabel: 'الهدف المهاري والتطبيقي الإجرائي',
+            objectiveStatement: `أن يطبق الطالب مهارات (${cleanTitle}) في حل مسألة أو مهمة حياتية واقعية.`,
+            performanceIndicator: 'ينفذ خطوات الحل الإجرائي بالتسلسل المنطقي السليم موضحاً ناتج تفكيره بدقة.',
+            suggestedAssessmentMethod: 'مهمة أدائية مقاسة بسلم تقدير وصفي (Rubric).',
+            isSelected: true,
+          },
+          {
+            id: 'obj-3',
+            type: 'affective',
+            typeLabel: 'الهدف القيمي والوجداني والوطني',
+            objectiveStatement: `أن يُظهر الطالب اعتزازه بالهوية والبيئة والتراث الفلسطيني من خلال موضوع (${cleanTitle}).`,
+            performanceIndicator: 'يربط مفاهيم الدرس بقضايا ترشيد الموارد والتعاون الإيجابي والتراث الأصيل.',
+            suggestedAssessmentMethod: 'تقويم الموقف الصفي وملاحظة الحوار والتفاعل التشاركي.',
+            isSelected: true,
+          },
+        ],
+        resourcesTriad: {
+          primaryResource: {
+            id: 'res-pri-1',
+            title: `كتاب ودليل المعلم في ${cleanSub} — البوابة التعليمية الفلسطينية`,
+            provider: 'البوابة التعليمية elearn.edu.ps (الأولوية ١)',
+            url: 'https://elearn.edu.ps',
+            type: 'textbook',
+            pedagogicalNotes: 'المرجع الرسمي المعتمد للشرح الصفي.',
+          },
+          alternativeResource1: {
+            id: 'res-alt-1',
+            title: `أنشطة ومحاكاة تفاعلية لدرس (${cleanTitle}) — منصة روافد`,
+            provider: 'منصة روافد التعليمية (rawafed.edu.ps)',
+            url: 'https://rawafed.edu.ps',
+            type: 'interactive',
+            pedagogicalNotes: 'بديل تفاعلي يعزز الفهم عند انقطاع الإنترنت أو للتعلم الذاتي.',
+          },
+          alternativeResource2: {
+            id: 'res-alt-2',
+            title: `أوراق عمل ومهمات تطبيقية ملموسة — منصة منهاجي`,
+            provider: 'منصة منهاجي التعليمية (minhaji.net)',
+            url: 'https://minhaji.net',
+            type: 'worksheet',
+            pedagogicalNotes: 'بديل ورقي ومحسوسات لمراعاة التمايز دون حاجة لاتصال رقمي.',
+          },
+        },
+        learningSituation: {
+          title: `الموقف الصفي الاستقصائي: تحدي مستكشفي فلسطين في (${cleanTitle})`,
+          contextDescription: `يُوضع الطلاب في سياق واقعي لحل مشكلة تطبيقية تتطلب توظيف مفهوم (${cleanTitle}) في بيئة مدرسية أو مجتمعية فلسطينية.`,
+          authenticPalestineContext: 'ربط المفهوم بالبيئة الفلسطينية والمدن والتراث الأصيل وسوق العمل المحلي.',
+          totalDurationMinutes: 45,
+          steps: [
+            {
+              stepNumber: 1,
+              phaseName: 'التمهيد والتهيئة الحافزة (إثارة الدافعية)',
+              durationMinutes: 7,
+              teacherAction: 'طرح لغز بصري أو تساؤل حياتي من البيئة الفلسطينية، واسترجاع المتطلبات السابقة.',
+              studentAction: 'التفكير الفردي دقيقة واحدة، ثم تبادل التوقعات ثنائياً (فكر - زاوج - شارك).',
+              expectedProducts: ['قائمة التوقعات الأولية والفرضيات الصفية.'],
+            },
+            {
+              stepNumber: 2,
+              phaseName: 'الاستكشاف والبحث الموجه (بناء المفهوم)',
+              durationMinutes: 15,
+              teacherAction: 'تيسير العمل في مجموعات متمايزة وتزويدهم بالمصادر المعتمدة وطرح أسئلة سابرة.',
+              studentAction: 'تصفح المصادر واستخراج المعطيات وتجريب الحلول في بطاقة الاستقصاء.',
+              expectedProducts: ['بطاقة استقصاء مكتملة تتضمن المعطيات والحلول.'],
+            },
+            {
+              stepNumber: 3,
+              phaseName: 'التطبيق والإنتاج والتعميق',
+              durationMinutes: 15,
+              teacherAction: 'متابعة تنفيذ المهمة الأدائية وتقديم تغذية راجعة فورية وضبط الوقت.',
+              studentAction: 'إنتاج النموذج أو حل المسألة المركبة وتجهيز ملخص العرض التقديمي.',
+              expectedProducts: ['منتج تعليمي ملموس (خريطة مفاهيم، حل مسألة مبرهن).'],
+            },
+            {
+              stepNumber: 4,
+              phaseName: 'الختام والتقويم التكويني وبطاقة الخروج',
+              durationMinutes: 8,
+              teacherAction: 'إدارة تقييم الأقران وتلخيص الكفايات المستفادة وتوزيع بطاقات الخروج.',
+              studentAction: 'تقديم التغذية الراجعة لزملائهم والإجابة السريعة عن سؤال بطاقة الخروج.',
+              expectedProducts: ['بطاقات خروج ملخصة (Exit Tickets).'],
+            },
+          ],
+          expectedProducts: ['بطاقة استقصاء المفهوم', 'نموذج الحل المبرهن', 'تذاكر الخروج الفردية'],
+        },
+        differentiatedActivities: {
+          supportActivities: [
+            {
+              id: 'sup-1',
+              title: 'محطة النمذجة المحسوسة والمصغرة',
+              strategy: 'التعلم بالحواس والمجسمات والمحاكاة التفاعلية',
+              description: `تقديم محسوسات بصرية وبطاقات ملونة تُجزئ مفهوم (${cleanTitle}) إلى خطوات صغيرة متسلسلة للطلبة المحتاجين لمساعدة.`,
+              materialsNeeded: 'بطاقات ملونة، مجسمات محسوسة، أو محاكي روافد البصري.',
+            },
+            {
+              id: 'sup-2',
+              title: 'استراتيجية المعلم الصغير والتعلم بالقرين (Peer Tutoring)',
+              strategy: 'الشراكة الطلابية والمراجعة التكافلية',
+              description: 'دمج الطالب مع زميل متمكن لشرح الخطوة الصعبة بأسلوب مبسط وتبادل الأدوار في حل المسألة.',
+              materialsNeeded: 'دليل الإرشاد الثنائي المصغر.',
+            },
+          ],
+          enrichmentActivities: [
+            {
+              id: 'enr-1',
+              title: 'تحدي المهندس والمبتكر الصغير (مسألة غير روتينية مفتوحة النهاية)',
+              challengeType: 'حل مشكلات معقدة وتفكير إبداعي ممتد',
+              description: `صياغة مسألة واقعية مفتوحة النهاية تتطلب من الطلبة المتميزين تطبيق (${cleanTitle}) في تصميم حل مبتكر.`,
+            },
+            {
+              id: 'enr-2',
+              title: 'مشروع البحث والتسجيل الرقمي: سفراء المعرفة الفلسطينية',
+              challengeType: 'إنتاج رقمي وتطبيق عملي',
+              description: 'إنتاج بطاقة إنفوجرافيك رقمية أو مقطع صوتي تعليمي في دقيقة يشرح الفكرة لزملائهم.',
+            },
+          ],
+        },
+      };
+    }
+
+    return res.json({
+      success: true,
+      isAi,
+      suggestionPackage: pkg,
+    });
+  } catch (err: any) {
+    console.error('Error in /api/pedagogical-assistant:', err);
+    return res.status(500).json({
+      error: 'فشل في استدعاء المساعد التربوي الذكي: ' + (err.message || 'خطأ غير معروف'),
+    });
+  }
+});
+
 // Dev server with Vite middleware vs Production static serving
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

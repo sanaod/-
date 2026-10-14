@@ -8,6 +8,8 @@ import { exportToWord, exportToHtml } from '../utils/exportUtils';
 import { ensureExecutiveData } from '../utils/executivePlanDefaults';
 import { isWebShareSupported, sharePlanViaWebShare } from '../utils/shareUtils';
 import { ExecutivePrintDocument } from './ExecutivePrintDocument';
+import { OerPrintDocument } from './OerPrintDocument';
+import { ensureOerData } from '../data/oerPalestinianCurriculum';
 import { SharePlanModal } from './SharePlanModal';
 
 interface OfficialPrintViewProps {
@@ -18,8 +20,9 @@ interface OfficialPrintViewProps {
 
 export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBack, onOpenShareModal }) => {
   const planWithExec = ensureExecutiveData(plan);
-  const [printTemplate, setPrintTemplate] = useState<'executive' | 'adaptive'>(
-    (plan.templateType as 'executive' | 'adaptive') || 'executive'
+  const planWithOer = ensureOerData(planWithExec);
+  const [printTemplate, setPrintTemplate] = useState<'oer' | 'executive' | 'adaptive'>(
+    (plan.templateType as 'oer' | 'executive' | 'adaptive') || 'oer'
   );
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -39,7 +42,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
       const sanitizedTitle = (plan.header.lessonTitle || 'خطة_درس')
         .replace(/[/\\?%*:|"<>]/g, '-')
         .trim();
-      const templateSuffix = printTemplate === 'executive' ? 'النموذج_الرئيسي' : 'النموذج_التكيفي';
+      const templateSuffix = printTemplate === 'oer' ? 'دليل_المصادر_المفتوحة_OER' : printTemplate === 'executive' ? 'النموذج_الرئيسي' : 'النموذج_التكيفي';
       const fileName = `${sanitizedTitle}_${templateSuffix}.pdf`;
 
       await exportLessonPlanToPdf(documentContainerRef.current, {
@@ -148,13 +151,28 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
         {/* Template Switcher in Print Toolbar */}
         <div className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-slate-800">نموذج الطباعة والتصدير المعتمد:</span>
+            <span className="text-xs font-black text-slate-800">نموذج الطباعة والتصدير:</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
-              {printTemplate === 'executive' ? '⭐ النموذج الرئيسي (الرسمي المعتمد)' : '📋 النموذج الثاني (التكيفي)'}
+              {printTemplate === 'oer'
+                ? '⭐ نموذج دليل مصادر التعليم المفتوحة OER (الصفوف ١-٤)'
+                : printTemplate === 'executive'
+                ? '📋 النموذج التنفيذي (SMART)'
+                : '📑 النموذج التكيفي الموسع'}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setPrintTemplate('oer')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                printTemplate === 'oer'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ⭐ نموذج OER (الصفوف ١-٤ المعتمد)
+            </button>
             <button
               type="button"
               onClick={() => setPrintTemplate('executive')}
@@ -164,7 +182,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              ⭐ النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)
+              📋 النموذج التنفيذي (SMART)
             </button>
             <button
               type="button"
@@ -175,7 +193,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📋 النموذج الثاني (التخطيط التكيفي الموسع)
+              📑 النموذج التكيفي الموسع
             </button>
           </div>
         </div>
@@ -200,7 +218,9 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
         dir="rtl"
         className="max-w-4xl mx-auto space-y-6 sm:space-y-8 print:space-y-0 official-document-wrapper text-right overflow-x-auto"
       >
-        {printTemplate === 'executive' ? (
+        {printTemplate === 'oer' ? (
+          <OerPrintDocument plan={planWithOer} />
+        ) : printTemplate === 'executive' ? (
           <ExecutivePrintDocument plan={planWithExec} />
         ) : (
           <>

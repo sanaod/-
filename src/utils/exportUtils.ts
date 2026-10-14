@@ -27,6 +27,189 @@ export function exportToWord(plan: LessonPlan) {
   const p = plan;
   const h = p.header;
 
+  if ((plan.templateType || 'oer') === 'oer' && plan.oerData) {
+    const o = plan.oerData;
+    const l = o.lessonInfo;
+
+    const oerWordDoc = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>${l.lessonTitle || 'خطة درس OER'} - ${l.subject || 'المبحث'}</title>
+<style>
+  body {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Traditional Arabic', 'Calibri', 'Arial', sans-serif;
+    font-size: 13pt;
+    line-height: 1.5;
+    color: #111;
+    margin: 20mm 15mm 20mm 15mm;
+  }
+  h1 { font-size: 18pt; text-align: center; color: #064e3b; margin-bottom: 4pt; }
+  .subtitle { text-align: center; font-size: 11pt; color: #475569; margin-bottom: 12pt; }
+  h2 { font-size: 14pt; border-bottom: 2pt solid #059669; padding-bottom: 3pt; color: #064e3b; margin-top: 14pt; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
+  th, td { border: 1pt solid #000; padding: 6pt 8pt; vertical-align: top; text-align: right; font-size: 11.5pt; }
+  th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; }
+  .table-header-cell { background-color: #e2e8f0; font-weight: bold; }
+  .badge-elearn { background-color: #d1fae5; color: #065f46; font-weight: bold; padding: 2pt 4pt; border: 1pt solid #10b981; }
+</style>
+</head>
+<body>
+  <div style="text-align: center; margin-bottom: 12pt;">
+    <p style="margin: 0; font-size: 12pt; font-weight: bold;">دولة فلسطين • وزارة التربية والتعليم العالي</p>
+    <p style="margin: 2pt 0; font-size: 10pt; color: #475569;">مديرية التربية والتعليم: ${l.directorate || '...............'} | مدرسة: ${l.school || '...............'}</p>
+    <h1>استمارة خطة درس مستندة إلى مصادر التعليم المفتوحة (OER)</h1>
+    <p class="subtitle">دليل المعلم الفلسطيني (الصفوف ١–٤ الأساسية) • البوابة التعليمية الرسمية elearn.edu.ps</p>
+  </div>
+
+  <h2>أولاً: بيانات الدرس الأساسية</h2>
+  <table>
+    <tr>
+      <td class="table-header-cell" style="width: 15%;">المبحث / المادة:</td>
+      <td style="width: 35%;">${l.subject || '—'}</td>
+      <td class="table-header-cell" style="width: 15%;">الصف والشعبة:</td>
+      <td style="width: 35%;">${l.grade || '—'} (شعبة: ${l.section || 'أ'})</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">عنوان الدرس:</td>
+      <td><strong>${l.lessonTitle || '—'}</strong></td>
+      <td class="table-header-cell">مدة الحصة:</td>
+      <td>${toArabicDigits(l.durationMinutes || 40)} دقيقة</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">اسم المعلم/ة:</td>
+      <td>${l.teacherName || '—'}</td>
+      <td class="table-header-cell">التاريخ:</td>
+      <td>${l.date || '—'} (الفصل: ${l.semester || 'الأول'})</td>
+    </tr>
+  </table>
+
+  <h2>ثانياً: الكفايات المستهدفة</h2>
+  <table>
+    <tr>
+      <td class="table-header-cell" style="width: 25%;">الكفاية العامة:</td>
+      <td style="width: 75%;">${o.targetCompetencies.generalCompetency || '—'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">الكفاية الخاصة:</td>
+      <td>${o.targetCompetencies.specificCompetency || '—'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">مؤشرات أداء قابلة للملاحظة:</td>
+      <td>
+        <ol style="margin: 0; padding-right: 18pt;">
+          ${o.targetCompetencies.observableIndicators.map((ind) => `<li>${ind}</li>`).join('')}
+        </ol>
+      </td>
+    </tr>
+  </table>
+
+  <h2>ثالثاً: الموقف التعليمي ومصادر التعليم المفتوحة OER (رئيسي + بديلان لكل نشاط)</h2>
+  <table>
+    <tr style="background-color: #f1f5f9;">
+      <th style="width: 15%;">المرحلة والزمن</th>
+      <th style="width: 30%;">الخطوات الإجرائية وأدوار الطلبة</th>
+      <th style="width: 35%;">مصادر التعليم المفتوحة (رئيسي + بديلان)</th>
+      <th style="width: 20%;">التقويم (تكويني / منتج)</th>
+    </tr>
+    ${o.activities
+      .map(
+        (act) => `
+    <tr>
+      <td>
+        <strong>${act.title}</strong><br>
+        <span style="font-size: 10pt; color: #475569;">${toArabicDigits(act.allocatedTimeMinutes)} دقيقة</span>
+      </td>
+      <td>
+        <p style="margin: 0 0 4pt 0;">${act.description}</p>
+        <p style="margin: 0; font-size: 10pt; color: #047857;"><strong>دور الطلبة:</strong> ${act.studentRoles} ${act.studentRolesDetails ? `(${act.studentRolesDetails})` : ''}</p>
+        ${act.expectedProducts ? `<p style="margin: 2pt 0 0 0; font-size: 10pt; color: #6b21a8;"><strong>المنتج المتوقع:</strong> ${act.expectedProducts}</p>` : ''}
+      </td>
+      <td>
+        <div style="background-color: #ecfdf5; padding: 4pt; border: 1pt solid #10b981; margin-bottom: 4pt;">
+          <strong>🌟 رئيسي:</strong> ${act.primaryResource.title}<br>
+          <span style="font-size: 9.5pt; color: #047857;">النوع: ${act.primaryResource.type} | الرخصة: ${act.primaryResource.licenseType === 'ministry_elearn' ? 'معتمد elearn.edu.ps' : 'مشاع إبداعي'}</span>
+          ${act.primaryResource.directUrl ? `<br><a href="${act.primaryResource.directUrl}" style="font-size: 9pt; color: #0284c7;">${act.primaryResource.directUrl}</a>` : ''}
+        </div>
+        <div style="background-color: #f0f9ff; padding: 3pt; border: 1pt solid #bae6fd; margin-bottom: 3pt;">
+          <strong>🔄 بديل ١:</strong> ${act.alternativeResource1.title}
+        </div>
+        <div style="background-color: #fffbeb; padding: 3pt; border: 1pt solid #fde68a;">
+          <strong>🔄 بديل ٢ (أوفلاين):</strong> ${act.alternativeResource2.title}
+        </div>
+      </td>
+      <td>
+        <p style="margin: 0 0 4pt 0; font-size: 10.5pt;"><strong>تكويني:</strong> ${act.formativeAssessment || 'ملاحظة وتغذية راجعة'}</p>
+        <p style="margin: 0; font-size: 10.5pt;"><strong>تقويم المنتج:</strong> ${act.productAssessment || 'سلم تقدير'}</p>
+      </td>
+    </tr>
+    `
+      )
+      .join('')}
+  </table>
+
+  <h2>رابعاً: التقويم الختامي الشامل</h2>
+  <table>
+    <tr>
+      <td class="table-header-cell" style="width: 25%;">مهمة التقويم الختامي:</td>
+      <td style="width: 75%;">${o.summativeAssessment.description || '—'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">أداة التقويم:</td>
+      <td>${o.summativeAssessment.assessmentTool || 'سلم تقدير لفظي (Rubric)'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">الربط بمؤشرات الكفاية:</td>
+      <td>${o.summativeAssessment.alignmentWithIndicators || '—'}</td>
+    </tr>
+  </table>
+
+  <h2>خامساً: بدائل وملاحظات ما بعد الدرس</h2>
+  <table>
+    <tr>
+      <td class="table-header-cell" style="width: 25%;">حلول عند تعذر مصدر:</td>
+      <td style="width: 75%;">${o.contingenciesAndNotes.sourceContingencies || 'الاعتماد على البدائل الأوفلاين والخامات البيئية والمحسوسات.'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">ما بعد الدرس (التأمل الذاتي):</td>
+      <td>${o.contingenciesAndNotes.postLessonReflection || 'استيفاء النتاجات بنجاح.'}</td>
+    </tr>
+    <tr>
+      <td class="table-header-cell">متابعة الطلبة والدعم:</td>
+      <td>${o.contingenciesAndNotes.followUpActions || 'تقديم الدعم الإضافي للطلبة المحتاجين وأنشطة التحدي للمتميزين.'}</td>
+    </tr>
+  </table>
+
+  <div style="margin-top: 20pt; border-top: 1pt solid #000; padding-top: 8pt; display: flex; justify-content: space-between; text-align: center;">
+    <div style="float: right; width: 32%;">
+      <strong>توقيع المعلم:</strong> ....................<br>
+      <strong>التاريخ:</strong> ${l.date || '..../..../2026'}
+    </div>
+    <div style="float: right; width: 33%;">
+      <strong>توقيع وختم مدير المدرسة:</strong> ....................<br>
+      <strong>التاريخ:</strong> ..../..../2026
+    </div>
+    <div style="float: left; width: 32%;">
+      <strong>توقيع المشرف التربوي:</strong> ....................<br>
+      <strong>التاريخ:</strong> ..../..../2026
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+
+  <div style="margin-top: 25pt; text-align: center; font-size: 9.5pt; color: #475569;">
+    إعداد وتصميم: الأستاذ عبد الرحمن دويكات | منظومة عبقور للتخطيط التربوي • بوابة elearn.edu.ps
+  </div>
+</body>
+</html>
+    `.trim();
+
+    const fileName = `خطة_درس_OER_${(l.subject || 'مبحث').replace(/[\s/\\:]+/g, '_')}_${(l.lessonTitle || 'درس').replace(/[\s/\\:]+/g, '_')}.doc`;
+    downloadBlob(oerWordDoc, fileName, 'application/msword;charset=utf-8');
+    return;
+  }
+
   if ((plan.templateType || 'executive') === 'executive' && plan.executiveData) {
     const d = plan.executiveData;
     const stage1 = d.executiveStages.find((s) => s.id === 1) || d.executiveStages[0];
@@ -555,6 +738,227 @@ export function exportToWord(plan: LessonPlan) {
 export function exportToHtml(plan: LessonPlan) {
   const p = plan;
   const h = p.header;
+
+  if ((plan.templateType || 'oer') === 'oer' && plan.oerData) {
+    const o = plan.oerData;
+    const l = o.lessonInfo;
+
+    const oerHtmlDoc = `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>خطة درس OER: ${l.lessonTitle || 'درس'} - ${l.subject || 'المبحث'}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      direction: rtl;
+      text-align: right;
+      font-family: 'Tajawal', 'Cairo', sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1050px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+      padding: 32px;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      margin-left: 6px;
+      margin-bottom: 6px;
+    }
+    .badge-amber { background: #fef3c7; color: #78350f; }
+    .badge-emerald { background: #d1fae5; color: #065f46; }
+    .section-title {
+      background: #047857;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      margin: 24px 0 14px 0;
+    }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; border-radius: 12px; overflow: hidden; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: right; font-size: 13px; }
+    th { background: #f8fafc; font-weight: 800; color: #0f172a; }
+    .table-label { background: #f1f5f9; font-weight: bold; width: 22%; }
+    .activity-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .res-box { padding: 8px 12px; border-radius: 10px; margin-top: 6px; font-size: 12px; }
+    .res-primary { background: #ecfdf5; border: 1px solid #10b981; color: #064e3b; }
+    .res-alt1 { background: #f0f9ff; border: 1px solid #38bdf8; color: #0369a1; }
+    .res-alt2 { background: #fffbeb; border: 1px solid #f59e0b; color: #78350f; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-banner">
+      <div style="margin-bottom: 8px;">
+        <span class="badge badge-amber">دليل المعلم الفلسطيني OER</span>
+        <span class="badge badge-emerald">البوابة التعليمية elearn.edu.ps</span>
+        <span class="badge badge-emerald">المرحلة الأساسية (الصفوف ١-٤)</span>
+      </div>
+      <h1 style="margin: 0 0 6px 0; font-size: 24px; font-weight: 900;">استمارة خطة درس مستندة لمصادر التعليم المفتوحة OER</h1>
+      <p style="margin: 0; font-size: 13px; opacity: 0.9;">${l.subject} • ${l.grade} • ${l.lessonTitle}</p>
+    </div>
+
+    <div class="section-title">١. بيانات الدرس الأساسية</div>
+    <table>
+      <tr>
+        <td class="table-label">المبحث / المادة:</td>
+        <td><strong>${l.subject}</strong></td>
+        <td class="table-label">الصف والشعبة:</td>
+        <td>${l.grade} (شعبة: ${l.section || 'أ'})</td>
+      </tr>
+      <tr>
+        <td class="table-label">عنوان الدرس:</td>
+        <td>${l.lessonTitle}</td>
+        <td class="table-label">مدة الحصة:</td>
+        <td>${toArabicDigits(l.durationMinutes || 40)} دقيقة</td>
+      </tr>
+      <tr>
+        <td class="table-label">اسم المعلم/ة:</td>
+        <td>${l.teacherName}</td>
+        <td class="table-label">المدرسة والمديرية:</td>
+        <td>${l.school} • ${l.directorate}</td>
+      </tr>
+      <tr>
+        <td class="table-label">التاريخ والفصل:</td>
+        <td>${l.date} • ${l.semester}</td>
+        <td class="table-label">الوحدة الدراسية:</td>
+        <td>${l.unitTitle || '—'}</td>
+      </tr>
+    </table>
+
+    <div class="section-title">٢. الكفايات المستهدفة</div>
+    <table>
+      <tr>
+        <td class="table-label">الكفاية العامة:</td>
+        <td>${o.targetCompetencies.generalCompetency || '—'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">الكفاية الخاصة:</td>
+        <td>${o.targetCompetencies.specificCompetency || '—'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">مؤشرات أداء قابلة للملاحظة:</td>
+        <td>
+          <ol style="margin: 0; padding-right: 20px;">
+            ${o.targetCompetencies.observableIndicators.map((ind) => `<li>${ind}</li>`).join('')}
+          </ol>
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-title">٣. الموقف التعليمي ومصادر OER (رئيسي + بديلان لكل نشاط)</div>
+    ${o.activities
+      .map(
+        (act) => `
+    <div class="activity-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <strong style="font-size: 15px; color: #047857;">${act.title}</strong>
+        <span style="background: #e2e8f0; padding: 3px 10px; border-radius: 8px; font-weight: bold; font-size: 12px;">${toArabicDigits(act.allocatedTimeMinutes)} دقيقة</span>
+      </div>
+      <p style="margin: 0 0 10px 0; font-size: 13.5px; line-height: 1.7;">${act.description}</p>
+      <div style="font-size: 12px; color: #334155; margin-bottom: 12px;">
+        <strong>دور الطلبة:</strong> ${act.studentRoles} ${act.studentRolesDetails ? `(${act.studentRolesDetails})` : ''} | 
+        <strong>المنتج المتوقع:</strong> ${act.expectedProducts || 'إنجاز المطلوب'}
+      </div>
+
+      <div style="margin-top: 10px;">
+        <strong style="font-size: 12.5px; color: #0f172a;">مصادر التعليم المفتوحة OER:</strong>
+        <div class="res-box res-primary">
+          <strong>🌟 مصدر رئيسي:</strong> ${act.primaryResource.title} 
+          <span style="font-size: 11px; opacity: 0.85;">(${act.primaryResource.type} • ${act.primaryResource.licenseType === 'ministry_elearn' ? 'معتمد elearn.edu.ps' : 'مشاع إبداعي'})</span>
+          ${act.primaryResource.directUrl ? `<br><a href="${act.primaryResource.directUrl}" target="_blank" style="color: #0284c7;">${act.primaryResource.directUrl}</a>` : ''}
+        </div>
+        <div class="res-box res-alt1">
+          <strong>🔄 بديل ١:</strong> ${act.alternativeResource1.title}
+        </div>
+        <div class="res-box res-alt2">
+          <strong>🔄 بديل ٢ (أوفلاين):</strong> ${act.alternativeResource2.title}
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 12px; background: #ffffff; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+        <div style="flex: 1;"><strong>التقويم التكويني:</strong> ${act.formativeAssessment || 'ملاحظة وتغذية راجعة'}</div>
+        <div style="flex: 1;"><strong>تقويم المنتج:</strong> ${act.productAssessment || 'سلم تقدير'}</div>
+      </div>
+    </div>
+    `
+      )
+      .join('')}
+
+    <div class="section-title">٤. التقويم الختامي الشامل</div>
+    <table>
+      <tr>
+        <td class="table-label">المهمة الختامية:</td>
+        <td>${o.summativeAssessment.description || '—'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">أداة التقويم:</td>
+        <td>${o.summativeAssessment.assessmentTool || 'سلم تقدير لفظي (Rubric)'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">الربط بمؤشرات الكفاية:</td>
+        <td>${o.summativeAssessment.alignmentWithIndicators || '—'}</td>
+      </tr>
+    </table>
+
+    <div class="section-title">٥. بدائل وملاحظات ما بعد الدرس</div>
+    <table>
+      <tr>
+        <td class="table-label">حلول عند تعذر مصدر:</td>
+        <td>${o.contingenciesAndNotes.sourceContingencies || 'الاعتماد على البدائل الأوفلاين والخامات البيئية.'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">ما بعد الدرس (التأمل الذاتي):</td>
+        <td>${o.contingenciesAndNotes.postLessonReflection || 'استيفاء النتاجات بنجاح.'}</td>
+      </tr>
+      <tr>
+        <td class="table-label">متابعة الطلبة والدعم:</td>
+        <td>${o.contingenciesAndNotes.followUpActions || 'دعم تشخيصي وإثرائي.'}</td>
+      </tr>
+    </table>
+
+    <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
+      منظومة عبقور للتخطيط التربوي وتحضير الدروس • إعداد وتصميم: أ. عبد الرحمن دويكات • متوافق كلياً مع بوابة elearn.edu.ps
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    const fileName = `خطة_درس_OER_${(l.subject || 'مبحث').replace(/[\s/\\:]+/g, '_')}_${(l.lessonTitle || 'درس').replace(/[\s/\\:]+/g, '_')}.html`;
+    downloadBlob(oerHtmlDoc, fileName, 'text/html;charset=utf-8');
+    return;
+  }
 
   const htmlDoc = `
 <!DOCTYPE html>
