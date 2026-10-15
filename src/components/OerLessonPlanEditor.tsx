@@ -65,6 +65,7 @@ interface OerLessonPlanEditorProps {
   onOpenPalestinianOerHub?: () => void;
   onOpenCompetenciesModal?: () => void;
   onOpenSmartGuideModal?: () => void;
+  onAddResource?: (resource: EducationalResource, linkToCurrentPlan?: boolean) => void;
 }
 
 const PRIMARY_GRADES_1_TO_4 = [
@@ -180,6 +181,7 @@ export const OerLessonPlanEditor: React.FC<OerLessonPlanEditorProps> = ({
   onOpenPalestinianOerHub,
   onOpenCompetenciesModal,
   onOpenSmartGuideModal,
+  onAddResource,
 }) => {
   const planWithOer = ensureOerData(plan);
   const oer: OerLessonPlanData = planWithOer.oerData!;
@@ -190,6 +192,16 @@ export const OerLessonPlanEditor: React.FC<OerLessonPlanEditorProps> = ({
   // Curriculum Preset Selection Modal / Drawer state
   const [isCurriculumPickerOpen, setIsCurriculumPickerOpen] = useState(false);
   const [selectedCurriculumPreset, setSelectedCurriculumPreset] = useState<string>('');
+
+  // Add Open Resource Modal State
+  const [isAddResourceModalOpen, setIsAddResourceModalOpen] = useState(false);
+  const [newResTitle, setNewResTitle] = useState('');
+  const [newResType, setNewResType] = useState<'video' | 'book' | 'image' | 'link' | 'file' | 'activity'>('book');
+  const [newResUrl, setNewResUrl] = useState('');
+  const [newResSource, setNewResSource] = useState('وزارة التربية والتعليم العالي');
+  const [newResLicense, setNewResLicense] = useState<'open' | 'public_domain' | 'shared_rights'>('open');
+  const [newResNotes, setNewResNotes] = useState('');
+  const [newResLinkToPlan, setNewResLinkToPlan] = useState(true);
 
   // Updates OER data & synchronizes common fields with top-level plan header
   const handleUpdateOer = (updatedOer: OerLessonPlanData) => {
@@ -363,110 +375,111 @@ export const OerLessonPlanEditor: React.FC<OerLessonPlanEditorProps> = ({
   return (
     <div className="space-y-6 oer-lesson-plan-editor font-['Tajawal']" dir="rtl">
       {/* ===================== Top Official Context & Badge Banner ===================== */}
-      <div className="bg-linear-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-3xl p-5 sm:p-7 shadow-xl border-2 border-emerald-500/50 relative overflow-hidden">
+      <div className="bg-linear-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-3xl p-5 sm:p-7 shadow-xl border-2 border-emerald-500/50 relative overflow-hidden space-y-4">
         <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
         
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black shadow-xs flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-900" />
-                <span>دليل المعلم الفلسطيني الرسمي OER</span>
-              </span>
-              <span className="bg-emerald-800/80 text-emerald-200 border border-emerald-400/40 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                <span>🇵🇸 وزارة التربية والتعليم العالي</span>
-              </span>
-              <span className="bg-teal-800/80 text-teal-200 border border-teal-400/40 px-2.5 py-1 rounded-full text-xs font-bold">
-                البوابة التعليمية elearn.edu.ps
-              </span>
-              <span className="bg-blue-900/60 text-blue-200 border border-blue-400/40 px-2.5 py-1 rounded-full text-xs font-bold">
-                المرحلة المستهدفة: الصفوف ١–٤ (قابلة للتوسع)
-              </span>
-            </div>
+        {/* Row 1: Top Bar - Single horizontal row right to left */}
+        <div className="flex flex-wrap items-center gap-2.5 pb-3 border-b border-emerald-700/60">
+          <span className="bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black shadow-xs flex items-center gap-1.5 shrink-0">
+            <ShieldCheck className="w-4 h-4 text-emerald-900" />
+            <span>دليل المعلم الفلسطيني OER</span>
+          </span>
+          <span className="bg-emerald-800/90 text-emerald-100 border border-emerald-400/40 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shrink-0">
+            <span>🇵🇸 وزارة التربية والتعليم العالي</span>
+          </span>
+          <span className="bg-teal-800/90 text-teal-100 border border-teal-400/40 px-3 py-1 rounded-full text-xs font-bold shrink-0">
+            البوابة التعليمية elearn.edu.ps
+          </span>
+          <span className="bg-blue-900/70 text-blue-100 border border-blue-400/40 px-3 py-1 rounded-full text-xs font-bold shrink-0">
+            المرحلة المستهدفة: الصفوف ١–٤ قابلة للتوسع
+          </span>
+        </div>
 
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wide">
-              واجهة بناء خطة الدرس المستندة إلى مصادر التعليم المفتوحة (OER)
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-200 max-w-3xl leading-relaxed">
-              هيكل بيداغوجي متكامل يربط بين الكفايات العامة والخاصة ومؤشرات الأداء القابلة للملاحظة، مع إلزامية توفير مصدر رئيسي وبديلين لكل نشاط تعليمي لضمان استمرارية التعلم تحت كافة الظروف.
-            </p>
-          </div>
+        {/* Row 2: Title & Description horizontal layout */}
+        <div className="space-y-1.5">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wide">
+            واجهة بناء خطة الدرس المستندة إلى مصادر التعليم المفتوحة (OER)
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-4xl">
+            هيكل بيداغوجي متكامل يربط بين الكفايات العامة والخاصة ومؤشرات الأداء القابلة للملاحظة، مع إلزامية توفير مصدر رئيسي وبديلين لكل نشاط تعليمي لضمان استمرارية التعلم تحت كافة الظروف.
+          </p>
+        </div>
 
-          {/* Quick Actions in Header */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {onOpenSmartGuideModal && (
-              <button
-                type="button"
-                onClick={onOpenSmartGuideModal}
-                className="px-4 py-2.5 bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-97 transition-all cursor-pointer border border-amber-300 ring-2 ring-amber-400/40"
-                title="مرشد عبقور التربوي الذكي ووحدة فحص التوافق والمعايير الوزارية"
-              >
-                <Lightbulb className="w-4 h-4 text-slate-950 animate-pulse" />
-                <span>مرشد عبقور وفحص التوافق 💡</span>
-              </button>
-            )}
+        {/* Row 3: Middle Actions Bar - Single horizontal row right to left */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-2">
+          <button
+            type="button"
+            onClick={() => setIsCurriculumPickerOpen(true)}
+            className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.01] active:scale-97 transition-all cursor-pointer border border-amber-300 shrink-0"
+            title="استيراد من قاعدة بيانات الكفايات OER"
+          >
+            <FolderOpen className="w-4 h-4 text-slate-950 shrink-0" />
+            <span>استيراد من قاعدة بيانات الكفايات OER ⚡</span>
+          </button>
 
-            {onOpenPalestinianOerHub && (
-              <button
-                type="button"
-                onClick={onOpenPalestinianOerHub}
-                className="px-4 py-2.5 bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-97 transition-all cursor-pointer border border-amber-300/60 ring-2 ring-amber-400/30"
-                title="وحدة الربط المباشر بمصادر التعليم المفتوحة OER المعتمدة في فلسطين ومكتبتي الشخصية"
-              >
-                <span className="text-amber-300">🇵🇸</span>
-                <Globe className="w-4 h-4 text-emerald-200" />
-                <span>مصادر OER المعتمدة والمكتبة</span>
-              </button>
-            )}
-
-            {onOpenCompetenciesModal && (
-              <button
-                type="button"
-                onClick={onOpenCompetenciesModal}
-                className="px-4 py-2.5 bg-linear-to-r from-emerald-700 via-teal-700 to-slate-900 hover:from-emerald-600 hover:to-slate-850 text-white font-black rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-97 transition-all cursor-pointer border border-emerald-400/60 ring-2 ring-emerald-500/20"
-                title="مكتبة الكفايات الوطنية الفلسطينية وفق إطار وزارة التربية والتعليم العالي"
-              >
-                <Award className="w-4 h-4 text-amber-300" />
-                <span>مكتبة الكفايات الوطنية 🎯</span>
-              </button>
-            )}
-
+          {onOpenCompetenciesModal && (
             <button
               type="button"
-              onClick={() => setIsCurriculumPickerOpen(true)}
-              className="px-4 py-2.5 bg-linear-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-97 transition-all cursor-pointer border border-amber-300"
-              title="اختيار كفايات ومصادر جاهزة من قاعدة بيانات المنهاج الفلسطيني OER"
+              onClick={onOpenCompetenciesModal}
+              className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.01] active:scale-97 transition-all cursor-pointer border border-emerald-400/60 shrink-0"
+              title="مكتبة الكفايات الوطنية"
             >
-              <FolderOpen className="w-4 h-4 text-slate-950 shrink-0" />
-              <span>استيراد من قاعدة بيانات الكفايات OER ⚡</span>
+              <Award className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>مكتبة الكفايات الوطنية 🎯</span>
             </button>
+          )}
 
-            {onOpenAiModal && (
-              <button
-                type="button"
-                onClick={onOpenAiModal}
-                className="px-3.5 py-2.5 bg-emerald-800/80 hover:bg-emerald-700 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 border border-emerald-400/50 shadow-md hover:scale-[1.02] transition-all cursor-pointer"
-                title="توليد خطة الدرس عبر الذكاء الاصطناعي مع مراعاة معايير OER"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>توليد ذكي (AI)</span>
-              </button>
-            )}
+          {onOpenPalestinianOerHub && (
+            <button
+              type="button"
+              onClick={onOpenPalestinianOerHub}
+              className="px-4 py-2.5 bg-teal-700 hover:bg-teal-600 text-white font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.01] active:scale-97 transition-all cursor-pointer border border-teal-400/60 shrink-0"
+              title="مصادر معتمدة OER — PS"
+            >
+              <span className="text-amber-300">🇵🇸</span>
+              <Globe className="w-4 h-4 text-emerald-200 shrink-0" />
+              <span>مصادر معتمدة OER — PS 📚</span>
+            </button>
+          )}
 
-            {onOpenResourcesModal && (
-              <button
-                type="button"
-                onClick={onOpenResourcesModal}
-                className="px-3.5 py-2.5 bg-teal-800/80 hover:bg-teal-700 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 border border-teal-400/50 shadow-md hover:scale-[1.02] transition-all cursor-pointer"
-                title="فتح بنك المصادر والمراجع التعليمية المعتمدة"
-              >
-                <Layers className="w-4 h-4 text-teal-200" />
-                <span>بنك المصادر ({toArabicDigits(resourcesCount)})</span>
-              </button>
-            )}
-          </div>
+          {onOpenSmartGuideModal && (
+            <button
+              type="button"
+              onClick={onOpenSmartGuideModal}
+              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.01] active:scale-97 transition-all cursor-pointer border border-amber-300 shrink-0"
+              title="مرشد عبقور وفحص التوافق"
+            >
+              <Lightbulb className="w-4 h-4 text-slate-950 shrink-0 animate-pulse" />
+              <span>مرشد عبقور وفحص التوافق 💡</span>
+            </button>
+          )}
+
+          {onOpenAiModal && (
+            <button
+              type="button"
+              onClick={onOpenAiModal}
+              className="px-3.5 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 border border-emerald-400/50 shadow-md hover:scale-[1.01] transition-all cursor-pointer shrink-0"
+              title="توليد ذكي (AI)"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>توليد ذكي (AI) ⚡</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsAddResourceModalOpen(true)}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.01] active:scale-97 transition-all cursor-pointer border border-emerald-400 shrink-0"
+            title="إضافة مصدر مفتوح جديد"
+          >
+            <Plus className="w-4 h-4 text-amber-300 shrink-0" />
+            <span>➕ إضافة مصدر مفتوح</span>
+          </button>
         </div>
+
       </div>
+
+
 
       {/* ===================== SECTION 1: بيانات الدرس ===================== */}
       <section className="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm overflow-hidden transition-all hover:border-emerald-300">
@@ -1449,6 +1462,204 @@ export const OerLessonPlanEditor: React.FC<OerLessonPlanEditorProps> = ({
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
               >
                 إغلاق النافذة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== ADD OPEN SOURCE MODAL ===================== */}
+      {isAddResourceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-emerald-500 space-y-5 animate-in fade-in zoom-in-95 duration-200" dir="rtl">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black">
+                  ➕
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 font-['Tajawal']">إضافة مصدر مفتوح جديد (OER)</h3>
+                  <p className="text-xs text-slate-500">إثراء بنك المصادر المفتوحة الفلسطيني وفق منهاج وزارة التربية والتعليم</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddResourceModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+              {/* 1. اسم المصدر */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  اسم المصدر <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newResTitle}
+                  onChange={(e) => setNewResTitle(e.target.value)}
+                  placeholder="مثال: فيديو تفاعلي لجدول الضرب، دليل المعلم..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-bold focus:bg-white focus:border-emerald-600 outline-hidden"
+                />
+              </div>
+
+              {/* 2. النوع */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  نوع المصدر <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={newResType}
+                  onChange={(e) => setNewResType(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-bold focus:bg-white focus:border-emerald-600 outline-hidden cursor-pointer"
+                >
+                  <option value="video">🎥 فيديو تفاعلي</option>
+                  <option value="book">📖 كتاب / دليل</option>
+                  <option value="image">🖼️ صورة / بطاقة تعليمية</option>
+                  <option value="link">🔗 رابط / منصة تعليمية</option>
+                  <option value="file">📄 ملف / وثيقة PDF</option>
+                  <option value="activity">⚡ نشاط تطبيقي / مهمة</option>
+                </select>
+              </div>
+
+              {/* 3. الرابط / المسار */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  الرابط / المسار <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newResUrl}
+                  onChange={(e) => setNewResUrl(e.target.value)}
+                  placeholder="https://elearn.edu.ps/... أو مسار الملف"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-semibold focus:bg-white focus:border-emerald-600 outline-hidden text-left"
+                  dir="ltr"
+                />
+              </div>
+
+              {/* 4. المرجع / الجهة المصدرة */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  المرجع / الجهة المصدرة <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={newResSource}
+                  onChange={(e) => setNewResSource(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-bold focus:bg-white focus:border-emerald-600 outline-hidden cursor-pointer"
+                >
+                  <option value="وزارة التربية والتعليم العالي">وزارة التربية والتعليم العالي</option>
+                  <option value="بوابة التعليم الإلكتروني elearn.edu.ps">بوابة التعليم الإلكتروني elearn.edu.ps</option>
+                  <option value="منصة روافد التعليمية">منصة روافد التعليمية</option>
+                  <option value="منصة خارجية معتمدة">منصة خارجية معتمدة</option>
+                  <option value="إعداد المعلم / مصدر محلي">إعداد المعلم / مصدر محلي</option>
+                </select>
+              </div>
+
+              {/* 5. الرخصة */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  رخصة الاستخدام <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={newResLicense}
+                  onChange={(e) => setNewResLicense(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-bold focus:bg-white focus:border-emerald-600 outline-hidden cursor-pointer"
+                >
+                  <option value="open">🟢 مفتوح (Creative Commons OER)</option>
+                  <option value="public_domain">🟡 ملكية عامة (Public Domain)</option>
+                  <option value="shared_rights">🔵 بحقوق مشاركة تربوية</option>
+                </select>
+              </div>
+
+              {/* 6. ملاحظات موجزة */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 mb-1">
+                  ملاحظات موجزة (ما يغطي هذا المصدر من موضوعات)
+                </label>
+                <textarea
+                  rows={3}
+                  value={newResNotes}
+                  onChange={(e) => setNewResNotes(e.target.value)}
+                  placeholder="اكتب باختصار الموضوعات والكفايات التي يغطيها هذا المصدر..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs sm:text-sm font-medium focus:bg-white focus:border-emerald-600 outline-hidden"
+                />
+              </div>
+
+              {/* Checkbox: ربط بالخطة الحالية */}
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <input
+                  type="checkbox"
+                  id="linkToPlanCheck"
+                  checked={newResLinkToPlan}
+                  onChange={(e) => setNewResLinkToPlan(e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                />
+                <label htmlFor="linkToPlanCheck" className="text-xs font-bold text-slate-800 cursor-pointer">
+                  🔗 ربط تلقائي بالخطة الحالية (تحديث مصادر الدرس النشط)
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setIsAddResourceModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newResTitle.trim()) {
+                    alert('يرجى إدخال عنوان المصدر');
+                    return;
+                  }
+                  const mappedType =
+                    newResType === 'video'
+                      ? 'video'
+                      : newResType === 'book'
+                      ? 'textbook'
+                      : newResType === 'image'
+                      ? 'image'
+                      : newResType === 'link'
+                      ? 'link'
+                      : newResType === 'file'
+                      ? 'document'
+                      : 'worksheet';
+
+                  const newResObj: EducationalResource = {
+                    id: `custom-res-${Date.now()}`,
+                    type: mappedType as any,
+                    title: newResTitle.trim(),
+                    content: newResNotes.trim() || newResUrl.trim() || 'مصدر مفتوح معتمد',
+                    sourceInfo: newResSource,
+                    createdAt: new Date().toLocaleDateString('ar-PS'),
+                    tags: [newResType, 'مصدر مفتوح', 'OER'],
+                    fileDataUrl: newResUrl.trim(),
+                  };
+
+                  if (onAddResource) {
+                    onAddResource(newResObj, newResLinkToPlan);
+                  } else {
+                    try {
+                      const existing = JSON.parse(localStorage.getItem('educational_expert_resources_v1') || '[]');
+                      localStorage.setItem('educational_expert_resources_v1', JSON.stringify([newResObj, ...existing]));
+                    } catch (e) {}
+                  }
+
+                  setIsAddResourceModalOpen(false);
+                  setNewResTitle('');
+                  setNewResUrl('');
+                  setNewResNotes('');
+                  alert('✅ تم إضافة وحفظ المصدر المفتوح بنجاح في بنك المصادر!');
+                }}
+                className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-1.5"
+              >
+                <span>✅ إضافة وحفظ في بنك المصادر المفتوحة</span>
               </button>
             </div>
           </div>

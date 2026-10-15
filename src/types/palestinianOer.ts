@@ -78,9 +78,19 @@ export interface OerCustomGroup {
   shareCode?: string;
 }
 
+export interface CustomAddedOerLink {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+  note: string;
+  createdAt: string;
+}
+
 export interface TeacherPersonalOerLibrary {
   savedResourceIds: string[];
   groups: OerCustomGroup[];
   personalNotes: Record<string, string>; // resourceId -> teacher note
   suggestedResources: TeacherSuggestedOerResource[];
+  customAddedResources?: CustomAddedOerLink[];
 }

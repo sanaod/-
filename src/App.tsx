@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LessonPlan, EducationalResource } from './types/lessonPlan';
-import { defaultExemplarPlans, palestineMathGrade3Plan } from './data/exemplarPlans';
+import { defaultExemplarPlans, palestineMathGrade3Plan, abqourEnglishHabitatsPlan } from './data/exemplarPlans';
 import { defaultBlankPlan, getBlankLessonPlan } from './data/blankPlan';
 import { HeaderNav } from './components/HeaderNav';
 import { LessonHeaderCard } from './components/LessonHeaderCard';
@@ -20,6 +20,7 @@ import { ExecutivePlanEditor } from './components/ExecutivePlanEditor';
 import { OerLessonPlanEditor } from './components/OerLessonPlanEditor';
 import { ensureExecutiveData } from './utils/executivePlanDefaults';
 import { ensureOerData } from './data/oerPalestinianCurriculum';
+import { AbqourIntegrationToolModal } from './components/AbqourIntegrationToolModal';
 import { AbacusSimulationModal } from './components/AbacusSimulationModal';
 import { AiGeneratorModal } from './components/AiGeneratorModal';
 import { ExitTicketModal } from './components/ExitTicketModal';
@@ -44,6 +45,7 @@ import { TeacherDashboard } from './components/TeacherDashboard';
 import { BlankTemplateModal } from './components/BlankTemplateModal';
 import { CreativeCommonsFooter } from './components/CreativeCommonsFooter';
 import { PlansViewerModal } from './components/PlansViewerModal';
+import { ArchivePlansModal } from './components/ArchivePlansModal';
 import { DeletePlanConfirmModal } from './components/DeletePlanConfirmModal';
 import { InteractiveWorksheetModal } from './components/InteractiveWorksheetModal';
 import { AssessmentHubModal } from './components/AssessmentHubModal';
@@ -168,7 +170,11 @@ export default function App() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           const sanitized = parsed.map(sanitizePlan);
           const hasBlank = sanitized.some((p) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
-          const finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
+          let finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
+          const hasAbqour = finalPlans.some((p) => p.id === abqourEnglishHabitatsPlan.id);
+          if (!hasAbqour) {
+            finalPlans = [finalPlans[0], sanitizePlan(abqourEnglishHabitatsPlan), ...finalPlans.slice(1)];
+          }
           try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalPlans));
           } catch (e) {}
@@ -195,6 +201,20 @@ export default function App() {
 
   const [viewMode, setViewMode] = useState<'editor' | 'official-print' | 'dashboard'>('dashboard');
   const [currentRole, setCurrentRole] = useState<UserRole>('teacher');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('abqoor_is_authenticated_v1') === 'true';
+    } catch (e) {
+      return true;
+    }
+  });
+  const [currentUsername, setCurrentUsername] = useState<string>(() => {
+    try {
+      return localStorage.getItem('abqoor_username_v1') || 'أ. أحمد المعلم';
+    } catch (e) {
+      return 'أ. أحمد المعلم';
+    }
+  });
   const [activeTab, setActiveTab] = useState<string>('all');
   const [actionCategoryFilter, setActionCategoryFilter] = useState<'all' | 'ai' | 'resources' | 'plans' | 'export'>('all');
 
@@ -253,6 +273,7 @@ export default function App() {
   const [isAcademicMilestonesModalOpen, setIsAcademicMilestonesModalOpen] = useState(false);
   const [isAndroidAppModalOpen, setIsAndroidAppModalOpen] = useState(false);
   const [isPlansViewerModalOpen, setIsPlansViewerModalOpen] = useState(false);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [selectedResourceForPlanning, setSelectedResourceForPlanning] = useState<EducationalResource | null>(null);
   const [resourceLinkNotice, setResourceLinkNotice] = useState<string | null>(null);
@@ -260,9 +281,18 @@ export default function App() {
   const [isCompetenciesModalOpen, setIsCompetenciesModalOpen] = useState(false);
   const [isSmartGuideModalOpen, setIsSmartGuideModalOpen] = useState(false);
   const [isReportsCenterOpen, setIsReportsCenterOpen] = useState(false);
+  const [isIntegrationToolModalOpen, setIsIntegrationToolModalOpen] = useState(false);
   const [reportsCenterDefaultTab, setReportsCenterDefaultTab] = useState<
     'official_lesson_plan' | 'student_competencies_record' | 'school_oer_statistics'
   >('official_lesson_plan');
+
+  const handleApplyIntegratedPlan = (newPlan: LessonPlan) => {
+    setPlans((prev) => [newPlan, ...prev]);
+    setActivePlanId(newPlan.id);
+    setViewMode('editor');
+    setResourceLinkNotice(`تم استيراد وتفعيل خطة درس «${newPlan.header.lessonTitle}» وربطها بنجاح مع مصادر OER! 🐍⚡`);
+    setTimeout(() => setResourceLinkNotice(null), 5000);
+  };
 
   const handleUpdatePlanReview = (planId: string, directives: string, status: 'approved' | 'needs_revision') => {
     setPlans((prev) =>
@@ -348,6 +378,13 @@ export default function App() {
 
   const updateCurrentPlan = (updated: LessonPlan) => {
     setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
+
+  const handleAddCustomResource = (resource: EducationalResource, linkToCurrentPlan?: boolean) => {
+    setResources((prev) => [resource, ...prev]);
+    if (linkToCurrentPlan) {
+      handleApplyResourceToCurrentPlan(resource);
+    }
   };
 
   const handleApplyResourceToCurrentPlan = (resource: EducationalResource) => {
@@ -635,6 +672,16 @@ export default function App() {
     handleRequestDeletePlan(targetPlan);
   };
 
+  const handleToggleArchivePlan = (planId: string) => {
+    setPlans((prev) => {
+      const updated = prev.map((p) => (p.id === planId ? { ...p, isArchived: !p.isArchived } : p));
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
   const handleResetToDefault = () => {
     if (confirm('هل تريد استعادة الصفحة الرئيسية المفرغة المعتمدة للمنظومة والبدء من جديد؟')) {
       const freshBlank = getBlankLessonPlan();
@@ -711,6 +758,7 @@ export default function App() {
         onImportPlan={handleImportPlan}
         currentPlan={currentPlan}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
         onOpenShareModal={() => setIsShareModalOpen(true)}
         onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
         onNewBlankPlan={handleCreateNewBlankPlan}
@@ -730,6 +778,13 @@ export default function App() {
         onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
         onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
         onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
+        currentUser={currentUsername}
+        onLogout={() => {
+          setIsAuthenticated(false);
+          try {
+            localStorage.removeItem('abqoor_is_authenticated_v1');
+          } catch (e) {}
+        }}
       />
 
       {viewMode === 'dashboard' ? (
@@ -752,6 +807,7 @@ export default function App() {
           onOpenPrintView={() => setViewMode('official-print')}
           onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
           onOpenExportModal={() => setIsExportModalOpen(true)}
+          onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
           onOpenShareModal={() => setIsShareModalOpen(true)}
           onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
           onNewBlankPlan={handleCreateNewBlankPlan}
@@ -770,200 +826,11 @@ export default function App() {
           onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
           currentRole={currentRole}
           onChangeRole={(role) => setCurrentRole(role)}
+          onToggleArchivePlan={handleToggleArchivePlan}
+          onOpenArchiveModal={() => setIsArchiveModalOpen(true)}
         />
       ) : (
         <>
-          {/* Hero Pedagogical Context & Categorized Quick Action Hub */}
-          <section className="bg-linear-to-b from-emerald-950 via-slate-900 to-slate-900 text-white py-5 sm:py-7 px-3 sm:px-6 lg:px-8 border-b border-emerald-900/50 shadow-md no-print">
-            <div className="max-w-7xl mx-auto space-y-5">
-              
-              {/* Top Row: Abqoor Prominent Logo, Plan Title, Ministry Badges */}
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
-                {/* Large Featured Logo Emblem */}
-                <div className="relative group shrink-0">
-                  <div className="absolute -inset-2 rounded-full bg-linear-to-tr from-amber-400 via-emerald-400 to-teal-300 opacity-85 blur-md group-hover:opacity-100 transition duration-300"></div>
-                  <img
-                    src="/abqoor_logo.jpg"
-                    alt="شعار منظومة عبقور للتخطيط التربوي وتحضير الدروس"
-                    className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full object-cover shadow-2xl border-4 border-amber-300 ring-4 ring-emerald-500/40 shrink-0 bg-white transition-transform group-hover:scale-[1.03]"
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (target.src.includes('abqoor_logo.jpg')) {
-                        target.src = '/logo.png';
-                      } else if (target.src.includes('logo.png')) {
-                        target.src = '/logo.jpg';
-                      } else {
-                        target.style.display = 'none';
-                        if (target.nextElementSibling) {
-                          (target.nextElementSibling as HTMLElement).style.display = 'flex';
-                        }
-                      }
-                    }}
-                  />
-                  <div
-                    style={{ display: 'none' }}
-                    className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-linear-to-tr from-emerald-800 via-teal-800 to-amber-700 items-center justify-center text-white shadow-2xl ring-4 ring-emerald-500/40 shrink-0"
-                  >
-                    <BookOpen className="w-16 h-16 text-emerald-200" />
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-center md:text-right flex-1">
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 shadow-xs">
-                      <span>📌</span>
-                      <span>استمارة التحضير المفرغة المعتمدة (الرئيسية)</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/30">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>معايير التميز وإطار تقييم أداء المعلم</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-500/20 text-teal-200 rounded-full text-[11px] font-bold border border-teal-500/30">
-                      <span>🇵🇸 وزارة التربية والتعليم</span>
-                    </div>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-['Tajawal'] tracking-wide text-white leading-snug">
-                    {currentPlan.title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300/95 leading-relaxed">
-                    منظومة عبقور الشاملة للتخطيط الصفي والتوزيع الفصلي وفق التقويم المدرسي المعتمد. يمكنك استخدام أيقونات الوصول السريع المصنفة أدناه لتوليد الخطط، أوراق العمل، والمهام الأصيلة، أو تحرير النموذج مباشرة.
-                  </p>
-
-                  {/* Horizontal Quick Shortcuts Directly Below Name */}
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1.5 pb-1 shrink-0">
-                    <button
-                      onClick={() => setIsAiModalOpen(true)}
-                      className="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                      <span>تحضير بالـ AI</span>
-                    </button>
-                    <button
-                      onClick={() => setIsUnitPlanModalOpen(true)}
-                      className="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <Boxes className="w-3.5 h-3.5 text-blue-300" />
-                      <span>وحدة كاملة</span>
-                    </button>
-                    <button
-                      onClick={() => setIsSemesterPlanModalOpen(true)}
-                      className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <CalendarRange className="w-3.5 h-3.5 text-teal-300" />
-                      <span>الخطة الفصلية</span>
-                    </button>
-                    <button
-                      onClick={() => setIsWorksheetModalOpen(true)}
-                      className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-400/40 text-teal-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <FileCheck2 className="w-3.5 h-3.5 text-teal-300" />
-                      <span>ورقة عمل AI</span>
-                    </button>
-                    <button
-                      onClick={() => setIsAssessmentModalOpen(true)}
-                      className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <Activity className="w-3.5 h-3.5 text-purple-300" />
-                      <span>أدوات التقويم</span>
-                    </button>
-                    <button
-                      onClick={() => setIsAuthenticTaskModalOpen(true)}
-                      className="px-2.5 py-1 bg-pink-600/30 hover:bg-pink-600/50 border border-pink-400/40 text-pink-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                    >
-                      <Award className="w-3.5 h-3.5 text-pink-300" />
-                      <span>المهمة الأصيلة</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Moved below template models */}
-
-              {/* Direct High-Frequency Action Buttons - Placed Below Form Title & Logo Row */}
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-emerald-500/40 flex flex-wrap items-center justify-center gap-2.5 shadow-lg no-print">
-                <div className="flex items-center gap-1.5 px-2 text-xs font-bold text-emerald-300">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>إجراءات فورية:</span>
-                </div>
-                <button
-                  onClick={() => setViewMode('official-print')}
-                  className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                  title="معاينة وطباعة الاستمارة الرسمية المعتمدة A4"
-                >
-                  <Printer className="w-4 h-4 text-emerald-800 shrink-0" />
-                  <span>طباعة PDF</span>
-                </button>
-
-                <button
-                  onClick={() => window.print()}
-                  className="px-3.5 py-2 bg-emerald-800/90 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
-                  title="طباعة فورية للمحرر الحالي بتنسيق رسمي معتمد أبيض وأسود خالٍ من الأزرار والعناصر الزائدة"
-                >
-                  <Printer className="w-4 h-4 text-amber-300 shrink-0" />
-                  <span>طباعة المحرر 🖨️</span>
-                </button>
-
-                <button
-                  onClick={() => setIsExportModalOpen(true)}
-                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                  title="تصدير الخطة بصيغ Word و HTML و JSON"
-                >
-                  <FileDown className="w-4 h-4 text-blue-200 shrink-0" />
-                  <span>تصدير الخطة</span>
-                </button>
-
-                <button
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer border border-emerald-400/40"
-                  title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
-                >
-                  <Share2 className="w-4 h-4 text-emerald-200 shrink-0" />
-                  <span>مشاركة الخطة 📱</span>
-                </button>
-
-                <button
-                  onClick={() => setIsBackupRestoreModalOpen(true)}
-                  className="px-3.5 py-2 bg-linear-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-97 cursor-pointer"
-                  title="تصدير كافة الخطط كملف JSON موحد لأخذ نسخة احتياطية أو استيرادها في أي متصفح آخر"
-                >
-                  <Database className="w-4 h-4 text-slate-950 shrink-0" />
-                  <span>نسخ احتياطي (JSON)</span>
-                </button>
-              </div>
-
-              {/* Master Unified Tools & Icons Hub (مركز الأدوات والأيقونات الموحد لكافة الأجهزة) */}
-              <MainToolsIconHub
-                onOpenAiModal={() => setIsAiModalOpen(true)}
-                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
-                onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
-                onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
-                onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
-                onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
-                onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
-                onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
-                onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
-                onOpenRubricModal={() => setIsRubricModalOpen(true)}
-                onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
-                onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
-                onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-                resourcesCount={resources.length}
-                onOpenDashboard={() => setViewMode('dashboard')}
-                onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
-                onOpenBlankModal={() => setIsBlankModalOpen(true)}
-                onOpenPlansViewer={() => setIsPlansViewerModalOpen(true)}
-                totalPlansCount={plans.length}
-                onOpenPrintView={() => setViewMode('official-print')}
-                onOpenExportModal={() => setIsExportModalOpen(true)}
-                onOpenShareModal={() => setIsShareModalOpen(true)}
-                onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
-                onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
-                onOpenQrModal={() => setIsQrModalOpen(true)}
-                onClearCurrentPlan={handleClearCurrentPlan}
-                onDeleteCurrentPlan={() => handleRequestDeletePlan(currentPlan)}
-              />
-            </div>
-          </section>
-
           {/* Sub-nav Category Tabs */}
           <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-2xs no-print">
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
@@ -1007,7 +874,7 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Subnav Action Hub: Pinned Sections Quick Badge & Resources Button */}
+                {/* Subnav Action Hub */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
@@ -1022,11 +889,6 @@ export default function App() {
                         ? 'bg-amber-100/90 text-amber-950 border-amber-400 shadow-2xs hover:bg-amber-200'
                         : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200 hover:text-slate-900'
                     }`}
-                    title={
-                      pinnedSections.length > 0
-                        ? `لديك (${toArabicDigits(pinnedSections.length)}) أقسام مثبتة تظل معروضة معك في لوحة عائمة أثناء التمرير`
-                        : 'انقر لتثبيت القسم الأول ليظل معروضاً معك أثناء التمرير لأسفل'
-                    }
                   >
                     <Pin className={`w-3.5 h-3.5 ${pinnedSections.length > 0 ? 'rotate-45 fill-amber-500 text-amber-700' : 'text-slate-500'}`} />
                     <span>الأقسام المثبتة</span>
@@ -1039,11 +901,9 @@ export default function App() {
                     </span>
                   </button>
 
-                  {/* Quick Link to Resources in Subnav - Distinctive & Large */}
                   <button
                     onClick={() => setIsResourcesModalOpen(true)}
                     className="px-3.5 py-1.5 bg-linear-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 text-emerald-950 rounded-xl text-xs font-black flex items-center gap-2 border-2 border-emerald-500/80 shrink-0 transition-all shadow-xs hover:shadow-sm hover:scale-[1.02] cursor-pointer ring-1 ring-emerald-500/20"
-                    title="فتح وإضافة بنك المصادر والمراجع التعليمية والمناهج"
                   >
                     <div className="relative p-0.5 bg-emerald-700 text-white rounded-md shrink-0">
                       <Layers className="w-4 h-4 text-emerald-100" />
@@ -1096,37 +956,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Official Print-Only Submission Header (يظهر حصرياً عند طباعة المحرر للاعتماد الرسمي) */}
-            <div className="hidden print:block official-editor-print-header">
-              <div className="flex items-center justify-between border-b-2 border-black pb-3 text-black">
-                <div className="text-right text-xs font-bold leading-relaxed space-y-0.5">
-                  <div>دولة فلسطين 🇵🇸</div>
-                  <div>وزارة التربية والتعليم العالي</div>
-                  <div>مديرية التربية والتعليم: {currentPlan.header.directorate || '...............'}</div>
-                  <div>مدرسة: {currentPlan.header.school || '...............'}</div>
-                </div>
-                <div className="text-center px-4">
-                  <div className="text-[10px] font-black border border-black px-2 py-0.5 rounded inline-block mb-1">
-                    الاستمارة المعتمدة للتخطيط التربوي وتحضير الدروس
-                  </div>
-                  <h1 className="text-base font-black text-black">
-                    {currentPlan.header.lessonTitle || currentPlan.title}
-                  </h1>
-                  <div className="text-xs font-bold text-black mt-0.5">
-                    المبحث: {currentPlan.header.subject || '—'} • الصف: {currentPlan.header.grade || '—'}
-                  </div>
-                </div>
-                <div className="text-left text-xs font-bold leading-relaxed space-y-0.5">
-                  <div>اسم المعلم/ة: {currentPlan.header.teacherName || '...............'}</div>
-                  <div>العام الدراسي: 2025 / 2026م</div>
-                  <div>الفصل الدراسي: {currentPlan.header.semester || 'الأول'}</div>
-                  <div>الفترة الزمنية: {currentPlan.header.timeframe || currentPlan.header.date || '—'}</div>
-                  <div>عدد الحصص: {toArabicDigits(currentPlan.header.totalPeriods || 2)} حصص</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Template Model Switcher (النموذجان: الرئيسي والتكيفي) */}
+            {/* Template Model Switcher */}
             <div className="bg-white border-2 border-emerald-500/50 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-700 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -1152,7 +982,6 @@ export default function App() {
               </div>
 
               <div className="flex flex-col gap-1.5 p-1.5 bg-slate-100 rounded-2xl shrink-0">
-                {/* Row 1: Templates */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
@@ -1202,13 +1031,11 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Row 2: Actions & AI Tools */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setIsAiModalOpen(true)}
                     className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 shadow-xs transition-all cursor-pointer border border-amber-300 group"
-                    title="توليد وتعبئة خطة تحضير الدرس بالذكاء الاصطناعي"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-slate-950 group-hover:rotate-12 transition-transform" />
                     <span>توليد التحضير (AI)</span>
@@ -1218,7 +1045,6 @@ export default function App() {
                     type="button"
                     onClick={() => setIsShareModalOpen(true)}
                     className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-xs transition-all cursor-pointer border border-emerald-400/30 group"
-                    title="مشاركة الخطة الحالية مع الزملاء عبر تطبيقات المراسلة (Web Share API)"
                   >
                     <Share2 className="w-3.5 h-3.5 text-emerald-200 group-hover:scale-110 transition-transform" />
                     <span>مشاركة الخطة 📱</span>
@@ -1228,7 +1054,6 @@ export default function App() {
                     type="button"
                     onClick={() => window.print()}
                     className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all cursor-pointer border border-slate-700 group"
-                    title="طباعة الخطة مباشرة بتنسيق رسمي نظيف (أبيض وأسود) خالٍ من الأزرار والعناصر الزائدة"
                   >
                     <Printer className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
                     <span>طباعة المحرر (Print-Friendly) 🖨️</span>
@@ -1236,8 +1061,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-
-
 
             {/* Render Selected Template */}
             {(currentPlan.templateType || 'oer') === 'oer' ? (
@@ -1254,6 +1077,7 @@ export default function App() {
                 onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
                 onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
                 onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
+                onAddResource={handleAddCustomResource}
               />
             ) : currentPlan.templateType === 'executive' ? (
               <ExecutivePlanEditor
@@ -1271,7 +1095,6 @@ export default function App() {
               />
             ) : (
               <>
-                {/* Header / Institutional Metadata */}
                 <LessonHeaderCard
                   header={currentPlan.header}
                   onChange={(header) => updateCurrentPlan({ ...currentPlan, header })}
@@ -1289,7 +1112,6 @@ export default function App() {
                   sectionId="sec-adapt-header"
                 />
 
-                {/* Section 1: Adaptive Planning */}
                 {(activeTab === 'all' || activeTab === 'sec1') && (
                   <Section1Card
                     data={currentPlan.section1}
@@ -1307,7 +1129,6 @@ export default function App() {
                   />
                 )}
 
-                {/* Section 2: Timeline */}
                 {(activeTab === 'all' || activeTab === 'sec2') && (
                   <Section2TimelineCard
                     timeline={currentPlan.section2Timeline}
@@ -1323,7 +1144,6 @@ export default function App() {
                   />
                 )}
 
-                {/* Section 3: Assessment & GRASPS */}
                 {(activeTab === 'all' || activeTab === 'sec3') && (
                   <Section3AssessmentCard
                     data={currentPlan.section3Assessment}
@@ -1338,7 +1158,6 @@ export default function App() {
                   />
                 )}
 
-                {/* Section 4: Learning Environment & Parents */}
                 {(activeTab === 'all' || activeTab === 'sec4') && (
                   <Section4EnvironmentCard
                     data={currentPlan.section4Environment}
@@ -1350,7 +1169,6 @@ export default function App() {
                   />
                 )}
 
-                {/* Section 5: Self Reflection, PLC Sharing & Growth Dashboard */}
                 {(activeTab === 'all' || activeTab === 'sec5') && (
                   <Section5ReflectionCard
                     data={currentPlan.section5Reflection}
@@ -1364,7 +1182,6 @@ export default function App() {
                   />
                 )}
 
-                {/* Section 6: Official Signatures */}
                 {(activeTab === 'all' || activeTab === 'sec6') && (
                   <Section6SignaturesCard
                     data={currentPlan.section6Signatures}
@@ -1376,6 +1193,40 @@ export default function App() {
                 )}
               </>
             )}
+
+            {/* Comprehensive System Tools Hub (مركز الأدوات الـ ٢٣ المتكامل) */}
+            <div id="main-tools-hub" className="pt-6 border-t border-slate-200/80 no-print">
+              <MainToolsIconHub
+                onOpenAiModal={() => setIsAiModalOpen(true)}
+                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+                onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+                onOpenAcademicMilestonesModal={() => setIsAcademicMilestonesModalOpen(true)}
+                onOpenAndroidAppModal={() => setIsAndroidAppModalOpen(true)}
+                onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
+                onOpenWorksheetModal={() => setIsWorksheetModalOpen(true)}
+                onOpenAssessmentSimulatorModal={() => setIsAssessmentSimulatorModalOpen(true)}
+                onOpenAuthenticTaskModal={() => setIsAuthenticTaskModalOpen(true)}
+                onOpenRubricModal={() => setIsRubricModalOpen(true)}
+                onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
+                onOpenAbacusModal={() => setIsAbacusModalOpen(true)}
+                onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                resourcesCount={resources.length}
+                onOpenDashboard={() => setViewMode('dashboard')}
+                onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
+                onOpenBlankModal={() => setIsBlankModalOpen(true)}
+                onOpenPlansViewer={() => setIsPlansViewerModalOpen(true)}
+                totalPlansCount={plans.length}
+                onOpenPrintView={() => setViewMode('official-print')}
+                onOpenExportModal={() => setIsExportModalOpen(true)}
+                onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
+                onOpenBackupRestoreModal={() => setIsBackupRestoreModalOpen(true)}
+                onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
+                onOpenQrModal={() => setIsQrModalOpen(true)}
+                onClearCurrentPlan={handleCreateNewBlankPlan}
+                onDeleteCurrentPlan={() => handleRequestDeletePlan(currentPlan)}
+              />
+            </div>
           </main>
         </>
       )}
@@ -1584,6 +1435,10 @@ export default function App() {
           setIsExportModalOpen(false);
           setIsShareModalOpen(true);
         }}
+        onOpenIntegrationToolModal={() => {
+          setIsExportModalOpen(false);
+          setIsIntegrationToolModalOpen(true);
+        }}
         allPlans={plans}
         onOpenBackupRestore={() => {
           setIsExportModalOpen(false);
@@ -1618,6 +1473,7 @@ export default function App() {
           setViewMode('editor');
         }}
         onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+        onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
       />
 
       <PlansViewerModal
@@ -1671,6 +1527,13 @@ export default function App() {
           setIsPlansViewerModalOpen(false);
           setIsBackupRestoreModalOpen(true);
         }}
+        onOpenIntegrationToolModal={() => {
+          setIsPlansViewerModalOpen(false);
+          setIsIntegrationToolModalOpen(true);
+        }}
+        onAddAbqourPlan={() => {
+          handleApplyIntegratedPlan(abqourEnglishHabitatsPlan);
+        }}
       />
 
       <SemesterPlanModal
@@ -1711,6 +1574,16 @@ export default function App() {
         onClose={() => setIsQrModalOpen(false)}
       />
 
+      <ArchivePlansModal
+        isOpen={isArchiveModalOpen}
+        onClose={() => setIsArchiveModalOpen(false)}
+        plans={plans}
+        onToggleArchive={handleToggleArchivePlan}
+        onDeletePlan={handleDeletePlan}
+        onSelectPlan={(id) => setActivePlanId(id)}
+        onOpenEditor={() => setViewMode('editor')}
+      />
+
       <MotionGraphicsModal
         isOpen={isMotionGraphicsModalOpen}
         onClose={() => setIsMotionGraphicsModalOpen(false)}
@@ -1740,6 +1613,14 @@ export default function App() {
         isOpen={isAndroidAppModalOpen}
         onClose={() => setIsAndroidAppModalOpen(false)}
         onOpenQrModal={() => setIsQrModalOpen(true)}
+      />
+
+      {/* Abqour Lesson Plan Integration Tool Modal (Python & OER Direct Linker) */}
+      <AbqourIntegrationToolModal
+        isOpen={isIntegrationToolModalOpen}
+        onClose={() => setIsIntegrationToolModalOpen(false)}
+        currentPlan={currentPlan}
+        onApplyPlan={handleApplyIntegratedPlan}
       />
 
       {/* Mobile Sticky Quick Navigation Bar */}

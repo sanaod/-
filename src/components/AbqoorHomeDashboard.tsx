@@ -29,6 +29,7 @@ import {
   TrendingUp,
   HelpCircle,
   Check,
+  Archive,
 } from 'lucide-react';
 import { toArabicDigits, toArabicPercent, formatDateDMY } from '../utils/arabicNumerals';
 
@@ -61,8 +62,11 @@ interface AbqoorHomeDashboardProps {
   onOpenAssessmentSimulatorModal: () => void;
   onOpenAcademicMilestonesModal: () => void;
   onOpenAndroidAppModal: () => void;
+  onOpenIntegrationToolModal?: () => void;
   currentRole: UserRole;
   onChangeRole: (role: UserRole) => void;
+  onToggleArchivePlan: (id: string) => void;
+  onOpenArchiveModal: () => void;
 }
 
 export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
@@ -94,8 +98,11 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
   onOpenAssessmentSimulatorModal,
   onOpenAcademicMilestonesModal,
   onOpenAndroidAppModal,
+  onOpenIntegrationToolModal,
   currentRole,
   onChangeRole,
+  onToggleArchivePlan,
+  onOpenArchiveModal,
 }) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [activePlansTab, setActivePlansTab] = useState<'all' | 'in_progress' | 'completed'>('all');
@@ -103,10 +110,12 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
 
-  // Compute metrics
-  const totalPlansCount = plans.length;
-  const completedPlans = plans.filter((p) => p.section6Signatures?.educationalSupervisor?.name || p.header?.lessonTitle);
-  const inProgressPlans = plans.filter((p) => !p.section6Signatures?.educationalSupervisor?.name);
+  // Compute metrics (excluding archived plans from active dashboard)
+  const activePlans = useMemo(() => plans.filter((p) => !p.isArchived), [plans]);
+  const archivedPlansCount = useMemo(() => plans.filter((p) => p.isArchived).length, [plans]);
+  const totalPlansCount = activePlans.length;
+  const completedPlans = activePlans.filter((p) => p.section6Signatures?.educationalSupervisor?.name || p.header?.lessonTitle);
+  const inProgressPlans = activePlans.filter((p) => !p.section6Signatures?.educationalSupervisor?.name);
 
   const completionRate = totalPlansCount > 0 ? Math.round((completedPlans.length / totalPlansCount) * 100) : 80;
 
@@ -174,6 +183,17 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
               <span>مساعدتي</span>
+            </button>
+
+            {/* الأرشيف */}
+            <button
+              type="button"
+              onClick={onOpenArchiveModal}
+              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+              title="أرشيف الخطط الدراسية القديمة غير النشطة"
+            >
+              <Archive className="w-3.5 h-3.5 text-amber-600" />
+              <span>الأرشيف ({toArabicDigits(archivedPlansCount)})</span>
             </button>
 
             {/* حسابي / الدور */}
@@ -280,8 +300,8 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>توليد ذكي بالـ AI</span>
                 </button>
-                <button onClick={onNewBlankPlan} className="hover:text-emerald-700 font-bold cursor-pointer">
-                  + نموذج فارغ
+                <button onClick={onNewBlankPlan} className="hover:text-purple-700 font-bold cursor-pointer text-purple-700 flex items-center gap-1">
+                  <span>⭐ نماذج التحضير (عبقور)</span>
                 </button>
               </div>
             </div>
@@ -422,35 +442,47 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
           </div>
 
           <div className="space-y-2">
-            {plans.slice(0, 3).map((plan, idx) => (
-              <div key={plan.id || idx} className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                    {toArabicDigits(idx + 1)}
+            {activePlans.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4">لا توجد خطط نشطة حالياً. كل الخطط تمت جدولتها أو أرشفتها.</p>
+            ) : (
+              activePlans.slice(0, 3).map((plan, idx) => (
+                <div key={plan.id || idx} className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      {toArabicDigits(idx + 1)}
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 font-['Tajawal']">{plan.title || plan.header?.lessonTitle || 'خطة درس معتمدة'}</h4>
+                      <p className="text-[11px] text-slate-500">{plan.header?.subject || 'الرياضيات'} • {plan.header?.grade || 'الصف الثالث الأساسي'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900 font-['Tajawal']">{plan.title || plan.header?.lessonTitle || 'خطة درس معتمدة'}</h4>
-                    <p className="text-[11px] text-slate-500">{plan.header?.subject || 'الرياضيات'} • {plan.header?.grade || 'الصف الثالث الأساسي'}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-black">
-                    مكتمل 🟢
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSelectPlan(plan.id);
-                      onOpenEditor();
-                    }}
-                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                  >
-                    فتح
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-black">
+                      نشط 🟢
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectPlan(plan.id);
+                        onOpenEditor();
+                      }}
+                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    >
+                      فتح
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onToggleArchivePlan(plan.id)}
+                      className="p-2 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-xl transition-all cursor-pointer"
+                      title="نقل إلى الأرشيف لاستعادة مساحة لوحة التحكم الرئيسية"
+                    >
+                      <Archive className="w-4 h-4 text-amber-600" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -495,6 +527,10 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
               <button onClick={() => onOpenReportsCenter()} className="p-3 bg-slate-900 text-white rounded-2xl text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer">
                 <FileDown className="w-5 h-5 text-amber-300" />
                 <span>مركز التقارير</span>
+              </button>
+              <button onClick={onOpenIntegrationToolModal} className="p-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 rounded-2xl text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer">
+                <span className="text-xl">🐍</span>
+                <span>أداة بايثون وOER</span>
               </button>
             </div>
           )}

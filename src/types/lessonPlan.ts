@@ -302,6 +302,7 @@ export interface LessonPlan {
   executiveData?: ExecutivePlanData;
   oerData?: OerLessonPlanData;
   attachedResources?: EducationalResource[];
+  isArchived?: boolean;
 }
 
 export interface EducationalStageGroup {

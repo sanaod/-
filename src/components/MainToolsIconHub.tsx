@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   Users2,
   FileEdit,
+  FileCode,
   FolderKanban,
   Printer,
   FileDown,
@@ -68,6 +69,7 @@ export interface MainToolsIconHubProps {
   totalPlansCount?: number;
   onOpenPrintView: () => void;
   onOpenExportModal: () => void;
+  onOpenIntegrationToolModal?: () => void;
   onOpenShareModal?: () => void;
   onOpenBackupRestoreModal: () => void;
   onOpenMotionGraphicsModal: () => void;
@@ -115,6 +117,7 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   totalPlansCount = 1,
   onOpenPrintView,
   onOpenExportModal,
+  onOpenIntegrationToolModal,
   onOpenShareModal,
   onOpenBackupRestoreModal,
   onOpenMotionGraphicsModal,
@@ -129,6 +132,22 @@ export const MainToolsIconHub: React.FC<MainToolsIconHubProps> = ({
   // Master definition of all 22 system tools
   const tools: ToolItem[] = useMemo(() => [
     // 1. AI Planning & Curriculum
+    {
+      id: 'abqour-python-tool',
+      category: 'resources',
+      title: 'أداة ربط بايثون والمصادر المفتوحة',
+      subtitle: 'توليد ومزامنة نماذج الدروس مع OER وPython',
+      badge: 'Python & OER 🐍',
+      badgeType: 'success',
+      icon: FileCode,
+      colorGradient: 'from-emerald-950/95 via-teal-950 to-slate-950',
+      borderColor: 'border-emerald-500/80',
+      hoverBorder: 'hover:border-emerald-400',
+      iconBg: 'bg-emerald-600/40 border-emerald-400/40',
+      iconColor: 'text-amber-300',
+      action: onOpenIntegrationToolModal || onOpenResourcesModal,
+      keywords: ['بايثون', 'python', 'oer', 'مصادر', 'مفتوحة', 'ربط', 'خطة', 'تصدير', 'json', 'txt'],
+    },
     {
       id: 'ai-lesson',
       category: 'ai',

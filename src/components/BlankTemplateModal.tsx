@@ -18,6 +18,7 @@ import {
   Flag,
   Loader2,
   GraduationCap,
+  ExternalLink,
 } from 'lucide-react';
 import { LessonPlan, STANDARD_GRADES, EDUCATIONAL_STAGES } from '../types/lessonPlan';
 import { createBlankLessonPlan, exportBlankTemplateToWord } from '../utils/blankPlanTemplate';
@@ -33,12 +34,15 @@ import {
 } from '../utils/palestinianCalendar';
 import { AcademicYearAgendaModal } from './AcademicYearAgendaModal';
 import { EducationalStagePickerModal } from './EducationalStagePickerModal';
+import { abqourEnglishHabitatsPlan, palestineMathGrade3Plan } from '../data/exemplarPlans';
+import { getAbqourEnglishHabitatsExemplarPlan } from '../utils/abqourIntegrationTool';
 
 interface BlankTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreatePlan: (newPlan: LessonPlan) => void;
   onOpenResourcesModal?: () => void;
+  onOpenIntegrationToolModal?: () => void;
 }
 
 export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
@@ -46,14 +50,15 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   onClose,
   onCreatePlan,
   onOpenResourcesModal,
+  onOpenIntegrationToolModal,
 }) => {
-  const [activeTab, setActiveTab] = useState<'sheet' | 'create' | 'guide'>('sheet');
+  const [activeTab, setActiveTab] = useState<'sheet' | 'create' | 'models' | 'guide'>('models');
   const blankSheetRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportProgress, setExportProgress] = useState('');
 
   // Fast creation inputs
-  const [blankTemplateType, setBlankTemplateType] = useState<'executive' | 'adaptive'>('executive');
+  const [blankTemplateType, setBlankTemplateType] = useState<'executive' | 'adaptive' | 'abqour'>('abqour');
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('');
   const [lessonTitle, setLessonTitle] = useState('');
@@ -86,6 +91,31 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
 
     const startFormatted = formatDateDMY(sDate);
     const endFormatted = formatDateDMY(eDate);
+
+    if (blankTemplateType === 'abqour') {
+      const basePlan = getAbqourEnglishHabitatsExemplarPlan();
+      const planId = `plan-abqour-${Date.now()}`;
+      const customizedPlan: LessonPlan = {
+        ...basePlan,
+        id: planId,
+        title: lessonTitle.trim() ? `${lessonTitle.trim()} — (${grade.trim() || 'الصف الخامس'})` : basePlan.title,
+        header: {
+          ...basePlan.header,
+          school: school.trim() || basePlan.header.school,
+          teacherName: teacherName.trim() || basePlan.header.teacherName,
+          subject: subject.trim() || basePlan.header.subject,
+          grade: grade.trim() || basePlan.header.grade,
+          lessonTitle: lessonTitle.trim() || basePlan.header.lessonTitle,
+          date: sDate,
+          startDate: sDate,
+          endDate: eDate,
+          timeframe: `من ${startFormatted} إلى ${endFormatted}${holidayNotice}`,
+        },
+      };
+      onCreatePlan(customizedPlan);
+      onClose();
+      return;
+    }
 
     const blankPlan = createBlankLessonPlan({
       subject: subject.trim() || 'المبحث الدراسي',
@@ -186,6 +216,17 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
             >
               <FileEdit className="w-3.5 h-3.5" />
               <span>بدء خطة مفرغة في المحرر</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('models')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                activeTab === 'models'
+                  ? 'bg-purple-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>نماذج التحضير المعتمدة والمفتوحة ⭐</span>
             </button>
             <button
               onClick={() => setActiveTab('guide')}
@@ -719,35 +760,63 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                       نموذج التحضير المطلوب:
                     </label>
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                      {blankTemplateType === 'executive' ? 'النموذج الرئيسي الافتراضي' : 'النموذج الثاني البديل'}
+                      {blankTemplateType === 'abqour' ? '⭐ نموذج عبقور المعتمد (English & OER)' : blankTemplateType === 'executive' ? 'النموذج التنفيذي SMART' : 'النموذج التكيفي الموسع'}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBlankTemplateType('abqour')}
+                      className={`p-2 rounded-lg border text-right transition-all flex flex-col justify-between cursor-pointer ${
+                        blankTemplateType === 'abqour'
+                          ? 'bg-purple-700 text-white border-purple-800 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>🚀</span>
+                        <span>نموذج منظومة عبقور</span>
+                      </div>
+                      <span className={`text-[10px] mt-1 ${blankTemplateType === 'abqour' ? 'text-purple-100' : 'text-slate-500'}`}>
+                        English + OER + بايثون
+                      </span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setBlankTemplateType('executive')}
-                      className={`p-2 rounded-lg border text-right transition-all flex items-center gap-2 cursor-pointer ${
+                      className={`p-2 rounded-lg border text-right transition-all flex flex-col justify-between cursor-pointer ${
                         blankTemplateType === 'executive'
                           ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-300'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      <span className="text-xs">⭐</span>
-                      <div className="text-xs font-bold">النموذج الرئيسي (خطة التنفيذ التنفيذية - SMART)</div>
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>⭐</span>
+                        <span>النموذج التنفيذي</span>
+                      </div>
+                      <span className={`text-[10px] mt-1 ${blankTemplateType === 'executive' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                        الخطة التنفيذية (SMART)
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setBlankTemplateType('adaptive')}
-                      className={`p-2 rounded-lg border text-right transition-all flex items-center gap-2 cursor-pointer ${
+                      className={`p-2 rounded-lg border text-right transition-all flex flex-col justify-between cursor-pointer ${
                         blankTemplateType === 'adaptive'
                           ? 'bg-blue-700 text-white border-blue-800 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-300'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      <span className="text-xs">📋</span>
-                      <div className="text-xs font-bold">النموذج الثاني (التخطيط التكيفي الموسع)</div>
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>📋</span>
+                        <span>النموذج التكيفي</span>
+                      </div>
+                      <span className={`text-[10px] mt-1 ${blankTemplateType === 'adaptive' ? 'text-blue-100' : 'text-slate-500'}`}>
+                        الأقسام الستة والتمايز
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -939,6 +1008,153 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                     <span>إنشاء الخطة والبدء بالتحضير الفوري</span>
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: Approved Exemplar Models (نماذج التحضير المعتمدة والمفتوحة) */}
+          {activeTab === 'models' && (
+            <div className="space-y-5 max-w-3xl mx-auto py-2">
+              <div className="text-center space-y-1.5">
+                <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center mx-auto mb-2 shadow-xs">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 font-['Tajawal']">
+                  نماذج التحضير المعتمدة والمفتوحة (Exemplar Lesson Models)
+                </h3>
+                <p className="text-xs text-slate-600 max-w-xl mx-auto leading-relaxed">
+                  اختر من النماذج التطبيقية المكتملة مسبقاً والمعدة وفق معايير منظومة عبقور ومكتبة المصادر المفتوحة OER، ويمكنك تطبيق أي نموذج فوراً بنقرة واحدة داخل المحرر والتعديل عليه.
+                </p>
+              </div>
+
+              {/* CARD 1: ⭐ Abqour Python & OER Model */}
+              <div className="bg-linear-to-br from-purple-50/80 via-white to-indigo-50/50 border-2 border-purple-300 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div className="absolute top-0 left-0 bg-purple-700 text-white text-[10px] font-black px-4 py-1 rounded-br-2xl shadow-xs">
+                  ⭐ نموذج منظومة عبقور المعتمد (الجديد)
+                </div>
+
+                <div className="space-y-4 pt-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-base font-black text-purple-950 font-['Tajawal']">
+                          Unit 3: Animals and Their Habitats (English — Grade 5)
+                        </h4>
+                        <span className="text-[10px] bg-purple-200/80 text-purple-900 font-bold px-2.5 py-0.5 rounded-full border border-purple-300">
+                          اللغة الإنجليزية والمصادر المفتوحة
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        نموذج خطة درس تفاعلي متوافق مع أداة بايثون لمنظومة عبقور، يربط مباشرة مع مكتبات OER Commons وKhan Academy وTED-Ed.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Highlights Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
+                      <p className="font-bold text-purple-900">🎯 المفردات والتراكيب اللغوية:</p>
+                      <p className="text-slate-700 text-[10px] leading-relaxed">
+                        • Words: habitat, desert, forest, ocean, adapt, survive
+                        <br/>
+                        • Structures: Subject + live(s) in + Habitat | I prefer...
+                      </p>
+                    </div>
+
+                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
+                      <p className="font-bold text-purple-900">⏱️ المراحل الإجرائية والتوقيت (45 د):</p>
+                      <p className="text-slate-700 text-[10px] leading-relaxed">
+                        • 1. Warm-up & Review (5 د) • 2. Presentation (10 د)
+                        <br/>
+                        • 3. Guided Practice (10 د) • 4. Pair Work (15 د) • 5. Exit Ticket (5 د)
+                      </p>
+                    </div>
+
+                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
+                      <p className="font-bold text-purple-900">🌐 مصادر OER المفتوحة المرتبطة:</p>
+                      <p className="text-slate-700 text-[10px] leading-relaxed">
+                        • National Geographic Kids Video • OER Commons Worksheet
+                        <br/>
+                        • Khan Academy Kids Guide • TED-Ed Animal Adaptations
+                      </p>
+                    </div>
+
+                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
+                      <p className="font-bold text-purple-900">👥 التمايز والشراكة الأسرية:</p>
+                      <p className="text-slate-700 text-[10px] leading-relaxed">
+                        • بنك كلمات مصور للمتعثرين • مهام مقارنة للمتقدمين
+                        <br/>
+                        • بطاقة الشراكة الأسرية لمستكشف البيئات الصغير
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onCreatePlan(getAbqourEnglishHabitatsExemplarPlan());
+                        onClose();
+                      }}
+                      className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    >
+                      <span>🚀 تطبيق واستخدام نموذج عبقور في المحرر فوراً</span>
+                    </button>
+
+                    {onOpenIntegrationToolModal && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenIntegrationToolModal();
+                        }}
+                        className="px-3.5 py-2.5 bg-white hover:bg-purple-50 text-purple-800 border border-purple-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>فتح أداة بايثون وربط OER 🐍</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: Math Model */}
+              <div className="bg-white border border-slate-200 hover:border-emerald-400 rounded-3xl p-5 shadow-xs hover:shadow-sm transition-all space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 font-['Tajawal']">
+                        الدرس الثاني: القيمة المنزلية للأعداد ضمن 9999 (الرياضيات — الصف الثالث)
+                      </h4>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                        منهاج فلسطيني 🇵🇸
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      المعلم: أ. عبد الرحمن دويكات — مدرسة المعري الأساسية (مديرية نابلس)
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCreatePlan(palestineMathGrade3Plan);
+                      onClose();
+                    }}
+                    className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
+                  >
+                    <span>استخدام هذا النموذج</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Tips Note */}
+              <div className="bg-slate-100/80 rounded-2xl p-4 text-xs text-slate-600 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <p>
+                  <b>ملاحظة للمعلم:</b> عند تطبيق أي نموذج أعلاه، سيتم تحميل جميع أقسامه الستة وترويسته الوزارية الرسمية ومصادره وروابطه المفتوحة مباشرة داخل المحرر، ويمكنك التعديل عليها بحرية تامة وتصديرها أو طباعتها.
+                </p>
               </div>
             </div>
           )}

@@ -49,6 +49,7 @@ import {
   TeacherSuggestedOerResource,
   OerCustomGroup,
   TeacherPersonalOerLibrary,
+  CustomAddedOerLink,
 } from '../types/palestinianOer';
 import {
   PALESTINIAN_OER_DATABASE,
@@ -80,7 +81,15 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
   onApplyOerResourceToPlan,
 }) => {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'browser' | 'personal_library' | 'suggest_resource'>('browser');
+  const [activeTab, setActiveTab] = useState<'browser' | 'personal_library' | 'suggest_resource' | 'custom_added'>('browser');
+
+  // Custom added link modal state
+  const [isCustomLinkModalOpen, setIsCustomLinkModalOpen] = useState(false);
+  const [editingCustomLinkId, setEditingCustomLinkId] = useState<string | null>(null);
+  const [customLinkTitle, setCustomLinkTitle] = useState('');
+  const [customLinkUrl, setCustomLinkUrl] = useState('');
+  const [customLinkType, setCustomLinkType] = useState('موقع تعليمي');
+  const [customLinkNote, setCustomLinkNote] = useState('');
 
   // Filters for Explorer
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -182,6 +191,110 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
   // Group add selector for a specific resource card
   const [activeGroupSelectorResourceId, setActiveGroupSelectorResourceId] = useState<string | null>(null);
 
+  // Custom Link Handlers
+  const handleSaveCustomLinkModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customLinkTitle.trim() || !customLinkUrl.trim()) {
+      alert('يرجى إدخال اسم المصدر ورابط الموقع على الأقل.');
+      return;
+    }
+
+    setLibraryData((prev) => {
+      const existing = prev.customAddedResources || [];
+      if (editingCustomLinkId) {
+        const updated = existing.map((item) =>
+          item.id === editingCustomLinkId
+            ? {
+                ...item,
+                title: customLinkTitle.trim(),
+                url: customLinkUrl.trim(),
+                type: customLinkType,
+                note: customLinkNote.trim(),
+              }
+            : item
+        );
+        return { ...prev, customAddedResources: updated };
+      } else {
+        const newItem: CustomAddedOerLink = {
+          id: `custom-link-${Date.now()}`,
+          title: customLinkTitle.trim(),
+          url: customLinkUrl.trim(),
+          type: customLinkType,
+          note: customLinkNote.trim(),
+          createdAt: formatDateDMY(new Date().toISOString()),
+        };
+        return { ...prev, customAddedResources: [newItem, ...existing] };
+      }
+    });
+
+    setFeedbackNotice(
+      editingCustomLinkId
+        ? 'تم تحديث المصدر المضاف بنجاح! ✏️'
+        : 'تمت إضافة المصدر المفتوح برابط بنجاح إلى مصادري المضافة! ✅'
+    );
+    setTimeout(() => setFeedbackNotice(null), 3500);
+
+    setIsCustomLinkModalOpen(false);
+    setEditingCustomLinkId(null);
+    setCustomLinkTitle('');
+    setCustomLinkUrl('');
+    setCustomLinkType('موقع تعليمي');
+    setCustomLinkNote('');
+  };
+
+  const handleEditCustomLink = (item: CustomAddedOerLink) => {
+    setEditingCustomLinkId(item.id);
+    setCustomLinkTitle(item.title);
+    setCustomLinkUrl(item.url);
+    setCustomLinkType(item.type);
+    setCustomLinkNote(item.note);
+    setIsCustomLinkModalOpen(true);
+  };
+
+  const handleDeleteCustomLink = (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المصدر المضاف؟')) return;
+    setLibraryData((prev) => ({
+      ...prev,
+      customAddedResources: (prev.customAddedResources || []).filter((item) => item.id !== id),
+    }));
+    setFeedbackNotice('تمت إزالة المصدر بنجاح.');
+    setTimeout(() => setFeedbackNotice(null), 2500);
+  };
+
+  const handleShareCustomLinkWhatsApp = (item: CustomAddedOerLink) => {
+    const text = [
+      `🇵🇸 *مصدر تعليمي مفتوح موصى به*`,
+      `📌 *الاسم:* ${item.title}`,
+      `🏷️ *النوع:* ${item.type}`,
+      `🔗 *الرابط:* ${item.url}`,
+      item.note ? `📝 *ملاحظة:* ${item.note}` : '',
+      `---------------------------------`,
+      `منظومة «عبقور» للتخطيط التربوي - فلسطين`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    navigator.clipboard.writeText(text);
+    setFeedbackNotice(`تم نسخ بطاقة المصدر «${item.title}» الجاهزة للواتساب! 📋`);
+    setTimeout(() => setFeedbackNotice(null), 3500);
+  };
+
+  const handleExportCustomLinksJson = () => {
+    const links = libraryData.customAddedResources || [];
+    const blob = new Blob(
+      [JSON.stringify({ version: '1.0', exportedAt: new Date().toISOString(), customLinks: links }, null, 2)],
+      { type: 'application/json' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `abqoor-my-added-oer-resources.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setFeedbackNotice('تم تصدير مصادري المضافة بنجاح كملف JSON! 💾');
+    setTimeout(() => setFeedbackNotice(null), 3000);
+  };
+
   // Auto-sync filters with current active plan if available
   const handleSyncWithCurrentPlan = () => {
     if (!currentPlan) return;
@@ -198,6 +311,40 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
 
   // Filtered resources for the browser
   const filteredBrowserResources = useMemo(() => {
+    if (selectedPublisher === 'custom_open_source') {
+      const items: PalestinianOerItem[] = (libraryData.customAddedResources || []).map((c) => ({
+        id: c.id,
+        title: c.title,
+        subject: selectedSubject !== 'all' ? selectedSubject : 'الرياضيات والعلوم',
+        grade: selectedGrade !== 'all' ? selectedGrade : 'الصف الأساسي',
+        topic: c.note || 'مصدر مفتوح برابط مباشر',
+        unitTitle: 'مصادر مفتوحة مخصصة',
+        type: (c.type === 'فيديو' ? 'video' : c.type === 'كتاب' ? 'book' : c.type === 'صورة' ? 'image' : c.type === 'نشاط' ? 'interactive_activity' : 'link') as any,
+        publisher: 'custom_open_source' as any,
+        publisherNameAr: 'مصدري المضاف برابط مباشر (Open Source OER)',
+        priority: 5,
+        directUrl: c.url,
+        officialBadge: {
+          text: 'مصدر مفتوح برابط مباشر',
+          subText: c.createdAt,
+          tier: 'community_teal',
+        },
+        license: 'مفتوح - مشاركة حرة',
+        description: c.note || 'مصدر تعليمي مفتوح أضافه المعلم برابط مباشر.',
+        suggestedUseInLesson: 'توظيف مباشر في الأنشطة الصفية.',
+        tags: ['مصدر مفتوح', c.type],
+      }));
+      let results = items;
+      if (selectedType !== 'all') {
+        results = results.filter((i) => i.type === selectedType);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        results = results.filter((i) => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
+      }
+      return results;
+    }
+
     return queryPalestinianOerResources({
       subject: selectedSubject,
       grade: selectedGrade,
@@ -206,7 +353,7 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
       type: selectedType,
       searchQuery: searchQuery,
     });
-  }, [selectedSubject, selectedGrade, selectedTopic, selectedPublisher, selectedType, searchQuery]);
+  }, [selectedSubject, selectedGrade, selectedTopic, selectedPublisher, selectedType, searchQuery, libraryData.customAddedResources]);
 
   // Saved resources items for teacher's library
   const savedOerItems = useMemo(() => {
@@ -579,62 +726,100 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
             </div>
           </div>
 
-          {/* Sub Navigation Bar (3 Main Modes) */}
-          <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-white/10">
-            <button
-              type="button"
-              onClick={() => setActiveTab('browser')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
-                activeTab === 'browser'
-                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              <Search className="w-4 h-4" />
-              <span>المستكشف الذكي للمصادر المعتمدة</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'browser' ? 'bg-slate-950 text-amber-400' : 'bg-white/20 text-white'
-              }`}>
-                {toArabicDigits(filteredBrowserResources.length)}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('personal_library')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
-                activeTab === 'personal_library'
-                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              <Bookmark className="w-4 h-4" />
-              <span>مكتبتي الشخصية ومجموعاتي</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'personal_library' ? 'bg-slate-950 text-amber-400' : 'bg-white/20 text-white'
-              }`}>
-                {toArabicDigits(savedOerItems.length)}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('suggest_resource')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
-                activeTab === 'suggest_resource'
-                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>اقتراح مصدر واعتماده تربوياً</span>
-              {libraryData.suggestedResources.length > 0 && (
+          {/* Sub Navigation Bar & Custom Add Button */}
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-white/10">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('browser')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
+                  activeTab === 'browser'
+                    ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <Search className="w-4 h-4" />
+                <span>المستكشف الذكي للمصادر المعتمدة</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  activeTab === 'suggest_resource' ? 'bg-slate-950 text-amber-400' : 'bg-emerald-500 text-white'
+                  activeTab === 'browser' ? 'bg-slate-950 text-amber-400' : 'bg-white/20 text-white'
                 }`}>
-                  {toArabicDigits(libraryData.suggestedResources.length)}
+                  {toArabicDigits(filteredBrowserResources.length)}
                 </span>
-              )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('personal_library')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
+                  activeTab === 'personal_library'
+                    ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <Bookmark className="w-4 h-4" />
+                <span>مكتبتي الشخصية ومجموعاتي</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  activeTab === 'personal_library' ? 'bg-slate-950 text-amber-400' : 'bg-white/20 text-white'
+                }`}>
+                  {toArabicDigits(savedOerItems.length)}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('custom_added')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
+                  activeTab === 'custom_added'
+                    ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <LinkIcon className="w-4 h-4" />
+                <span>📂 مصادري المضافة</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  activeTab === 'custom_added' ? 'bg-slate-950 text-amber-400' : 'bg-emerald-600 text-white'
+                }`}>
+                  {toArabicDigits(libraryData.customAddedResources?.length || 0)}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('suggest_resource')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
+                  activeTab === 'suggest_resource'
+                    ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>اقتراح مصدر واعتماده تربوياً</span>
+                {libraryData.suggestedResources.length > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    activeTab === 'suggest_resource' ? 'bg-slate-950 text-amber-400' : 'bg-emerald-500 text-white'
+                  }`}>
+                    {toArabicDigits(libraryData.suggestedResources.length)}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Quick Add Custom Link Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setEditingCustomLinkId(null);
+                setCustomLinkTitle('');
+                setCustomLinkUrl('');
+                setCustomLinkType('موقع تعليمي');
+                setCustomLinkNote('');
+                setIsCustomLinkModalOpen(true);
+              }}
+              className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-97"
+              title="إضافة مصدر مفتوح جديد برابط مباشر"
+            >
+              <Plus className="w-4 h-4" />
+              <span>➕ إضافة مصدر مفتوح برابط</span>
             </button>
           </div>
         </div>
@@ -788,7 +973,9 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setSelectedPublisher('palestine_content_library')}
+                    onClick={() => {
+                      setSelectedPublisher('palestine_content_library');
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer border ${
                       selectedPublisher === 'palestine_content_library'
                         ? 'bg-purple-100 text-purple-950 border-purple-400 shadow-2xs'
@@ -797,6 +984,29 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
                   >
                     <span className="text-purple-600">🏅</span>
                     <span>مكتبة المحتوى الفلسطيني (أولوية 4)</span>
+                  </button>
+
+                  {/* Open Source with Link Priority Item */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPublisher('custom_open_source');
+                      setIsCustomLinkModalOpen(true);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
+                      selectedPublisher === 'custom_open_source'
+                        ? 'bg-emerald-100 text-emerald-950 border-emerald-500 shadow-2xs scale-102'
+                        : 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-900 border-emerald-200'
+                    }`}
+                    title="اختر مصدر مفتوح برابط ضمن سلم الأولويات وأضف رابطه"
+                  >
+                    <span className="text-emerald-600">🌐</span>
+                    <span>مصدر مفتوح برابط (أولوية مخصصة)</span>
+                    <input
+                      type="hidden"
+                      name="customOpenSourceUrl"
+                      value={libraryData.customAddedResources?.[0]?.url || ''}
+                    />
                   </button>
                 </div>
 
@@ -1665,8 +1875,248 @@ export const PalestinianOerHubModal: React.FC<PalestinianOerHubModalProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* QR Code Modal Overlay for Group Sharing */}
+        {/* TAB 4: My Custom Added OER Links */}
         {/* ========================================================================= */}
+        {activeTab === 'custom_added' && (
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
+            <div className="max-w-4xl mx-auto space-y-4">
+              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                    <LinkIcon className="w-5 h-5 text-emerald-700" />
+                    <span>قائمة «مصادري المضافة» بروابط مباشرة</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    جميع المصادر المفتوحة التي أضفتها يدوياً مع روابطها وملاحظاتها؛ يمكنك تعديلها، حذفها، مشاركتها أو تصديرها.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportCustomLinksJson}
+                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-emerald-700" />
+                    <span>تصدير المصادر (JSON)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCustomLinkId(null);
+                      setCustomLinkTitle('');
+                      setCustomLinkUrl('');
+                      setCustomLinkType('موقع تعليمي');
+                      setCustomLinkNote('');
+                      setIsCustomLinkModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>➕ إضافة مصدر مفتوح برابط</span>
+                  </button>
+                </div>
+              </div>
+
+              {!libraryData.customAddedResources || libraryData.customAddedResources.length === 0 ? (
+                <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center max-w-lg mx-auto my-8">
+                  <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                    <LinkIcon className="w-7 h-7" />
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-sm mb-1">لا توجد مصادر مضافة بروابط خاصة بعد</h4>
+                  <p className="text-xs text-slate-500 mb-4">
+                    انقر على زر «➕ إضافة مصدر مفتوح برابط» في الأعلى لإضافة أول رابط تعليمي لمصادرك الخاصة.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCustomLinkId(null);
+                      setCustomLinkTitle('');
+                      setCustomLinkUrl('');
+                      setCustomLinkType('موقع تعليمي');
+                      setCustomLinkNote('');
+                      setIsCustomLinkModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    ➕ إضافة مصدر مفتوح برابط الآن
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {libraryData.customAddedResources.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white rounded-2xl border border-slate-200 hover:border-emerald-300 p-4 shadow-2xs flex flex-col justify-between transition-all"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black border border-emerald-300">
+                            {item.type}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500 font-bold">
+                            {item.createdAt}
+                          </span>
+                        </div>
+
+                        <h4 className="font-black text-slate-900 text-sm mb-1.5">{item.title}</h4>
+
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-mono font-bold text-emerald-700 hover:underline flex items-center gap-1.5 mb-2.5 break-all bg-emerald-50/60 p-2 rounded-xl border border-emerald-100"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{item.url}</span>
+                        </a>
+
+                        {item.note && (
+                          <p className="text-xs text-slate-600 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <span className="font-bold text-slate-800">ملاحظة الموضوع: </span>
+                            {item.note}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleShareCustomLinkWhatsApp(item)}
+                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>مشاركة واتساب</span>
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditCustomLink(item)}
+                            className="p-1.5 hover:bg-slate-100 text-slate-700 rounded-lg cursor-pointer"
+                            title="تعديل المصدر"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomLink(item.id)}
+                            className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg cursor-pointer"
+                            title="حذف المصدر"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* Modal: Add or Edit Custom OER Link */}
+        {/* ========================================================================= */}
+        {isCustomLinkModalOpen && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+            <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                      {editingCustomLinkId ? 'تعديل المصدر المفتوح' : 'إضافة مصدر مفتوح برابط'}
+                    </h3>
+                    <p className="text-[11px] text-slate-500">أدخل بيانات المصدر والرابط المباشر للوصول السريع</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomLinkModalOpen(false)}
+                  className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveCustomLinkModal} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    اسم المصدر <span className="text-rose-600">*</span>:
+                  </label>
+                  <input
+                    type="text"
+                    value={customLinkTitle}
+                    onChange={(e) => setCustomLinkTitle(e.target.value)}
+                    placeholder="مثال: موقع الأنشطة الرياضية التفاعلية فلسطين"
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-emerald-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-hidden"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    الرابط (الموقع) <span className="text-rose-600">*</span>:
+                  </label>
+                  <input
+                    type="url"
+                    value={customLinkUrl}
+                    onChange={(e) => setCustomLinkUrl(e.target.value)}
+                    placeholder="أدخل رابط الموقع هنا (https://...)"
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-emerald-600 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 outline-hidden"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">النوع:</label>
+                  <select
+                    value={customLinkType}
+                    onChange={(e) => setCustomLinkType(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-emerald-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-hidden"
+                  >
+                    <option value="موقع تعليمي">موقع تعليمي</option>
+                    <option value="فيديو">فيديو</option>
+                    <option value="ملف">ملف (PDF / Doc)</option>
+                    <option value="نشاط">نشاط تفاعلي</option>
+                    <option value="آخر">آخر</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">ملاحظة قصيرة:</label>
+                  <textarea
+                    value={customLinkNote}
+                    onChange={(e) => setCustomLinkNote(e.target.value)}
+                    rows={2}
+                    placeholder="ما موضوع هذا المصدر وكيف يخدم الدرس؟"
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-emerald-600 rounded-xl p-3 text-xs text-slate-800 outline-hidden"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomLinkModalOpen(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1"
+                  >
+                    <span>⬅️ إلغاء</span>
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black cursor-pointer flex items-center gap-1 shadow-xs"
+                  >
+                    <span>✅ حفظ وإضافة</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {showQrModalForGroup && (
           <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
             <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">

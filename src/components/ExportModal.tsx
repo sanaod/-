@@ -30,6 +30,7 @@ interface ExportModalProps {
   allPlans?: LessonPlan[];
   onOpenBackupRestore?: () => void;
   onOpenShareModal?: () => void;
+  onOpenIntegrationToolModal?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -40,6 +41,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   allPlans,
   onOpenBackupRestore,
   onOpenShareModal,
+  onOpenIntegrationToolModal,
 }) => {
   const [copied, setCopied] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -322,6 +324,36 @@ ${plan.section3Assessment.graspsTask.fullDescription}
                 </div>
               </div>
               <Download className="w-5 h-5 text-purple-700 shrink-0" />
+            </button>
+
+            {/* Abqour Python & OER Integration Tool Export */}
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenIntegrationToolModal?.();
+              }}
+              className="p-4 rounded-2xl border-2 border-emerald-400 hover:border-emerald-600 bg-emerald-50/70 hover:bg-emerald-100/70 transition-all flex items-center justify-between gap-3 text-right group shadow-2xs cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-linear-to-br from-emerald-700 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                  <span className="text-xl">🐍</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black text-slate-900 group-hover:text-emerald-950 transition-colors">
+                      أداة بايثون وربط المصادر المفتوحة OER
+                    </h4>
+                    <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.2 rounded-full font-black">
+                      Python / TXT / JSON
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    تصدير الخطة بصيغة ABQOUR_LESSON_PLAN.txt وملف JSON وسكربت بايثون المستقل مع مكتبات OER
+                  </p>
+                </div>
+              </div>
+              <Download className="w-5 h-5 text-emerald-700 shrink-0" />
             </button>
 
             {/* 4. Blank Ministerial Template (.doc) */}

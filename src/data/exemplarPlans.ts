@@ -1,4 +1,7 @@
 import { LessonPlan } from '../types/lessonPlan';
+import { abqourEnglishHabitatsPlan } from '../utils/abqourIntegrationTool';
+
+export { abqourEnglishHabitatsPlan };
 
 export const palestineMathGrade3Plan: LessonPlan = {
   id: 'palestine-math-grade3-placevalue',
@@ -235,6 +238,7 @@ export const palestineMathGrade3Plan: LessonPlan = {
 };
 
 export const defaultExemplarPlans: LessonPlan[] = [
+  abqourEnglishHabitatsPlan,
   palestineMathGrade3Plan,
   {
     id: 'arabic-grade4-reading-alquds',
