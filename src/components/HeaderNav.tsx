@@ -17,6 +17,8 @@ import {
   CheckCircle,
   LogOut,
   UserCheck,
+  LayoutDashboard,
+  Library,
 } from 'lucide-react';
 import { LessonPlan } from '../types/lessonPlan';
 import { toArabicDigits } from '../utils/arabicNumerals';
@@ -107,7 +109,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {/* Right Side: Logo & System Title */}
           <div className="flex items-center gap-3 shrink-0">
             <div
-              onClick={onSelectBlankPlan || onNewBlankPlan}
+              onClick={() => {
+                if (onChangeView) {
+                  onChangeView(currentView === 'dashboard' ? 'editor' : 'dashboard');
+                } else if (onSelectBlankPlan) {
+                  onSelectBlankPlan();
+                } else if (onNewBlankPlan) {
+                  onNewBlankPlan();
+                }
+              }}
               className="flex items-center gap-3.5 sm:gap-4 cursor-pointer group select-none"
               title="الصفحة الرئيسية لمنظومة عبقور"
             >
@@ -135,51 +145,64 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
           </div>
 
-          {/* Center/Main Navigation: Exactly 4 Buttons */}
+          {/* Center/Main Navigation: 4 Core Buttons */}
           <div className="hidden md:flex items-center gap-2">
             
-            {/* 1. تحضير جديد */}
+            {/* 1. تبديل: الرئيسية (لوحة التحكم) / محرر التحضير */}
+            <button
+              type="button"
+              onClick={() => onChangeView?.(currentView === 'dashboard' ? 'editor' : 'dashboard')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 ${
+                currentView === 'dashboard'
+                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
+              }`}
+              title={currentView === 'dashboard' ? 'الانتقال إلى محرر التحضير' : 'الانتقال إلى لوحة التحكم الرئيسية'}
+            >
+              {currentView === 'dashboard' ? (
+                <>
+                  <FileEdit className="w-4 h-4 text-emerald-700" />
+                  <span>محرر التحضير</span>
+                </>
+              ) : (
+                <>
+                  <LayoutDashboard className="w-4 h-4 text-emerald-700" />
+                  <span>الرئيسية</span>
+                </>
+              )}
+            </button>
+
+            {/* 2. تحضير جديد */}
             <button
               type="button"
               onClick={onOpenAiGenerator}
               className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-              title="تحضير درس جديد بالذكاء الاصطناعي ومصادر OER"
+              title="إنشاء تحضير درس جديد بالذكاء الاصطناعي ومصادر OER"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>تحضير جديد</span>
             </button>
 
-            {/* 2. بنك المصادر */}
-            <button
-              type="button"
-              onClick={onOpenResourcesModal}
-              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs"
-              title="بنك المصادر والمناهج المعتمدة"
-            >
-              <Layers className="w-4 h-4 text-teal-700" />
-              <span>بنك المصادر ({toArabicDigits(resourcesCount)})</span>
-            </button>
-
-            {/* 3. مكتبة الكفايات */}
-            <button
-              type="button"
-              onClick={onOpenCompetenciesModal}
-              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs"
-              title="مكتبة الكفايات الوطنية الفلسطينية"
-            >
-              <Award className="w-4 h-4 text-amber-600" />
-              <span>مكتبة الكفايات</span>
-            </button>
-
-            {/* 4. عرض خططي */}
+            {/* 3. تحاضيري المحفوظة */}
             <button
               type="button"
               onClick={onOpenPlansViewer || (() => onChangeView?.('dashboard'))}
               className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs"
-              title="استعراض قائمة خططي (قيد العمل / مكتملة)"
+              title="استعراض قائمة تحاضيري المحفوظة"
             >
               <FolderOpen className="w-4 h-4 text-blue-600" />
-              <span>عرض خططي</span>
+              <span>تحاضيري المحفوظة ({toArabicDigits(plans.length)})</span>
+            </button>
+
+            {/* 4. مكتبتي التربوية ومصادري */}
+            <button
+              type="button"
+              onClick={onOpenResourcesModal}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs"
+              title="مكتبتي وبنك المصادر والمناهج المعتمدة"
+            >
+              <Library className="w-4 h-4 text-amber-600" />
+              <span>مكتبتي ومصادري ({toArabicDigits(resourcesCount)})</span>
             </button>
 
           </div>

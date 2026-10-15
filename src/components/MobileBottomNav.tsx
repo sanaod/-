@@ -41,75 +41,65 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 4px)' }}
     >
       <div className="grid grid-cols-5 items-center justify-items-center h-14 max-w-lg mx-auto">
-        {/* Tab 1: Editor / Home */}
-        <button
-          type="button"
-          onClick={() => onChangeView('editor')}
-          className={`flex flex-col items-center justify-center w-full h-full min-h-[44px] transition-colors rounded-xl cursor-pointer ${
-            currentView === 'editor'
-              ? 'text-emerald-700 font-black'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <div className={`p-1 rounded-lg ${currentView === 'editor' ? 'bg-emerald-50' : ''}`}>
-            <FileEdit className="w-5 h-5 shrink-0" />
-          </div>
-          <span className="text-[10px] font-bold mt-0.5 tracking-tight">الرئيسية</span>
-        </button>
-
-        {/* Tab 2: Master Tools Hub */}
-        <button
-          type="button"
-          onClick={onOpenToolsHub}
-          className="flex flex-col items-center justify-center w-full h-full min-h-[44px] text-amber-600 hover:text-amber-700 transition-colors rounded-xl cursor-pointer"
-        >
-          <div className="p-1 rounded-lg bg-amber-50">
-            <Zap className="w-5 h-5 shrink-0 text-amber-600 fill-amber-100" />
-          </div>
-          <span className="text-[10px] font-bold mt-0.5 tracking-tight">الأدوات (٢٢)</span>
-        </button>
-
-        {/* Tab 3: Center Primary Action - Twin Preparation & Resources Bank Hub */}
-        <div className="flex flex-col items-center justify-center -mt-3.5">
-          <div className="flex items-center bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-900 p-1 rounded-full shadow-lg ring-3 ring-white border border-emerald-300/40">
-            <button
-              type="button"
-              onClick={onOpenAiModal}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-700/80 hover:bg-emerald-600 text-white active:scale-95 transition-all cursor-pointer"
-              title="تحضير درس جديد بالذكاء الاصطناعي"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-            </button>
-            <div className="w-px h-4 bg-emerald-500/50 mx-0.5" />
-            <button
-              type="button"
-              onClick={onOpenResourcesModal}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-800 hover:bg-teal-700 text-white relative active:scale-95 transition-all cursor-pointer group"
-              title="بنك المصادر المربوط تلقائياً بتحضير الدرس"
-            >
-              <Layers className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 text-amber-950 font-black rounded-full flex items-center justify-center text-[8px] shadow-2xs">
-                {toArabicDigits(resourcesCount)}
-              </span>
-            </button>
-          </div>
-          <span className="text-[9px] font-black text-emerald-800 mt-0.5 tracking-tighter">تحضير • بنك المصادر</span>
-        </div>
-
-        {/* Tab 4: Teacher Dashboard */}
+        {/* Tab 1: Dashboard / Home */}
         <button
           type="button"
           onClick={() => onChangeView('dashboard')}
           className={`flex flex-col items-center justify-center w-full h-full min-h-[44px] transition-colors rounded-xl cursor-pointer ${
             currentView === 'dashboard'
+              ? 'text-emerald-700 font-black'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${currentView === 'dashboard' ? 'bg-emerald-50' : ''}`}>
+            <LayoutDashboard className="w-5 h-5 shrink-0" />
+          </div>
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">الرئيسية</span>
+        </button>
+
+        {/* Tab 2: Lesson Plan Editor */}
+        <button
+          type="button"
+          onClick={() => onChangeView('editor')}
+          className={`flex flex-col items-center justify-center w-full h-full min-h-[44px] transition-colors rounded-xl cursor-pointer ${
+            currentView === 'editor'
               ? 'text-teal-700 font-black'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <div className={`p-1 rounded-lg ${currentView === 'dashboard' ? 'bg-teal-50' : ''}`}>
-            <LayoutDashboard className="w-5 h-5 shrink-0" />
+          <div className={`p-1 rounded-lg ${currentView === 'editor' ? 'bg-teal-50' : ''}`}>
+            <FileEdit className="w-5 h-5 shrink-0" />
           </div>
-          <span className="text-[10px] font-bold mt-0.5 tracking-tight">الإنتاجية</span>
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">محرر التحضير</span>
+        </button>
+
+        {/* Tab 3: Center Primary Action - New Plan */}
+        <div className="flex flex-col items-center justify-center -mt-3.5">
+          <div className="flex items-center bg-linear-to-r from-emerald-800 via-teal-800 to-emerald-900 p-1.5 rounded-full shadow-lg ring-3 ring-white border border-emerald-300/40">
+            <button
+              type="button"
+              onClick={onOpenAiModal}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95 transition-all cursor-pointer shadow-md"
+              title="إنشاء تحضير درس جديد بالذكاء الاصطناعي"
+            >
+              <Sparkles className="w-5 h-5 text-amber-300" />
+            </button>
+          </div>
+          <span className="text-[9px] font-black text-emerald-800 mt-0.5 tracking-tight">تحضير جديد</span>
+        </div>
+
+        {/* Tab 4: Resources Bank */}
+        <button
+          type="button"
+          onClick={onOpenResourcesModal}
+          className="flex flex-col items-center justify-center w-full h-full min-h-[44px] text-amber-700 hover:text-amber-800 transition-colors rounded-xl cursor-pointer relative"
+        >
+          <div className="p-1 rounded-lg bg-amber-50">
+            <Layers className="w-5 h-5 shrink-0 text-amber-600" />
+          </div>
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">
+            المصادر ({toArabicDigits(resourcesCount)})
+          </span>
         </button>
 
         {/* Tab 5: Export & Print */}

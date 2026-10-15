@@ -695,6 +695,28 @@ export default function App() {
     setActivePlanId(planWithId.id);
   };
 
+  const handleDuplicatePlan = (planIdToDuplicate: string) => {
+    const targetPlan = plans.find((p) => p.id === planIdToDuplicate);
+    if (!targetPlan) return;
+    const duplicated: LessonPlan = {
+      ...targetPlan,
+      id: `plan-dup-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: `${targetPlan.title || targetPlan.header?.lessonTitle || 'خطة'} (نسخة مطابقة)`,
+      header: {
+        ...targetPlan.header,
+        lessonTitle: `${targetPlan.header?.lessonTitle || 'الدرس'} (نسخة مطابقة)`,
+        date: formatDateDMY(new Date().toISOString()),
+      },
+    };
+    setPlans((prev) => {
+      const updated = [duplicated, ...prev];
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
   if (viewMode === 'official-print') {
     return (
       <OfficialPrintView
@@ -810,6 +832,7 @@ export default function App() {
           onOpenBlankTemplateModal={() => setIsBlankModalOpen(true)}
           onNewBlankPlan={handleCreateNewBlankPlan}
           onDeletePlan={handleDeletePlan}
+          onDuplicatePlan={handleDuplicatePlan}
           onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
           onOpenCompetenciesModal={() => setIsCompetenciesModalOpen(true)}
           onOpenSmartGuideModal={() => setIsSmartGuideModalOpen(true)}
@@ -826,6 +849,17 @@ export default function App() {
           onChangeRole={(role) => setCurrentRole(role)}
           onToggleArchivePlan={handleToggleArchivePlan}
           onOpenArchiveModal={() => setIsArchiveModalOpen(true)}
+          currentUser={currentUsername}
+          onUpdateUsername={(name) => {
+            setCurrentUsername(name);
+            try {
+              localStorage.setItem('abqoor_username_v1', name);
+            } catch (e) {}
+          }}
+          onOpenExitTicketModal={() => setIsExitTicketModalOpen(true)}
+          onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
+          onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
+          onOpenPlansViewer={() => setIsPlansViewerModalOpen(true)}
         />
       ) : (
         <>
@@ -1455,10 +1489,14 @@ export default function App() {
         isOpen={isBackupRestoreModalOpen}
         onClose={() => setIsBackupRestoreModalOpen(false)}
         plans={plans}
-        onPlansUpdated={(newPlans, activeId) => {
+        resources={resources}
+        onPlansUpdated={(newPlans, activeId, newResources) => {
           setPlans(newPlans);
           if (activeId) {
             setActivePlanId(activeId);
+          }
+          if (newResources && newResources.length > 0) {
+            setResources(newResources);
           }
         }}
       />
