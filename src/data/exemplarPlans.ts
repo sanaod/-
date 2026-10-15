@@ -238,7 +238,6 @@ export const palestineMathGrade3Plan: LessonPlan = {
 };
 
 export const defaultExemplarPlans: LessonPlan[] = [
-  abqourEnglishHabitatsPlan,
   palestineMathGrade3Plan,
   {
     id: 'arabic-grade4-reading-alquds',

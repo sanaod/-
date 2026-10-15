@@ -168,13 +168,11 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const sanitized = parsed.map(sanitizePlan);
+          const sanitized = parsed
+            .map(sanitizePlan)
+            .filter((p) => p.id !== abqourEnglishHabitatsPlan.id);
           const hasBlank = sanitized.some((p) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
-          let finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
-          const hasAbqour = finalPlans.some((p) => p.id === abqourEnglishHabitatsPlan.id);
-          if (!hasAbqour) {
-            finalPlans = [finalPlans[0], sanitizePlan(abqourEnglishHabitatsPlan), ...finalPlans.slice(1)];
-          }
+          const finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
           try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalPlans));
           } catch (e) {}
@@ -194,7 +192,7 @@ export default function App() {
   const [activePlanId, setActivePlanId] = useState<string>(() => {
     try {
       const savedId = localStorage.getItem(ACTIVE_PLAN_KEY);
-      if (savedId) return savedId;
+      if (savedId && savedId !== abqourEnglishHabitatsPlan.id) return savedId;
     } catch (e) {}
     return defaultBlankPlan.id;
   });

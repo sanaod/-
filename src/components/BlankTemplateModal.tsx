@@ -1027,112 +1027,20 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                 </p>
               </div>
 
-              {/* CARD 1: ⭐ Abqour Python & OER Model */}
-              <div className="bg-linear-to-br from-purple-50/80 via-white to-indigo-50/50 border-2 border-purple-300 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
-                <div className="absolute top-0 left-0 bg-purple-700 text-white text-[10px] font-black px-4 py-1 rounded-br-2xl shadow-xs">
-                  ⭐ نموذج منظومة عبقور المعتمد (الجديد)
-                </div>
-
-                <div className="space-y-4 pt-1">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-base font-black text-purple-950 font-['Tajawal']">
-                          Unit 3: Animals and Their Habitats (English — Grade 5)
-                        </h4>
-                        <span className="text-[10px] bg-purple-200/80 text-purple-900 font-bold px-2.5 py-0.5 rounded-full border border-purple-300">
-                          اللغة الإنجليزية والمصادر المفتوحة
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        نموذج خطة درس تفاعلي متوافق مع أداة بايثون لمنظومة عبقور، يربط مباشرة مع مكتبات OER Commons وKhan Academy وTED-Ed.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Highlights Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
-                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
-                      <p className="font-bold text-purple-900">🎯 المفردات والتراكيب اللغوية:</p>
-                      <p className="text-slate-700 text-[10px] leading-relaxed">
-                        • Words: habitat, desert, forest, ocean, adapt, survive
-                        <br/>
-                        • Structures: Subject + live(s) in + Habitat | I prefer...
-                      </p>
-                    </div>
-
-                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
-                      <p className="font-bold text-purple-900">⏱️ المراحل الإجرائية والتوقيت (45 د):</p>
-                      <p className="text-slate-700 text-[10px] leading-relaxed">
-                        • 1. Warm-up & Review (5 د) • 2. Presentation (10 د)
-                        <br/>
-                        • 3. Guided Practice (10 د) • 4. Pair Work (15 د) • 5. Exit Ticket (5 د)
-                      </p>
-                    </div>
-
-                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
-                      <p className="font-bold text-purple-900">🌐 مصادر OER المفتوحة المرتبطة:</p>
-                      <p className="text-slate-700 text-[10px] leading-relaxed">
-                        • National Geographic Kids Video • OER Commons Worksheet
-                        <br/>
-                        • Khan Academy Kids Guide • TED-Ed Animal Adaptations
-                      </p>
-                    </div>
-
-                    <div className="bg-white/80 p-2.5 rounded-xl border border-purple-200/80 space-y-1">
-                      <p className="font-bold text-purple-900">👥 التمايز والشراكة الأسرية:</p>
-                      <p className="text-slate-700 text-[10px] leading-relaxed">
-                        • بنك كلمات مصور للمتعثرين • مهام مقارنة للمتقدمين
-                        <br/>
-                        • بطاقة الشراكة الأسرية لمستكشف البيئات الصغير
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-2.5 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onCreatePlan(getAbqourEnglishHabitatsExemplarPlan());
-                        onClose();
-                      }}
-                      className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
-                    >
-                      <span>🚀 تطبيق واستخدام نموذج عبقور في المحرر فوراً</span>
-                    </button>
-
-                    {onOpenIntegrationToolModal && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onClose();
-                          onOpenIntegrationToolModal();
-                        }}
-                        className="px-3.5 py-2.5 bg-white hover:bg-purple-50 text-purple-800 border border-purple-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>فتح أداة بايثون وربط OER 🐍</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 2: Math Model */}
-              <div className="bg-white border border-slate-200 hover:border-emerald-400 rounded-3xl p-5 shadow-xs hover:shadow-sm transition-all space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              {/* CARD 1: Official Palestinian Curriculum Exemplar */}
+              <div className="bg-linear-to-br from-emerald-50/80 via-white to-teal-50/50 border-2 border-emerald-300 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm sm:text-base font-bold text-slate-900 font-['Tajawal']">
+                      <h4 className="text-sm sm:text-base font-black text-slate-900 font-['Tajawal']">
                         الدرس الثاني: القيمة المنزلية للأعداد ضمن 9999 (الرياضيات — الصف الثالث)
                       </h4>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                        منهاج فلسطيني 🇵🇸
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                        منهاج دولة فلسطين الرسمي 🇵🇸
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      المعلم: أ. عبد الرحمن دويكات — مدرسة المعري الأساسية (مديرية نابلس)
+                    <p className="text-xs text-slate-600 mt-1">
+                      المعلم: أ. عبد الرحمن دويكات — مدرسة المعري الأساسية للبنين (مديرية نابلس) · خطة نموذجية معتمدة وفق استمارة التحضير الرسمية
                     </p>
                   </div>
 
@@ -1142,9 +1050,39 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
                       onCreatePlan(palestineMathGrade3Plan);
                       onClose();
                     }}
-                    className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
+                    className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
                   >
-                    <span>استخدام هذا النموذج</span>
+                    <span>استخدام هذا النموذج في المحرر</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* CARD 2: Optional English / OER Plan */}
+              <div className="bg-white border border-slate-200 hover:border-purple-300 rounded-3xl p-5 shadow-xs hover:shadow-sm transition-all space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 font-['Tajawal']">
+                        Unit 3: Animals and Their Habitats (English — Grade 5)
+                      </h4>
+                      <span className="text-[10px] bg-purple-100 text-purple-900 font-bold px-2.5 py-0.5 rounded-full border border-purple-200">
+                        اللغة الإنجليزية والمصادر المفتوحة OER
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      نموذج خطة درس مدمج يربط مع مكتبات OER Commons وKhan Academy وTED-Ed.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCreatePlan(getAbqourEnglishHabitatsExemplarPlan());
+                      onClose();
+                    }}
+                    className="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
+                  >
+                    <span>استخدام النموذج</span>
                   </button>
                 </div>
               </div>
