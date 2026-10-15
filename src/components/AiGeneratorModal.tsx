@@ -172,6 +172,24 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
   const [customCompetencyStatement, setCustomCompetencyStatement] = useState('');
   const [isCompetencyPickerExpanded, setIsCompetencyPickerExpanded] = useState(false);
 
+  // Filter Palestinian Competencies
+  const filteredPalestinianCompetencies = useMemo(() => {
+    return INITIAL_PALESTINIAN_COMPETENCIES.filter((comp) => {
+      if (competenciesCategoryFilter === 'general' && comp.category !== 'general') return false;
+      if (competenciesCategoryFilter === 'subject_specific' && comp.category !== 'subject_specific') return false;
+      if (competenciesSearchQuery.trim()) {
+        const q = competenciesSearchQuery.trim().toLowerCase();
+        return (
+          comp.title.toLowerCase().includes(q) ||
+          comp.statement.toLowerCase().includes(q) ||
+          comp.domainLabel.toLowerCase().includes(q) ||
+          comp.code.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [competenciesCategoryFilter, competenciesSearchQuery]);
+
   // =========================================================================
   // STEP 3 STATE: Assessment Tools (التقويم التربوي وأدوات التقييم) & Assignments
   // =========================================================================
@@ -633,24 +651,6 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
     setActionNotice('تم حذف أداة التقويم.');
     setTimeout(() => setActionNotice(null), 2500);
   };
-
-  // Filter Palestinian Competencies
-  const filteredPalestinianCompetencies = useMemo(() => {
-    return INITIAL_PALESTINIAN_COMPETENCIES.filter((comp) => {
-      if (competenciesCategoryFilter === 'general' && comp.category !== 'general') return false;
-      if (competenciesCategoryFilter === 'subject_specific' && comp.category !== 'subject_specific') return false;
-      if (competenciesSearchQuery.trim()) {
-        const q = competenciesSearchQuery.trim().toLowerCase();
-        return (
-          comp.title.toLowerCase().includes(q) ||
-          comp.statement.toLowerCase().includes(q) ||
-          comp.domainLabel.toLowerCase().includes(q) ||
-          comp.code.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [competenciesCategoryFilter, competenciesSearchQuery]);
 
   const assessmentTypeInfo = (type: AssessmentType) => {
     switch (type) {
