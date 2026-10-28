@@ -93,8 +93,8 @@ interface AbqoorHomeDashboardProps {
 }
 
 export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
-  plans,
-  resources,
+  plans = [],
+  resources = [],
   activePlanId,
   onSelectPlan,
   onOpenEditor,
@@ -242,7 +242,11 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
     teacher: { name: 'المعلم', badge: '🟢 معلم صف', desc: 'إعداد وتحضير الخطط الصفية وفق المنهاج الفلسطيني ومصادر OER' },
     supervisor: { name: 'المشرف التربوي', badge: '🔵 مشرف تربوي', desc: 'متابعة واعتماد خطط المعلمين وإرشادهم ميدانياً' },
     principal: { name: 'مدير المدرسة', badge: '🟠 مدير مدرسة', desc: 'متابعة مؤشرات الأداء المؤسسي وتقارير الجودة' },
-  }[currentRole];
+  }[currentRole] || {
+    name: 'المعلم',
+    badge: '🟢 معلم صف',
+    desc: 'إعداد وتحضير الخطط الصفية وفق المنهاج الفلسطيني ومصادر OER',
+  };
 
   // Navigation Items (The 7 Core Functions Requested by User)
   const navTabs: { id: DashboardNavSection; label: string; icon: React.ComponentType<{ className?: string }>; count?: number }[] = [

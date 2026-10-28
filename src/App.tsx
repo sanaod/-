@@ -1365,309 +1365,355 @@ export default function App() {
       )}
 
       {/* Smart Pedagogical Guide & Compliance Audit Unit (مرشد عبقور التربوي الذكي ووحدة فحص التوافق) */}
-      <SmartPedagogicalGuideModal
-        isOpen={isSmartGuideModalOpen}
-        onClose={() => setIsSmartGuideModalOpen(false)}
-        currentPlan={currentPlan}
-        onApplySuggestionsToPlan={(updatedPlan) => {
-          updateCurrentPlan(updatedPlan);
-          setResourceLinkNotice('تم تطبيق توجيهات واقتراحات المرشد التربوي الذكي وفحص التوافق بنجاح! 💡🇵🇸');
-          setTimeout(() => setResourceLinkNotice(null), 4500);
-          setViewMode('editor');
-        }}
-        onOpenPalestinianOerHub={() => {
-          setIsSmartGuideModalOpen(false);
-          setIsPalestinianOerHubOpen(true);
-        }}
-        onOpenCompetenciesLibrary={() => {
-          setIsSmartGuideModalOpen(false);
-          setIsCompetenciesModalOpen(true);
-        }}
-      />
+      {isSmartGuideModalOpen && (
+        <SmartPedagogicalGuideModal
+          isOpen={isSmartGuideModalOpen}
+          onClose={() => setIsSmartGuideModalOpen(false)}
+          currentPlan={currentPlan}
+          onApplySuggestionsToPlan={(updatedPlan) => {
+            updateCurrentPlan(updatedPlan);
+            setResourceLinkNotice('تم تطبيق توجيهات واقتراحات المرشد التربوي الذكي وفحص التوافق بنجاح! 💡🇵🇸');
+            setTimeout(() => setResourceLinkNotice(null), 4500);
+            setViewMode('editor');
+          }}
+          onOpenPalestinianOerHub={() => {
+            setIsSmartGuideModalOpen(false);
+            setIsPalestinianOerHubOpen(true);
+          }}
+          onOpenCompetenciesLibrary={() => {
+            setIsSmartGuideModalOpen(false);
+            setIsCompetenciesModalOpen(true);
+          }}
+        />
+      )}
 
-      <AbacusSimulationModal
-        isOpen={isAbacusModalOpen}
-        onClose={() => setIsAbacusModalOpen(false)}
-        plan={currentPlan}
-        plans={plans}
-        onSelectPlan={(id) => setActivePlanId(id)}
-        onUpdatePlan={updateCurrentPlan}
-      />
+      {isAbacusModalOpen && (
+        <AbacusSimulationModal
+          isOpen={isAbacusModalOpen}
+          onClose={() => setIsAbacusModalOpen(false)}
+          plan={currentPlan}
+          plans={plans}
+          onSelectPlan={(id) => setActivePlanId(id)}
+          onUpdatePlan={updateCurrentPlan}
+        />
+      )}
 
-      <InteractiveWorksheetModal
-        isOpen={isWorksheetModalOpen}
-        onClose={() => setIsWorksheetModalOpen(false)}
-        plan={currentPlan}
-        onSaveToResources={(newRes) => {
-          setResources((prev) => [newRes, ...prev]);
-        }}
-      />
+      {isWorksheetModalOpen && (
+        <InteractiveWorksheetModal
+          isOpen={isWorksheetModalOpen}
+          onClose={() => setIsWorksheetModalOpen(false)}
+          plan={currentPlan}
+          onSaveToResources={(newRes) => {
+            setResources((prev) => [newRes, ...prev]);
+          }}
+        />
+      )}
 
-      <AssessmentHubModal
-        isOpen={isAssessmentModalOpen}
-        onClose={() => setIsAssessmentModalOpen(false)}
-        lessonContext={{
-          subject: currentPlan.header.subject,
-          grade: currentPlan.header.grade,
-          lessonTitle: currentPlan.header.lessonTitle
-        }}
-        onApplyToPlan={(data) => {
-          // Update Section 3 or other parts if desired
-        }}
-      />
+      {isAssessmentModalOpen && (
+        <AssessmentHubModal
+          isOpen={isAssessmentModalOpen}
+          onClose={() => setIsAssessmentModalOpen(false)}
+          lessonContext={{
+            subject: currentPlan.header.subject,
+            grade: currentPlan.header.grade,
+            lessonTitle: currentPlan.header.lessonTitle
+          }}
+          onApplyToPlan={(data) => {
+            // Update Section 3 or other parts if desired
+          }}
+        />
+      )}
 
-      <AuthenticTaskGeneratorModal
-        isOpen={isAuthenticTaskModalOpen}
-        onClose={() => setIsAuthenticTaskModalOpen(false)}
-        lessonContext={{
-          subject: currentPlan.header.subject,
-          grade: currentPlan.header.grade,
-          lessonTitle: currentPlan.header.lessonTitle
-        }}
-        initialTask={currentPlan.section3Assessment.graspsTask}
-        onApplyTask={(newTask) => {
-          updateCurrentPlan({
-            ...currentPlan,
-            section3Assessment: {
-              ...currentPlan.section3Assessment,
-              graspsTask: newTask
-            }
-          });
-        }}
-      />
+      {isAuthenticTaskModalOpen && (
+        <AuthenticTaskGeneratorModal
+          isOpen={isAuthenticTaskModalOpen}
+          onClose={() => setIsAuthenticTaskModalOpen(false)}
+          lessonContext={{
+            subject: currentPlan.header.subject,
+            grade: currentPlan.header.grade,
+            lessonTitle: currentPlan.header.lessonTitle
+          }}
+          initialTask={currentPlan.section3Assessment.graspsTask}
+          onApplyTask={(newTask) => {
+            updateCurrentPlan({
+              ...currentPlan,
+              section3Assessment: {
+                ...currentPlan.section3Assessment,
+                graspsTask: newTask
+              }
+            });
+          }}
+        />
+      )}
 
-      <RubricGeneratorModal
-        isOpen={isRubricModalOpen}
-        onClose={() => setIsRubricModalOpen(false)}
-        lessonContext={{
-          subject: currentPlan.header.subject,
-          grade: currentPlan.header.grade,
-          lessonTitle: currentPlan.header.lessonTitle
-        }}
-        initialRubric={currentPlan.section3Assessment.rubric}
-        onApplyRubric={(newRubric) => {
-          updateCurrentPlan({
-            ...currentPlan,
-            section3Assessment: {
-              ...currentPlan.section3Assessment,
-              rubric: newRubric
-            }
-          });
-        }}
-      />
+      {isRubricModalOpen && (
+        <RubricGeneratorModal
+          isOpen={isRubricModalOpen}
+          onClose={() => setIsRubricModalOpen(false)}
+          lessonContext={{
+            subject: currentPlan.header.subject,
+            grade: currentPlan.header.grade,
+            lessonTitle: currentPlan.header.lessonTitle
+          }}
+          initialRubric={currentPlan.section3Assessment.rubric}
+          onApplyRubric={(newRubric) => {
+            updateCurrentPlan({
+              ...currentPlan,
+              section3Assessment: {
+                ...currentPlan.section3Assessment,
+                rubric: newRubric
+              }
+            });
+          }}
+        />
+      )}
 
-      <ExitTicketModal
-        isOpen={isExitTicketModalOpen}
-        onClose={() => setIsExitTicketModalOpen(false)}
-        plan={currentPlan}
-      />
+      {isExitTicketModalOpen && (
+        <ExitTicketModal
+          isOpen={isExitTicketModalOpen}
+          onClose={() => setIsExitTicketModalOpen(false)}
+          plan={currentPlan}
+        />
+      )}
 
-      <ParentCardModal
-        isOpen={isParentCardModalOpen}
-        onClose={() => setIsParentCardModalOpen(false)}
-        plan={currentPlan}
-      />
+      {isParentCardModalOpen && (
+        <ParentCardModal
+          isOpen={isParentCardModalOpen}
+          onClose={() => setIsParentCardModalOpen(false)}
+          plan={currentPlan}
+        />
+      )}
 
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        plan={currentPlan}
-        onOpenPdfPrint={() => setViewMode('official-print')}
-        onOpenShareModal={() => {
-          setIsExportModalOpen(false);
-          setIsShareModalOpen(true);
-        }}
-        onOpenIntegrationToolModal={() => {
-          setIsExportModalOpen(false);
-          setIsIntegrationToolModalOpen(true);
-        }}
-        allPlans={plans}
-        onOpenBackupRestore={() => {
-          setIsExportModalOpen(false);
-          setIsBackupRestoreModalOpen(true);
-        }}
-      />
+      {isExportModalOpen && (
+        <ExportModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          plan={currentPlan}
+          onOpenPdfPrint={() => setViewMode('official-print')}
+          onOpenShareModal={() => {
+            setIsExportModalOpen(false);
+            setIsShareModalOpen(true);
+          }}
+          onOpenIntegrationToolModal={() => {
+            setIsExportModalOpen(false);
+            setIsIntegrationToolModalOpen(true);
+          }}
+          allPlans={plans}
+          onOpenBackupRestore={() => {
+            setIsExportModalOpen(false);
+            setIsBackupRestoreModalOpen(true);
+          }}
+        />
+      )}
 
       {/* Share Lesson Plan Modal (Web Share API & Messaging Apps) */}
-      <SharePlanModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        plan={currentPlan}
-      />
+      {isShareModalOpen && (
+        <SharePlanModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          plan={currentPlan}
+        />
+      )}
 
-      <BackupRestoreModal
-        isOpen={isBackupRestoreModalOpen}
-        onClose={() => setIsBackupRestoreModalOpen(false)}
-        plans={plans}
-        resources={resources}
-        onPlansUpdated={(newPlans, activeId, newResources) => {
-          setPlans(newPlans);
-          if (activeId) {
-            setActivePlanId(activeId);
-          }
-          if (newResources && newResources.length > 0) {
-            setResources(newResources);
-          }
-        }}
-      />
+      {isBackupRestoreModalOpen && (
+        <BackupRestoreModal
+          isOpen={isBackupRestoreModalOpen}
+          onClose={() => setIsBackupRestoreModalOpen(false)}
+          plans={plans}
+          resources={resources}
+          onPlansUpdated={(newPlans, activeId, newResources) => {
+            setPlans(newPlans);
+            if (activeId) {
+              setActivePlanId(activeId);
+            }
+            if (newResources && newResources.length > 0) {
+              setResources(newResources);
+            }
+          }}
+        />
+      )}
 
-      <BlankTemplateModal
-        isOpen={isBlankModalOpen}
-        onClose={() => setIsBlankModalOpen(false)}
-        onCreatePlan={(newPlan) => {
-          handlePlanGenerated(newPlan);
-          setViewMode('editor');
-        }}
-        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-        onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
-      />
+      {isBlankModalOpen && (
+        <BlankTemplateModal
+          isOpen={isBlankModalOpen}
+          onClose={() => setIsBlankModalOpen(false)}
+          onCreatePlan={(newPlan) => {
+            handlePlanGenerated(newPlan);
+            setViewMode('editor');
+          }}
+          onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+          onOpenIntegrationToolModal={() => setIsIntegrationToolModalOpen(true)}
+        />
+      )}
 
-      <PlansViewerModal
-        isOpen={isPlansViewerModalOpen}
-        onClose={() => setIsPlansViewerModalOpen(false)}
-        plans={plans}
-        activePlanId={currentPlan.id}
-        onSelectPlan={(id) => {
-          setActivePlanId(id);
-          setViewMode('editor');
-        }}
-        onRequestDeletePlan={(plan) => {
-          setIsPlansViewerModalOpen(false);
-          handleRequestDeletePlan(plan);
-        }}
-        onOpenEditor={() => {
-          setIsPlansViewerModalOpen(false);
-          setViewMode('editor');
-        }}
-        onOpenPrintView={(planId) => {
-          setIsPlansViewerModalOpen(false);
-          if (planId) setActivePlanId(planId);
-          setViewMode('official-print');
-        }}
-        onOpenShareModal={(planId) => {
-          setIsPlansViewerModalOpen(false);
-          if (planId) setActivePlanId(planId);
-          setIsShareModalOpen(true);
-        }}
-        onOpenNewBlank={() => {
-          setIsPlansViewerModalOpen(false);
-          handleCreateNewBlankPlan();
-        }}
-        onOpenAiGenerator={() => {
-          setIsPlansViewerModalOpen(false);
-          setIsAiModalOpen(true);
-        }}
-        onOpenUnitPlanModal={() => {
-          setIsPlansViewerModalOpen(false);
-          setIsUnitPlanModalOpen(true);
-        }}
-        onOpenSemesterPlanModal={() => {
-          setIsPlansViewerModalOpen(false);
-          setIsSemesterPlanModalOpen(true);
-        }}
-        onGoToDashboard={() => {
-          setIsPlansViewerModalOpen(false);
-          setViewMode('dashboard');
-        }}
-        onOpenBackupRestore={() => {
-          setIsPlansViewerModalOpen(false);
-          setIsBackupRestoreModalOpen(true);
-        }}
-        onOpenIntegrationToolModal={() => {
-          setIsPlansViewerModalOpen(false);
-          setIsIntegrationToolModalOpen(true);
-        }}
-        onAddAbqourPlan={() => {
-          handleApplyIntegratedPlan(abqourEnglishHabitatsPlan);
-        }}
-      />
+      {isPlansViewerModalOpen && (
+        <PlansViewerModal
+          isOpen={isPlansViewerModalOpen}
+          onClose={() => setIsPlansViewerModalOpen(false)}
+          plans={plans}
+          activePlanId={currentPlan.id}
+          onSelectPlan={(id) => {
+            setActivePlanId(id);
+            setViewMode('editor');
+          }}
+          onRequestDeletePlan={(plan) => {
+            setIsPlansViewerModalOpen(false);
+            handleRequestDeletePlan(plan);
+          }}
+          onOpenEditor={() => {
+            setIsPlansViewerModalOpen(false);
+            setViewMode('editor');
+          }}
+          onOpenPrintView={(planId) => {
+            setIsPlansViewerModalOpen(false);
+            if (planId) setActivePlanId(planId);
+            setViewMode('official-print');
+          }}
+          onOpenShareModal={(planId) => {
+            setIsPlansViewerModalOpen(false);
+            if (planId) setActivePlanId(planId);
+            setIsShareModalOpen(true);
+          }}
+          onOpenNewBlank={() => {
+            setIsPlansViewerModalOpen(false);
+            handleCreateNewBlankPlan();
+          }}
+          onOpenAiGenerator={() => {
+            setIsPlansViewerModalOpen(false);
+            setIsAiModalOpen(true);
+          }}
+          onOpenUnitPlanModal={() => {
+            setIsPlansViewerModalOpen(false);
+            setIsUnitPlanModalOpen(true);
+          }}
+          onOpenSemesterPlanModal={() => {
+            setIsPlansViewerModalOpen(false);
+            setIsSemesterPlanModalOpen(true);
+          }}
+          onGoToDashboard={() => {
+            setIsPlansViewerModalOpen(false);
+            setViewMode('dashboard');
+          }}
+          onOpenBackupRestore={() => {
+            setIsPlansViewerModalOpen(false);
+            setIsBackupRestoreModalOpen(true);
+          }}
+          onOpenIntegrationToolModal={() => {
+            setIsPlansViewerModalOpen(false);
+            setIsIntegrationToolModalOpen(true);
+          }}
+          onAddAbqourPlan={() => {
+            handleApplyIntegratedPlan(abqourEnglishHabitatsPlan);
+          }}
+        />
+      )}
 
-      <SemesterPlanModal
-        isOpen={isSemesterPlanModalOpen}
-        onClose={() => setIsSemesterPlanModalOpen(false)}
-        savedPlans={plans}
-        defaultSubject={currentPlan.header.subject}
-        defaultGrade={currentPlan.header.grade}
-        teacherName={currentPlan.header.teacherName}
-        schoolName={currentPlan.header.school}
-        onImportLessonsToApp={handleUnitPlansGenerated}
-      />
+      {isSemesterPlanModalOpen && (
+        <SemesterPlanModal
+          isOpen={isSemesterPlanModalOpen}
+          onClose={() => setIsSemesterPlanModalOpen(false)}
+          savedPlans={plans}
+          defaultSubject={currentPlan.header.subject}
+          defaultGrade={currentPlan.header.grade}
+          teacherName={currentPlan.header.teacherName}
+          schoolName={currentPlan.header.school}
+          onImportLessonsToApp={handleUnitPlansGenerated}
+        />
+      )}
 
-      <CurriculumPdfExtractorModal
-        isOpen={isCurriculumPdfExtractorOpen}
-        onClose={() => setIsCurriculumPdfExtractorOpen(false)}
-        onApplyPlan={(_extractedPlan) => {
-          setIsCurriculumPdfExtractorOpen(false);
-          setIsSemesterPlanModalOpen(true);
-        }}
-        onImportLessonsToApp={handleUnitPlansGenerated}
-        currentSubject={currentPlan.header.subject}
-        currentGrade={currentPlan.header.grade}
-        teacherName={currentPlan.header.teacherName}
-        schoolName={currentPlan.header.school}
-      />
+      {isCurriculumPdfExtractorOpen && (
+        <CurriculumPdfExtractorModal
+          isOpen={isCurriculumPdfExtractorOpen}
+          onClose={() => setIsCurriculumPdfExtractorOpen(false)}
+          onApplyPlan={(_extractedPlan) => {
+            setIsCurriculumPdfExtractorOpen(false);
+            setIsSemesterPlanModalOpen(true);
+          }}
+          onImportLessonsToApp={handleUnitPlansGenerated}
+          currentSubject={currentPlan.header.subject}
+          currentGrade={currentPlan.header.grade}
+          teacherName={currentPlan.header.teacherName}
+          schoolName={currentPlan.header.school}
+        />
+      )}
 
-      <DeletePlanConfirmModal
-        isOpen={planToDelete !== null}
-        onClose={() => setPlanToDelete(null)}
-        plan={planToDelete || undefined}
-        onConfirmDelete={handleConfirmDelete}
-        onClearFieldsInstead={handleClearCurrentPlan}
-      />
+      {planToDelete !== null && (
+        <DeletePlanConfirmModal
+          isOpen={planToDelete !== null}
+          onClose={() => setPlanToDelete(null)}
+          plan={planToDelete || undefined}
+          onConfirmDelete={handleConfirmDelete}
+          onClearFieldsInstead={handleClearCurrentPlan}
+        />
+      )}
 
-      <QrCodeModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-      />
+      {isQrModalOpen && (
+        <QrCodeModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+        />
+      )}
 
-      <ArchivePlansModal
-        isOpen={isArchiveModalOpen}
-        onClose={() => setIsArchiveModalOpen(false)}
-        plans={plans}
-        onToggleArchive={handleToggleArchivePlan}
-        onDeletePlan={handleDeletePlan}
-        onSelectPlan={(id) => setActivePlanId(id)}
-        onOpenEditor={() => setViewMode('editor')}
-      />
+      {isArchiveModalOpen && (
+        <ArchivePlansModal
+          isOpen={isArchiveModalOpen}
+          onClose={() => setIsArchiveModalOpen(false)}
+          plans={plans}
+          onToggleArchive={handleToggleArchivePlan}
+          onDeletePlan={handleDeletePlan}
+          onSelectPlan={(id) => setActivePlanId(id)}
+          onOpenEditor={() => setViewMode('editor')}
+        />
+      )}
 
-      <MotionGraphicsModal
-        isOpen={isMotionGraphicsModalOpen}
-        onClose={() => setIsMotionGraphicsModalOpen(false)}
-        activePlan={currentPlan}
-        savedPlans={plans}
-        onSelectPlan={(id) => setActivePlanId(id)}
-      />
+      {isMotionGraphicsModalOpen && (
+        <MotionGraphicsModal
+          isOpen={isMotionGraphicsModalOpen}
+          onClose={() => setIsMotionGraphicsModalOpen(false)}
+          activePlan={currentPlan}
+          savedPlans={plans}
+          onSelectPlan={(id) => setActivePlanId(id)}
+        />
+      )}
 
-      <EducationalAssessmentSimulatorModal
-        isOpen={isAssessmentSimulatorModalOpen}
-        onClose={() => setIsAssessmentSimulatorModalOpen(false)}
-        plans={plans}
-        activePlanId={currentPlan.id}
-        onSelectPlan={(id) => setActivePlanId(id)}
-      />
+      {isAssessmentSimulatorModalOpen && (
+        <EducationalAssessmentSimulatorModal
+          isOpen={isAssessmentSimulatorModalOpen}
+          onClose={() => setIsAssessmentSimulatorModalOpen(false)}
+          plans={plans}
+          activePlanId={currentPlan.id}
+          onSelectPlan={(id) => setActivePlanId(id)}
+        />
+      )}
 
-      <AcademicYearMilestonesModal
-        isOpen={isAcademicMilestonesModalOpen}
-        onClose={() => setIsAcademicMilestonesModalOpen(false)}
-        onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
-        onOpenDashboard={() => setViewMode('dashboard')}
-        onOpenExportModal={() => setIsExportModalOpen(true)}
-        onOpenPrintView={() => setViewMode('official-print')}
-      />
+      {isAcademicMilestonesModalOpen && (
+        <AcademicYearMilestonesModal
+          isOpen={isAcademicMilestonesModalOpen}
+          onClose={() => setIsAcademicMilestonesModalOpen(false)}
+          onOpenSemesterPlanModal={() => setIsSemesterPlanModalOpen(true)}
+          onOpenDashboard={() => setViewMode('dashboard')}
+          onOpenExportModal={() => setIsExportModalOpen(true)}
+          onOpenPrintView={() => setViewMode('official-print')}
+        />
+      )}
 
-      <AndroidAppModal
-        isOpen={isAndroidAppModalOpen}
-        onClose={() => setIsAndroidAppModalOpen(false)}
-        onOpenQrModal={() => setIsQrModalOpen(true)}
-      />
+      {isAndroidAppModalOpen && (
+        <AndroidAppModal
+          isOpen={isAndroidAppModalOpen}
+          onClose={() => setIsAndroidAppModalOpen(false)}
+          onOpenQrModal={() => setIsQrModalOpen(true)}
+        />
+      )}
 
       {/* Abqour Lesson Plan Integration Tool Modal (Python & OER Direct Linker) */}
-      <AbqourIntegrationToolModal
-        isOpen={isIntegrationToolModalOpen}
-        onClose={() => setIsIntegrationToolModalOpen(false)}
-        currentPlan={currentPlan}
-        onApplyPlan={handleApplyIntegratedPlan}
-      />
+      {isIntegrationToolModalOpen && (
+        <AbqourIntegrationToolModal
+          isOpen={isIntegrationToolModalOpen}
+          onClose={() => setIsIntegrationToolModalOpen(false)}
+          currentPlan={currentPlan}
+          onApplyPlan={handleApplyIntegratedPlan}
+        />
+      )}
 
       {/* Mobile Sticky Quick Navigation Bar */}
       <MobileBottomNav

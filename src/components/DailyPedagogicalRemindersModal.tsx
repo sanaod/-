@@ -85,6 +85,40 @@ export const DailyPedagogicalRemindersModal: React.FC<DailyPedagogicalRemindersM
   const [formNote, setFormNote] = useState('');
   const [formLinkedPlanId, setFormLinkedPlanId] = useState<string>('');
 
+  // Filtered list
+  const filteredReminders = useMemo(() => {
+    return reminders.filter((rem) => {
+      // Date Filter
+      if (dateFilter === 'today' && rem.date !== todayStr) return false;
+      if (dateFilter === 'upcoming' && rem.date < todayStr) return false;
+      if (dateFilter === 'completed' && !rem.completed) return false;
+
+      // Category Filter
+      if (categoryFilter !== 'all' && rem.category !== categoryFilter) return false;
+
+      // Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = rem.title.toLowerCase().includes(q);
+        const matchNote = rem.note?.toLowerCase().includes(q);
+        const matchPlan = rem.linkedPlanTitle?.toLowerCase().includes(q);
+        const matchSubject = rem.linkedSubject?.toLowerCase().includes(q);
+        if (!matchTitle && !matchNote && !matchPlan && !matchSubject) return false;
+      }
+
+      return true;
+    });
+  }, [reminders, dateFilter, categoryFilter, searchQuery, todayStr]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = reminders.length;
+    const completed = reminders.filter((r) => r.completed).length;
+    const todayCount = reminders.filter((r) => r.date === todayStr && !r.completed).length;
+    const highPriority = reminders.filter((r) => r.priority === 'high' && !r.completed).length;
+    return { total, completed, todayCount, highPriority };
+  }, [reminders, todayStr]);
+
   if (!isOpen) return null;
 
   // Selected Linked Plan Object
@@ -174,40 +208,6 @@ export const DailyPedagogicalRemindersModal: React.FC<DailyPedagogicalRemindersM
     setFormPriority(prio);
     setFormNote(noteText);
   };
-
-  // Filtered list
-  const filteredReminders = useMemo(() => {
-    return reminders.filter((rem) => {
-      // Date Filter
-      if (dateFilter === 'today' && rem.date !== todayStr) return false;
-      if (dateFilter === 'upcoming' && rem.date < todayStr) return false;
-      if (dateFilter === 'completed' && !rem.completed) return false;
-
-      // Category Filter
-      if (categoryFilter !== 'all' && rem.category !== categoryFilter) return false;
-
-      // Search Query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchTitle = rem.title.toLowerCase().includes(q);
-        const matchNote = rem.note?.toLowerCase().includes(q);
-        const matchPlan = rem.linkedPlanTitle?.toLowerCase().includes(q);
-        const matchSubject = rem.linkedSubject?.toLowerCase().includes(q);
-        if (!matchTitle && !matchNote && !matchPlan && !matchSubject) return false;
-      }
-
-      return true;
-    });
-  }, [reminders, dateFilter, categoryFilter, searchQuery, todayStr]);
-
-  // Statistics
-  const stats = useMemo(() => {
-    const total = reminders.length;
-    const completed = reminders.filter((r) => r.completed).length;
-    const todayCount = reminders.filter((r) => r.date === todayStr && !r.completed).length;
-    const highPriority = reminders.filter((r) => r.priority === 'high' && !r.completed).length;
-    return { total, completed, todayCount, highPriority };
-  }, [reminders, todayStr]);
 
   const handlePrintDailyAgenda = () => {
     window.print();

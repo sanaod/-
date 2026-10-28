@@ -4335,35 +4335,41 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       </div>
 
       {/* Teacher Statistical Report PDF Modal */}
-      <TeacherReportPdfModal
-        isOpen={isReportPdfModalOpen}
-        onClose={() => setIsReportPdfModalOpen(false)}
-        plans={plans}
-        activePlan={activePlan}
-        filteredPlans={filteredPlans}
-        activeSubjectFilter={selectedSubjectFilter}
-        activeGradeFilter={selectedGradeFilter}
-      />
+      {isReportPdfModalOpen && (
+        <TeacherReportPdfModal
+          isOpen={isReportPdfModalOpen}
+          onClose={() => setIsReportPdfModalOpen(false)}
+          plans={plans}
+          activePlan={activePlan}
+          filteredPlans={filteredPlans}
+          activeSubjectFilter={selectedSubjectFilter}
+          activeGradeFilter={selectedGradeFilter}
+        />
+      )}
 
       {/* Daily Pedagogical Reminders Modal */}
-      <DailyPedagogicalRemindersModal
-        isOpen={isDailyRemindersModalOpen}
-        onClose={() => setIsDailyRemindersModalOpen(false)}
-        reminders={dailyReminders}
-        onAddReminder={handleAddReminder}
-        onUpdateReminder={handleUpdateReminder}
-        onDeleteReminder={handleDeleteReminder}
-        onToggleComplete={handleToggleCompleteReminder}
-        plans={plans}
-        onSelectPlan={onSelectPlan}
-        onOpenEditor={onOpenEditor}
-      />
+      {isDailyRemindersModalOpen && (
+        <DailyPedagogicalRemindersModal
+          isOpen={isDailyRemindersModalOpen}
+          onClose={() => setIsDailyRemindersModalOpen(false)}
+          reminders={dailyReminders}
+          onAddReminder={handleAddReminder}
+          onUpdateReminder={handleUpdateReminder}
+          onDeleteReminder={handleDeleteReminder}
+          onToggleComplete={handleToggleCompleteReminder}
+          plans={plans}
+          onSelectPlan={onSelectPlan}
+          onOpenEditor={onOpenEditor}
+        />
+      )}
 
       {/* QR Code Designer Modal */}
-      <QrCodeModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-      />
+      {isQrModalOpen && (
+        <QrCodeModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
