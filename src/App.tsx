@@ -1277,82 +1277,92 @@ export default function App() {
       <CreativeCommonsFooter />
 
       {/* Modals */}
-      <AiGeneratorModal
-        isOpen={isAiModalOpen}
-        onClose={() => {
-          setIsAiModalOpen(false);
-          setSelectedResourceForPlanning(null);
-        }}
-        onPlanGenerated={handlePlanGenerated}
-        resources={resources}
-        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-        selectedResourceForPlanning={selectedResourceForPlanning}
-      />
+      {isAiModalOpen && (
+        <AiGeneratorModal
+          isOpen={isAiModalOpen}
+          onClose={() => {
+            setIsAiModalOpen(false);
+            setSelectedResourceForPlanning(null);
+          }}
+          onPlanGenerated={handlePlanGenerated}
+          resources={resources}
+          onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+          selectedResourceForPlanning={selectedResourceForPlanning}
+        />
+      )}
 
-      <UnitPlanGeneratorModal
-        isOpen={isUnitPlanModalOpen}
-        onClose={() => setIsUnitPlanModalOpen(false)}
-        onPlansGenerated={handleUnitPlansGenerated}
-        defaultTeacherName={currentPlan.header.teacherName}
-        defaultSchool={currentPlan.header.school}
-        defaultDirectorate={currentPlan.header.directorate}
-        defaultSubject={currentPlan.header.subject}
-        defaultGrade={currentPlan.header.grade}
-        resources={resources}
-        onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
-      />
+      {isUnitPlanModalOpen && (
+        <UnitPlanGeneratorModal
+          isOpen={isUnitPlanModalOpen}
+          onClose={() => setIsUnitPlanModalOpen(false)}
+          onPlansGenerated={handleUnitPlansGenerated}
+          defaultTeacherName={currentPlan.header.teacherName}
+          defaultSchool={currentPlan.header.school}
+          defaultDirectorate={currentPlan.header.directorate}
+          defaultSubject={currentPlan.header.subject}
+          defaultGrade={currentPlan.header.grade}
+          resources={resources}
+          onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+        />
+      )}
 
-      <ResourcesManagerModal
-        isOpen={isResourcesModalOpen}
-        onClose={() => setIsResourcesModalOpen(false)}
-        resources={resources}
-        onAddResource={(newRes) => {
-          setResources((prev) => [newRes, ...prev]);
-          setSelectedResourceForPlanning(newRes);
-          handleApplyResourceToCurrentPlan(newRes);
-        }}
-        onDeleteResource={(id) => setResources((prev) => prev.filter((r) => r.id !== id))}
-        onGenerateWithResources={(selectedRes) => {
-          if (selectedRes) {
-            setSelectedResourceForPlanning(selectedRes);
-          } else if (resources.length > 0) {
-            setSelectedResourceForPlanning(resources[0]);
-          }
-          setIsResourcesModalOpen(false);
-          setIsAiModalOpen(true);
-        }}
-        onApplyToCurrentPlan={handleApplyResourceToCurrentPlan}
-        currentPlanTitle={currentPlan.title}
-        onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
-      />
+      {isResourcesModalOpen && (
+        <ResourcesManagerModal
+          isOpen={isResourcesModalOpen}
+          onClose={() => setIsResourcesModalOpen(false)}
+          resources={resources}
+          onAddResource={(newRes) => {
+            setResources((prev) => [newRes, ...prev]);
+            setSelectedResourceForPlanning(newRes);
+            handleApplyResourceToCurrentPlan(newRes);
+          }}
+          onDeleteResource={(id) => setResources((prev) => prev.filter((r) => r.id !== id))}
+          onGenerateWithResources={(selectedRes) => {
+            if (selectedRes) {
+              setSelectedResourceForPlanning(selectedRes);
+            } else if (resources.length > 0) {
+              setSelectedResourceForPlanning(resources[0]);
+            }
+            setIsResourcesModalOpen(false);
+            setIsAiModalOpen(true);
+          }}
+          onApplyToCurrentPlan={handleApplyResourceToCurrentPlan}
+          currentPlanTitle={currentPlan.title}
+          onOpenPalestinianOerHub={() => setIsPalestinianOerHubOpen(true)}
+        />
+      )}
 
       {/* Palestinian OER Direct Integration Hub & Personal Library */}
-      <PalestinianOerHubModal
-        isOpen={isPalestinianOerHubOpen}
-        onClose={() => setIsPalestinianOerHubOpen(false)}
-        currentPlan={currentPlan}
-        onApplyOerResourceToPlan={handleApplyPalestinianOerResource}
-      />
+      {isPalestinianOerHubOpen && (
+        <PalestinianOerHubModal
+          isOpen={isPalestinianOerHubOpen}
+          onClose={() => setIsPalestinianOerHubOpen(false)}
+          currentPlan={currentPlan}
+          onApplyOerResourceToPlan={handleApplyPalestinianOerResource}
+        />
+      )}
 
       {/* Palestinian National Competencies Library & Semester Progress Tracker */}
-      <PalestinianCompetenciesLibraryModal
-        isOpen={isCompetenciesModalOpen}
-        onClose={() => setIsCompetenciesModalOpen(false)}
-        currentPlan={currentPlan}
-        allPlans={plans}
-        onApplyCompetenciesToPlan={handleApplyCompetenciesToPlan}
-        onSelectCompetencyToNewPlan={(compTitle) => {
-          const fresh = getBlankLessonPlan();
-          fresh.header.lessonTitle = `درس حول كفاية: ${compTitle}`;
-          fresh.header.subject = currentPlan.header.subject;
-          fresh.header.grade = currentPlan.header.grade;
-          fresh.title = `درس: ${compTitle}`;
-          const withOer = ensureOerData(fresh);
-          setPlans((prev) => [withOer, ...prev]);
-          setActivePlanId(withOer.id);
-          setViewMode('editor');
-        }}
-      />
+      {isCompetenciesModalOpen && (
+        <PalestinianCompetenciesLibraryModal
+          isOpen={isCompetenciesModalOpen}
+          onClose={() => setIsCompetenciesModalOpen(false)}
+          currentPlan={currentPlan}
+          allPlans={plans}
+          onApplyCompetenciesToPlan={handleApplyCompetenciesToPlan}
+          onSelectCompetencyToNewPlan={(compTitle) => {
+            const fresh = getBlankLessonPlan();
+            fresh.header.lessonTitle = `درس حول كفاية: ${compTitle}`;
+            fresh.header.subject = currentPlan.header.subject;
+            fresh.header.grade = currentPlan.header.grade;
+            fresh.title = `درس: ${compTitle}`;
+            const withOer = ensureOerData(fresh);
+            setPlans((prev) => [withOer, ...prev]);
+            setActivePlanId(withOer.id);
+            setViewMode('editor');
+          }}
+        />
+      )}
 
       {/* Smart Pedagogical Guide & Compliance Audit Unit (مرشد عبقور التربوي الذكي ووحدة فحص التوافق) */}
       <SmartPedagogicalGuideModal

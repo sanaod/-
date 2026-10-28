@@ -436,8 +436,6 @@ export const AiGeneratorModal: React.FC<AiGeneratorModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   // Validate Step 1
   const validateStep1 = (): boolean => {
     const errors: Record<string, string> = {};
