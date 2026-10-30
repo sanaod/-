@@ -345,7 +345,7 @@ export const ExecutivePlanEditor: React.FC<ExecutivePlanEditorProps> = ({
             </div>
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-1">
-                ⭐ النموذج الرئيسي المعتمد (SMART + GRASPS)
+                ⭐ النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART)
               </div>
               <h2 className="text-lg sm:text-xl font-black">أولاً: البيانات العامة وكفايات التعلّم والأهداف</h2>
             </div>

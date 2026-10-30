@@ -5,6 +5,71 @@
     <script>
       // Filter out Vite HMR WebSocket noise in AI Studio cloud iframe environment
       (function() {
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var RealWebSocket = window.WebSocket;
+          window.WebSocket = function(url, protocols) {
+            var isViteHmr = false;
+            if (protocols === 'vite-hmr') isViteHmr = true;
+            if (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) isViteHmr = true;
+            if (typeof url === 'string' && (url.indexOf('vite-hmr') !== -1 || url.indexOf('@vite') !== -1)) isViteHmr = true;
+
+            if (isViteHmr) {
+              var listeners = {};
+              var mockSocket = {
+                readyState: 1, // WebSocket.OPEN
+                url: String(url),
+                protocol: 'vite-hmr',
+                bufferedAmount: 0,
+                extensions: '',
+                binaryType: 'blob',
+                send: function() {},
+                close: function() {},
+                addEventListener: function(type, listener) {
+                  if (!listeners[type]) listeners[type] = [];
+                  listeners[type].push(listener);
+                  if (type === 'open') {
+                    setTimeout(function() {
+                      try {
+                        listener({ type: 'open', target: mockSocket });
+                      } catch (e) {}
+                    }, 0);
+                  }
+                },
+                removeEventListener: function(type, listener) {
+                  if (listeners[type]) {
+                    listeners[type] = listeners[type].filter(function(l) { return l !== listener; });
+                  }
+                },
+                dispatchEvent: function() { return true; },
+                onopen: null,
+                onmessage: null,
+                onerror: null,
+                onclose: null,
+              };
+              return mockSocket;
+            }
+            return new RealWebSocket(url, protocols);
+          };
+          window.WebSocket.prototype = RealWebSocket.prototype;
+          window.WebSocket.CONNECTING = 0;
+          window.WebSocket.OPEN = 1;
+          window.WebSocket.CLOSING = 2;
+          window.WebSocket.CLOSED = 3;
+        }
+
+        var isHmrNoise = function(str, file) {
+          if (!str) str = '';
+          if (!file) file = '';
+          return (
+            str.indexOf('WebSocket') !== -1 ||
+            str.indexOf('ws:disconnect') !== -1 ||
+            str.indexOf('failed to connect to websocket') !== -1 ||
+            str.indexOf('createWebSocketModuleRunnerTransport') !== -1 ||
+            str.indexOf('closed without opened') !== -1 ||
+            file.indexOf('@vite/client') !== -1
+          );
+        };
+
         var origConsoleError = console.error;
         console.error = function() {
           var args = Array.prototype.slice.call(arguments);
@@ -12,11 +77,7 @@
             return (item && (item.message || item.stack || String(item))) || '';
           }).join(' ');
 
-          if (
-            str.indexOf('WebSocket closed without opened') !== -1 ||
-            (str.indexOf('[vite]') !== -1 && (str.indexOf('WebSocket') !== -1 || str.indexOf('failed to connect') !== -1 || str.indexOf('connecting') !== -1)) ||
-            str.indexOf('createWebSocketModuleRunnerTransport') !== -1
-          ) {
+          if (isHmrNoise(str)) {
             return;
           }
           return origConsoleError.apply(console, arguments);
@@ -29,7 +90,7 @@
             return (item && (item.message || item.stack || String(item))) || '';
           }).join(' ');
 
-          if (str.indexOf('[vite]') !== -1 && str.indexOf('WebSocket') !== -1) {
+          if (isHmrNoise(str)) {
             return;
           }
           return origConsoleWarn.apply(console, arguments);
@@ -38,14 +99,10 @@
         window.addEventListener('error', function(event) {
           var msg = (event && (event.message || '')) + '';
           var file = (event && (event.filename || '')) + '';
-          if (
-            msg.indexOf('WebSocket') !== -1 ||
-            msg.indexOf('createWebSocketModuleRunnerTransport') !== -1 ||
-            msg.indexOf('transport') !== -1 ||
-            file.indexOf('@vite/client') !== -1
-          ) {
-            event.stopImmediatePropagation();
-            event.preventDefault();
+          var errorStr = (event && event.error && (event.error.message || event.error.stack || String(event.error))) || '';
+          if (isHmrNoise(msg, file) || isHmrNoise(errorStr, file)) {
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            if (event.preventDefault) event.preventDefault();
             return true;
           }
         }, true);
@@ -53,14 +110,9 @@
         window.addEventListener('unhandledrejection', function(event) {
           var reason = event && event.reason;
           var msg = (reason && (reason.message || reason.stack || String(reason))) || '';
-          if (
-            msg.indexOf('WebSocket') !== -1 ||
-            msg.indexOf('createWebSocketModuleRunnerTransport') !== -1 ||
-            msg.indexOf('transport') !== -1 ||
-            msg.indexOf('@vite/client') !== -1
-          ) {
-            event.stopImmediatePropagation();
-            event.preventDefault();
+          if (isHmrNoise(msg)) {
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            if (event.preventDefault) event.preventDefault();
           }
         }, true);
       })();
@@ -72,17 +124,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="منظومة عبقور" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="canonical" href="https://kabeer-expert.ai.studio" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>منظومة عبقور للتخطيط التربوي وتحضير الدروس</title>
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="description" content="منظومة عبقور للتخطيط التربوي وتحضير الدروس - المنصة التربوية المعتمدة لإعداد وتوليد خطط الدروس النموذجية التكيفية وفق المعايير الوزارية ومهمات GRASPS وسلالم التقدير اللفظية. إعداد وتصميم: الأستاذ عبد الرحمن دويكات." />
     <meta name="author" content="الأستاذ عبد الرحمن دويكات" />
     <meta name="copyright" content="جميع الحقوق محفوظة لصالح الأستاذ عبد الرحمن دويكات - رخصة المشاع الإبداعي CC BY-NC-SA 4.0" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kabeer-expert.ai.studio" />
     <meta property="og:title" content="منظومة عبقور للتخطيط التربوي وتحضير الدروس" />
     <meta property="og:description" content="منظومة عبقور للتخطيط التربوي وتحضير الدروس - المنصة التربوية المعتمدة لإعداد وتوليد خطط الدروس النموذجية التكيفية وفق المعايير الوزارية ومهمات GRASPS وسلالم التقدير اللفظية. إعداد وتصميم: الأستاذ عبد الرحمن دويكات." />
-    <meta property="og:image" content="/logo.png" />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://kabeer-expert.ai.studio/logo.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="منظومة عبقور للتخطيط التربوي وتحضير الدروس" />
+    <meta name="twitter:description" content="منظومة عبقور للتخطيط التربوي وتحضير الدروس - المنصة التربوية المعتمدة لإعداد وتوليد خطط الدروس النموذجية التكيفية وفق المعايير الوزارية ومهمات GRASPS وسلالم التقدير اللفظية. إعداد وتصميم: الأستاذ عبد الرحمن دويكات." />
+    <meta name="twitter:image" content="https://kabeer-expert.ai.studio/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">

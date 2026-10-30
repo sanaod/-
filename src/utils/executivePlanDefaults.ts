@@ -321,7 +321,7 @@ export function ensureExecutiveData(plan: LessonPlan): LessonPlan {
 
     return {
       ...plan,
-      templateType: plan.templateType || 'executive',
+      templateType: 'executive',
       executiveData: {
         ...plan.executiveData,
         timeframeDetails: {
@@ -338,7 +338,7 @@ export function ensureExecutiveData(plan: LessonPlan): LessonPlan {
   const generated = createDefaultExecutiveData(plan);
   return {
     ...plan,
-    templateType: plan.templateType || 'executive',
+    templateType: 'executive',
     executiveData: generated,
   };
 }

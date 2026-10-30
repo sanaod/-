@@ -109,7 +109,7 @@ const LOCAL_STORAGE_KEY = 'educational_expert_lesson_plans_v1';
 const ACTIVE_PLAN_KEY = 'educational_expert_active_plan_id_v1';
 
 export function sanitizePlan(p: any): LessonPlan {
-  if (!p) return getBlankLessonPlan();
+  if (!p) return ensureExecutiveData(getBlankLessonPlan());
   const safeP = p || {};
   const header = safeP.header || {};
   const todayIso = new Date().toISOString().split('T')[0];
@@ -128,8 +128,8 @@ export function sanitizePlan(p: any): LessonPlan {
   const base: LessonPlan = {
     ...safeP,
     id: safeP.id || `plan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    title: safeP.title || header.lessonTitle || 'خطة درس معتمدة',
-    templateType: safeP.templateType || 'executive', // Make executive model primary default!
+    title: safeP.title || header.lessonTitle || 'خطة درس تنفيذية معتمدة (خطة التنفيذ سمارت SMART)',
+    templateType: 'executive', // Executive SMART model is the primary certified default!
     header: {
       ...header,
       country: header.country || 'دولة فلسطين',
@@ -170,9 +170,10 @@ export default function App() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           const sanitized = parsed
             .map(sanitizePlan)
+            .map((p) => ensureExecutiveData({ ...p, templateType: 'executive' }))
             .filter((p) => p.id !== abqourEnglishHabitatsPlan.id);
           const hasBlank = sanitized.some((p) => p.id === defaultBlankPlan.id || p.id.startsWith('plan-blank'));
-          const finalPlans = hasBlank ? sanitized : [sanitizePlan(defaultBlankPlan), ...sanitized];
+          const finalPlans = hasBlank ? sanitized : [ensureExecutiveData(sanitizePlan(defaultBlankPlan)), ...sanitized];
           try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalPlans));
           } catch (e) {}
@@ -182,7 +183,7 @@ export default function App() {
     } catch (e) {
       console.error('Failed to load plans from localStorage', e);
     }
-    const initialDefault = [defaultBlankPlan, ...defaultExemplarPlans].map(sanitizePlan);
+    const initialDefault = [defaultBlankPlan, ...defaultExemplarPlans].map(sanitizePlan).map(ensureExecutiveData);
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialDefault));
     } catch (e) {}
@@ -627,13 +628,15 @@ export default function App() {
   };
 
   const handlePlanGenerated = (newPlan: LessonPlan) => {
-    const withOer = ensureOerData(ensureExecutiveData(newPlan));
-    setPlans((prev) => [withOer, ...prev]);
-    setActivePlanId(withOer.id);
+    const withExec = ensureExecutiveData({ ...newPlan, templateType: 'executive' });
+    setPlans((prev) => [withExec, ...prev]);
+    setActivePlanId(withExec.id);
+    setViewMode('editor');
   };
 
   const handleCreateNewBlankPlan = () => {
-    const newBlank = getBlankLessonPlan();
+    const newBlank = ensureExecutiveData(getBlankLessonPlan());
+    newBlank.templateType = 'executive';
     setPlans((prev) => [newBlank, ...prev]);
     setActivePlanId(newBlank.id);
     setViewMode('editor');
@@ -717,16 +720,6 @@ export default function App() {
     });
   };
 
-  if (viewMode === 'official-print') {
-    return (
-      <OfficialPrintView
-        plan={currentPlan}
-        onBack={() => setViewMode('editor')}
-        onOpenShareModal={() => setIsShareModalOpen(true)}
-      />
-    );
-  }
-
   const navSections = [
     { id: 'all', label: 'كافة الأقسام', icon: Sparkles },
     { id: 'sec1', label: '١. التخطيط التكيفي', icon: Compass },
@@ -755,6 +748,16 @@ export default function App() {
       window.removeEventListener('afterprint', handleAfterPrint);
     };
   }, [activeTab]);
+
+  if (viewMode === 'official-print') {
+    return (
+      <OfficialPrintView
+        plan={currentPlan}
+        onBack={() => setViewMode('editor')}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
+      />
+    );
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-['Cairo',sans-serif] text-right pb-16 md:pb-0 overflow-x-hidden">
@@ -860,6 +863,9 @@ export default function App() {
           onOpenParentCardModal={() => setIsParentCardModalOpen(true)}
           onOpenCurriculumPdfExtractor={() => setIsCurriculumPdfExtractorOpen(true)}
           onOpenPlansViewer={() => setIsPlansViewerModalOpen(true)}
+          onOpenQrModal={() => setIsQrModalOpen(true)}
+          onOpenMotionGraphicsModal={() => setIsMotionGraphicsModalOpen(true)}
+          onClearCurrentPlan={handleCreateNewBlankPlan}
         />
       ) : (
         <>
@@ -887,20 +893,20 @@ export default function App() {
                         </button>
                       );
                     })
-                  ) : (currentPlan.templateType || 'oer') === 'oer' ? (
+                  ) : (currentPlan.templateType || 'executive') === 'executive' ? (
                     <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
                       <span className="bg-emerald-100 border border-emerald-400 px-3 py-1 rounded-xl flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span>دليل OER الفلسطيني (الصفوف ١-٤) • معتمد عبر elearn.edu.ps</span>
+                        <span>النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART)</span>
                       </span>
                       <span className="hidden md:inline-flex text-[11px] text-slate-600 font-semibold">
-                        هيكل خماسي: بيانات الدرس ← الكفايات المستهدفة ← الموقف التعليمي ومصادر OER ← التقويم الشامل ← بدائل وملاحظات
+                        مصفوفة المراحل الخمس: التهيئة الحافزة ← العرض والنمذجة ← التطبيق والتعميق مع مهمة GRASPS ← التقويم وبطاقة الخروج ← التمايز
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
                       <span className="bg-slate-100 border border-slate-300 px-3 py-1 rounded-xl flex items-center gap-1.5">
-                        <span>📋 النموذج التنفيذي (SMART) • ٥ مراحل لتنفيذ الدرس</span>
+                        <span>📖 دليل OER الفلسطيني (الصفوف ١-٤)</span>
                       </span>
                     </div>
                   )}
@@ -999,16 +1005,16 @@ export default function App() {
                     <h3 className="text-sm font-black text-slate-900 font-['Tajawal']">
                       نموذج تحضير الدرس المعتمد
                     </h3>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-amber-100 text-amber-900 border border-amber-300">
-                      {(currentPlan.templateType || 'oer') === 'oer'
-                        ? '⭐ نموذج دليل مصادر التعلم المفتوحة OER (الصفوف ١-٤)'
-                        : currentPlan.templateType === 'executive'
-                        ? '📋 النموذج التنفيذي (خطة التنفيذ SMART)'
-                        : '📑 النموذج الثاني (التكيفي الموسع)'}
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                      {(currentPlan.templateType || 'executive') === 'executive'
+                        ? '⭐ النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART)'
+                        : currentPlan.templateType === 'oer'
+                        ? '📖 نموذج دليل مصادر التعلم المفتوحة OER (الصفوف ١-٤)'
+                        : '📑 النموذج التكيفي الموسع'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    النموذج الافتراضي متوافق كلياً مع دليل المعلم الفلسطيني لمصادر التعليم المفتوحة OER ومعتمد عبر elearn.edu.ps
+                    النموذج التنفيذي المعتمد رسمياً في المنظومة لربط أهداف SMART بالمراحل الإجرائية الخمس ومهمة التقويم الأصيل GRASPS
                   </p>
                 </div>
               </div>
@@ -1018,33 +1024,33 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => {
-                      const updated = ensureOerData({ ...currentPlan, templateType: 'oer' });
+                      const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
                       updateCurrentPlan(updated);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                      (currentPlan.templateType || 'oer') === 'oer'
-                        ? 'bg-emerald-700 text-white shadow-xs'
+                      (currentPlan.templateType || 'executive') === 'executive'
+                        ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-500/30'
                         : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
                     }`}
                   >
                     <span className="text-amber-300">⭐</span>
-                    <span>نموذج دليل OER (الصفوف ١–٤ المعتمد)</span>
+                    <span>النموذج التنفيذي المعتمد (SMART)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      const updated = ensureExecutiveData({ ...currentPlan, templateType: 'executive' });
+                      const updated = ensureOerData({ ...currentPlan, templateType: 'oer' });
                       updateCurrentPlan(updated);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                      currentPlan.templateType === 'executive'
+                      currentPlan.templateType === 'oer'
                         ? 'bg-emerald-700 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200'
                     }`}
                   >
-                    <span>📋</span>
-                    <span>النموذج التنفيذي (SMART)</span>
+                    <span>📖</span>
+                    <span>دليل OER (الصفوف ١–٤)</span>
                   </button>
 
                   <button
@@ -1095,7 +1101,21 @@ export default function App() {
             </div>
 
             {/* Render Selected Template */}
-            {(currentPlan.templateType || 'oer') === 'oer' ? (
+            {(currentPlan.templateType || 'executive') === 'executive' ? (
+              <ExecutivePlanEditor
+                plan={ensureExecutiveData(currentPlan)}
+                onChange={updateCurrentPlan}
+                onOpenUnitPlanModal={() => setIsUnitPlanModalOpen(true)}
+                onOpenResourcesModal={() => setIsResourcesModalOpen(true)}
+                resourcesCount={resources.length}
+                resources={resources}
+                onApplyResource={handleApplyResourceToCurrentPlan}
+                onOpenAiModal={() => setIsAiModalOpen(true)}
+                onOpenShareModal={() => setIsShareModalOpen(true)}
+                pinnedSections={pinnedSections}
+                onTogglePinSection={handleTogglePinSection}
+              />
+            ) : currentPlan.templateType === 'oer' ? (
               <OerLessonPlanEditor
                 plan={ensureOerData(currentPlan)}
                 onChange={updateCurrentPlan}

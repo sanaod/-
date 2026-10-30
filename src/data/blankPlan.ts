@@ -13,8 +13,8 @@ export function getBlankLessonPlan(): LessonPlan {
 
   const planBase: LessonPlan = {
     id: `plan-blank-${timestamp}`,
-    title: 'استمارة خطة درس OER (دليل المعلم الفلسطيني - الصفوف ١-٤)',
-    templateType: 'oer',
+    title: 'خطة درس تنفيذية معتمدة (خطة التنفيذ سمارت SMART)',
+    templateType: 'executive',
     header: {
       country: 'دولة فلسطين',
       ministry: 'وزارة التربية والتعليم',
@@ -195,8 +195,8 @@ export function getBlankLessonPlan(): LessonPlan {
  */
 const initialDefaultPlanBase: LessonPlan = {
   id: 'plan-blank-default',
-  title: 'استمارة خطة درس OER (دليل المعلم الفلسطيني - الصفوف ١-٤)',
-  templateType: 'oer',
+  title: 'خطة درس تنفيذية معتمدة (خطة التنفيذ سمارت SMART)',
+  templateType: 'executive',
   header: {
     country: 'دولة فلسطين',
     ministry: 'وزارة التربية والتعليم',

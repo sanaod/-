@@ -37,11 +37,14 @@ import {
   School,
   FileEdit,
   Copy,
+  Wrench,
 } from 'lucide-react';
 import { toArabicDigits, toArabicPercent, formatDateDMY } from '../utils/arabicNumerals';
+import { MainToolsIconHub } from './MainToolsIconHub';
 
 export type DashboardNavSection =
   | 'home'
+  | 'tools_hub'
   | 'new_prep'
   | 'my_plans'
   | 'library'
@@ -90,6 +93,9 @@ interface AbqoorHomeDashboardProps {
   onOpenParentCardModal?: () => void;
   onOpenCurriculumPdfExtractor?: () => void;
   onOpenPlansViewer?: () => void;
+  onOpenQrModal?: () => void;
+  onOpenMotionGraphicsModal?: () => void;
+  onClearCurrentPlan?: () => void;
 }
 
 export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
@@ -133,6 +139,9 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
   onOpenParentCardModal,
   onOpenCurriculumPdfExtractor,
   onOpenPlansViewer,
+  onOpenQrModal,
+  onOpenMotionGraphicsModal,
+  onClearCurrentPlan,
 }) => {
   // Current active navigation section
   const [activeNavSection, setActiveNavSection] = useState<DashboardNavSection>('home');
@@ -248,9 +257,10 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
     desc: 'إعداد وتحضير الخطط الصفية وفق المنهاج الفلسطيني ومصادر OER',
   };
 
-  // Navigation Items (The 7 Core Functions Requested by User)
+  // Navigation Items (The Core Functions Requested by User)
   const navTabs: { id: DashboardNavSection; label: string; icon: React.ComponentType<{ className?: string }>; count?: number }[] = [
     { id: 'home', label: 'الرئيسية', icon: LayoutDashboard },
+    { id: 'tools_hub', label: 'مركز الأدوات (٢٣ أداة)', icon: Boxes, count: 23 },
     { id: 'new_prep', label: 'إنشاء تحضير جديد', icon: PlusCircle },
     { id: 'my_plans', label: 'تحاضيري المحفوظة', icon: FolderOpen, count: activePlans.length },
     { id: 'library', label: 'مكتبتي التربوية ومصادري', icon: Library, count: resources.length },
@@ -632,6 +642,72 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
               </div>
             </div>
 
+            {/* 7. Comprehensive 23-Tools Hub Embedded on Main Interface (مركز الأدوات في الواجهة الرئيسية) */}
+            <div id="dashboard-tools-hub" className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-linear-to-r from-emerald-900/90 via-teal-900/90 to-slate-900/90 text-white p-4 sm:p-5 rounded-3xl border border-emerald-500/40 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 text-amber-300 flex items-center justify-center font-black shadow-inner shrink-0">
+                    <Boxes className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-black font-['Tajawal'] text-white">
+                        مركز الأدوات والوظائف الذكية لمنظومة عبقور
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-amber-950 shadow-2xs">
+                        ٢٣ أداة متكاملة ⚡
+                      </span>
+                    </div>
+                    <p className="text-xs text-emerald-100/90 mt-0.5">
+                      وصول سريع ومباشر لكافة أدوات الذكاء الاصطناعي، التقويم، المحاكيات، استخراج الـ PDF، والطباعة
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveNavSection('tools_hub')}
+                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border border-white/15"
+                  >
+                    <span>عرض موسع</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
+                  </button>
+                </div>
+              </div>
+              <MainToolsIconHub
+                onOpenAiModal={onOpenAiGenerator}
+                onOpenUnitPlanModal={onOpenUnitPlanModal}
+                onOpenSemesterPlanModal={onOpenSemesterPlanModal}
+                onOpenAcademicMilestonesModal={onOpenAcademicMilestonesModal}
+                onOpenAndroidAppModal={onOpenAndroidAppModal}
+                onOpenCurriculumPdfExtractor={onOpenCurriculumPdfExtractor || (() => {})}
+                onOpenWorksheetModal={onOpenWorksheetModal}
+                onOpenAssessmentSimulatorModal={onOpenAssessmentSimulatorModal}
+                onOpenAuthenticTaskModal={onOpenAuthenticTaskModal}
+                onOpenRubricModal={onOpenRubricModal}
+                onOpenExitTicketModal={onOpenExitTicketModal || (() => {})}
+                onOpenAbacusModal={onOpenAbacusModal}
+                onOpenResourcesModal={onOpenResourcesModal}
+                resourcesCount={resources.length}
+                onOpenDashboard={() => setActiveNavSection('home')}
+                onOpenParentCardModal={onOpenParentCardModal || (() => {})}
+                onOpenBlankModal={onOpenBlankTemplateModal}
+                onOpenPlansViewer={onOpenPlansViewer || (() => setActiveNavSection('my_plans'))}
+                totalPlansCount={plans.length}
+                onOpenPrintView={onOpenPrintView}
+                onOpenExportModal={onOpenExportModal}
+                onOpenIntegrationToolModal={onOpenIntegrationToolModal}
+                onOpenShareModal={onOpenShareModal}
+                onOpenBackupRestoreModal={onOpenBackupRestore}
+                onOpenMotionGraphicsModal={onOpenMotionGraphicsModal || (() => {})}
+                onOpenQrModal={onOpenQrModal || (() => {})}
+                onClearCurrentPlan={onClearCurrentPlan || onNewBlankPlan}
+                onDeleteCurrentPlan={() => {
+                  if (activePlanId) onDeletePlan(activePlanId);
+                }}
+              />
+            </div>
+
             {/* Quick Access to Recent Active Plans */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -730,6 +806,76 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
           </div>
         )}
 
+        {/* SECTION: مركز الأدوات والوظائف الذكية (٢٣ أداة) */}
+        {activeNavSection === 'tools_hub' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-bold shadow-sm">
+                    <Boxes className="w-6 h-6 text-amber-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg sm:text-xl font-black text-slate-900 font-['Tajawal']">
+                        مركز الأدوات والوظائف الذكية الشامل
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400 text-amber-950">
+                        ٢٣ أداة متقدمة
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      مجموعة الأدوات الكاملة والمحاكيات وأدوات التقويم والذكاء الاصطناعي وتصدير الخطط لمنظومة عبقور
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveNavSection('home')}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>العودة للرئيسية</span>
+                </button>
+              </div>
+            </div>
+
+            <MainToolsIconHub
+              onOpenAiModal={onOpenAiGenerator}
+              onOpenUnitPlanModal={onOpenUnitPlanModal}
+              onOpenSemesterPlanModal={onOpenSemesterPlanModal}
+              onOpenAcademicMilestonesModal={onOpenAcademicMilestonesModal}
+              onOpenAndroidAppModal={onOpenAndroidAppModal}
+              onOpenCurriculumPdfExtractor={onOpenCurriculumPdfExtractor || (() => {})}
+              onOpenWorksheetModal={onOpenWorksheetModal}
+              onOpenAssessmentSimulatorModal={onOpenAssessmentSimulatorModal}
+              onOpenAuthenticTaskModal={onOpenAuthenticTaskModal}
+              onOpenRubricModal={onOpenRubricModal}
+              onOpenExitTicketModal={onOpenExitTicketModal || (() => {})}
+              onOpenAbacusModal={onOpenAbacusModal}
+              onOpenResourcesModal={onOpenResourcesModal}
+              resourcesCount={resources.length}
+              onOpenDashboard={() => setActiveNavSection('home')}
+              onOpenParentCardModal={onOpenParentCardModal || (() => {})}
+              onOpenBlankModal={onOpenBlankTemplateModal}
+              onOpenPlansViewer={onOpenPlansViewer || (() => setActiveNavSection('my_plans'))}
+              totalPlansCount={plans.length}
+              onOpenPrintView={onOpenPrintView}
+              onOpenExportModal={onOpenExportModal}
+              onOpenIntegrationToolModal={onOpenIntegrationToolModal}
+              onOpenShareModal={onOpenShareModal}
+              onOpenBackupRestoreModal={onOpenBackupRestore}
+              onOpenMotionGraphicsModal={onOpenMotionGraphicsModal || (() => {})}
+              onOpenQrModal={onOpenQrModal || (() => {})}
+              onClearCurrentPlan={onClearCurrentPlan || onNewBlankPlan}
+              onDeleteCurrentPlan={() => {
+                if (activePlanId) onDeletePlan(activePlanId);
+              }}
+            />
+          </div>
+        )}
+
         {/* SECTION 2: إنشاء تحضير جديد */}
         {activeNavSection === 'new_prep' && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -792,12 +938,16 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
                     <FileEdit className="w-6 h-6 text-slate-700" />
                   </div>
                   <div>
-                    <h4 className="text-base sm:text-lg font-black text-slate-900 font-['Tajawal']">
-                      استمارة تحضير مفرغة (إدخال يدوي)
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-black text-slate-900 font-['Tajawal']">
+                        النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART)
+                      </h4>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[10px] font-black">
+                        النموذج المعتمد ⭐
+                      </span>
+                    </div>
                     <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                      بدء خطة جديدة فارغة معتمدة مطابقة للنموذج الرسمي بجميع أقسامه الستة (الترويس، الكفايات، سير الحصة،
-                      التقويم، والبيئة الصفية) لإدخال بياناتك بحرية تامة.
+                      بدء خطة درس جديدة بالنموذج التنفيذي المعتمد رسمياً بمراحله الخمس (التهيئة الحافزة، العرض والنمذجة، التطبيق مع مهمة GRASPS، التقويم الختامي، والتمايز).
                     </p>
                   </div>
                 </div>
@@ -809,9 +959,9 @@ export const AbqoorHomeDashboard: React.FC<AbqoorHomeDashboardProps> = ({
                       onNewBlankPlan();
                       onOpenEditor();
                     }}
-                    className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98"
+                    className="flex-1 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98"
                   >
-                    <span>فتح استمارة جديدة فارغة</span>
+                    <span>فتح النموذج التنفيذي سمارت مباشرة 📋</span>
                   </button>
                   <button
                     type="button"

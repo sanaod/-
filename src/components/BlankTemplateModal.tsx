@@ -57,8 +57,7 @@ export const BlankTemplateModal: React.FC<BlankTemplateModalProps> = ({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportProgress, setExportProgress] = useState('');
 
-  // Fast creation inputs
-  const [blankTemplateType, setBlankTemplateType] = useState<'executive' | 'adaptive' | 'abqour'>('abqour');
+  const [blankTemplateType, setBlankTemplateType] = useState<'executive' | 'adaptive' | 'abqour'>('executive');
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('');
   const [lessonTitle, setLessonTitle] = useState('');

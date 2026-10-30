@@ -22,7 +22,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
   const planWithExec = ensureExecutiveData(plan);
   const planWithOer = ensureOerData(planWithExec);
   const [printTemplate, setPrintTemplate] = useState<'oer' | 'executive' | 'adaptive'>(
-    (plan.templateType as 'oer' | 'executive' | 'adaptive') || 'oer'
+    (plan.templateType as 'oer' | 'executive' | 'adaptive') || 'executive'
   );
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -42,7 +42,7 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
       const sanitizedTitle = (plan.header.lessonTitle || 'خطة_درس')
         .replace(/[/\\?%*:|"<>]/g, '-')
         .trim();
-      const templateSuffix = printTemplate === 'oer' ? 'دليل_المصادر_المفتوحة_OER' : printTemplate === 'executive' ? 'النموذج_الرئيسي' : 'النموذج_التكيفي';
+      const templateSuffix = printTemplate === 'executive' ? 'النموذج_التنفيذي_المعتمد_سمارت_SMART' : printTemplate === 'oer' ? 'دليل_المصادر_المفتوحة_OER' : 'النموذج_التكيفي';
       const fileName = `${sanitizedTitle}_${templateSuffix}.pdf`;
 
       await exportLessonPlanToPdf(documentContainerRef.current, {
@@ -153,26 +153,15 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-slate-800">نموذج الطباعة والتصدير:</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
-              {printTemplate === 'oer'
-                ? '⭐ نموذج دليل مصادر التعليم المفتوحة OER (الصفوف ١-٤)'
-                : printTemplate === 'executive'
-                ? '📋 النموذج التنفيذي (SMART)'
+              {printTemplate === 'executive'
+                ? '⭐ النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART)'
+                : printTemplate === 'oer'
+                ? '📖 نموذج دليل مصادر التعليم المفتوحة OER'
                 : '📑 النموذج التكيفي الموسع'}
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setPrintTemplate('oer')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                printTemplate === 'oer'
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              ⭐ نموذج OER (الصفوف ١-٤ المعتمد)
-            </button>
             <button
               type="button"
               onClick={() => setPrintTemplate('executive')}
@@ -182,7 +171,18 @@ export const OfficialPrintView: React.FC<OfficialPrintViewProps> = ({ plan, onBa
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📋 النموذج التنفيذي (SMART)
+              ⭐ النموذج التنفيذي المعتمد (SMART)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrintTemplate('oer')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                printTemplate === 'oer'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📖 نموذج OER (الصفوف ١-٤)
             </button>
             <button
               type="button"

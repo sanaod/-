@@ -29,7 +29,7 @@ export const ExecutivePrintDocument: React.FC<ExecutivePrintDocumentProps> = ({ 
               أولاً: نموذج خطة تحضير درس (البيانات العامة وكفايات التعلّم والأهداف)
             </h1>
             <p className="text-xs text-slate-700 font-semibold mt-1">
-              النموذج التنفيذي المعتمد • وزارة التربية والتعليم
+              النموذج التنفيذي المعتمد (خطة التنفيذ سمارت SMART) • وزارة التربية والتعليم
             </p>
           </div>
 
